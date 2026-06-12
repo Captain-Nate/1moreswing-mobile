@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>1 More Swing</title>
+<meta name="description" content="One button. Grapple, pump, and chain swings — then bank your score or risk it all for 1 more swing. How greedy can you get?" />
+<meta name="theme-color" content="#0d1117" />
+<link rel="canonical" href="https://1moreswing.com/" />
+<link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%2358a6ff' opacity='0.25'/><circle cx='32' cy='32' r='21' fill='%2358a6ff'/></svg>" />
+
+<!-- Open Graph (Facebook, Discord, iMessage, LinkedIn…) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="1 More Swing" />
+<meta property="og:title" content="1 More Swing" />
+<meta property="og:description" content="One button. Grapple, pump, and chain swings — then bank your score or risk it all for 1 more swing." />
+<meta property="og:url" content="https://1moreswing.com/" />
+<meta property="og:image" content="https://1moreswing.com/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="1 More Swing — one-button momentum game" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="1 More Swing" />
+<meta name="twitter:description" content="One button. Grapple, pump, and chain swings — then bank it or risk it all for 1 more swing." />
+<meta name="twitter:image" content="https://1moreswing.com/og.png" />
+<style>
+  html, body { margin:0; height:100%; background:#0d1117; overflow:hidden;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; touch-action:none; }
+  #c { display:block; width:100vw; height:100vh; cursor:pointer; }
+  #title { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:10;
+    color:#e6edf3; font-weight:800; font-size:20px; letter-spacing:1px; pointer-events:none;
+    text-shadow:0 2px 10px rgba(0,0,0,.5); }
+  #title b { color:var(--accent,#58a6ff); font-weight:800; }
+  #hint { position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+    color:#8b949e; font-size:13px; letter-spacing:.3px; pointer-events:none; text-align:center;
+    background:rgba(13,17,23,.55); padding:6px 12px; border-radius:999px; max-width:min(680px,92vw);
+    transition:opacity .45s ease; }
+  #hint.hide { opacity:0; }
+  #footer { position:fixed; left:12px; bottom:10px; z-index:9; font-size:12.5px;
+    background:rgba(13,17,23,.6); padding:5px 12px; border-radius:999px; }
+  #footer a { color:#9aa4b0; text-decoration:underline; }
+  #footer a:hover { color:#e6edf3; }
+  #ui { position:fixed; top:16px; right:16px; display:flex; gap:10px; z-index:10; }
+  #ui button { width:42px; height:42px; border-radius:12px; border:1px solid #30363d;
+    background:rgba(22,27,34,.85); color:#e6edf3; font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+    -webkit-tap-highlight-color:transparent; transition:transform .08s, border-color .15s; }
+  #ui button:hover { border-color:#8b949e; }
+  #ui button:active { transform:scale(.92); }
+  #ui #modeBtn { width:auto; padding:0 13px; gap:6px; font-size:13px; font-weight:800;
+    border-color:var(--accent,#58a6ff); color:var(--accent,#58a6ff); }
+  #colorBtn { font-size:0; }
+  #colorBtn .dot { width:18px; height:18px; border-radius:50%; box-shadow:0 0 8px currentColor; }
+  #overBtns { position:fixed; left:50%; top:calc(50% + 116px); transform:translateX(-50%);
+    display:none; gap:10px; z-index:15; }
+  #overBtns.show { display:flex; }
+  #overBtns button { padding:11px 20px; border-radius:999px; border:none; font-weight:800; font-size:14px;
+    cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:0 6px 20px rgba(0,0,0,.4); }
+  #overBtns button:active { transform:scale(.95); }
+  #shareBtn  { background:var(--accent,#58a6ff); color:#0d1117; }
+  #lbOpenBtn { background:#21262d; color:#e6edf3; border:1px solid #30363d; }
+  #reviveBtn { background:linear-gradient(135deg,#f5c451,#e0a020); color:#1a1206; }
+  #reviveBtn:disabled { opacity:.7; cursor:default; }
+  #gameoverAd { position:fixed; left:50%; top:calc(50% + 168px); transform:translateX(-50%);
+    display:none; z-index:14; width:min(336px,92vw); }
+  #gameoverAd.show { display:block; }
+
+  /* ---- leaderboard overlay ---- */
+  #lb { position:fixed; inset:0; z-index:20; display:none;
+    background:rgba(8,11,16,.78); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
+  #lb.open { display:flex; }
+  #lb .panel { width:min(440px,92vw); max-height:84vh; overflow:hidden; display:flex; flex-direction:column;
+    background:#0f141b; border:1px solid #30363d; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  #lb .shead { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #21262d; }
+  #lb .shead h2 { margin:0; font-size:15px; letter-spacing:1px; color:#e6edf3; }
+  #lbClose { width:32px; height:32px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#e6edf3; cursor:pointer; font-size:16px; }
+  #lbBody { padding:14px 18px 20px; overflow-y:auto; }
+  #lbBody input { width:100%; box-sizing:border-box; margin-bottom:10px; padding:9px 12px; border-radius:9px;
+    border:1px solid #30363d; background:#161b22; color:#e6edf3; font-size:14px; }
+  #lbBody .submit { width:100%; margin-bottom:12px; padding:10px; border-radius:9px; border:none;
+    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:14px; cursor:pointer; }
+  #lb .row { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:8px; font-size:14px; color:#e6edf3; }
+  #lb .row .rk { width:30px; color:#8b949e; font-variant-numeric:tabular-nums; }
+  #lb .row .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #lb .row .sc { color:#e6edf3; font-weight:700; font-variant-numeric:tabular-nums; }
+  #lb .row.me { background:rgba(88,166,255,.14); }
+  #lb .row.me .rk, #lb .row.me .sc { color:var(--accent,#58a6ff); }
+  #lb .msg { color:#8b949e; text-align:center; padding:18px; font-size:14px; line-height:1.5; }
+  #lb .tag { color:#6e7681; font-weight:400; }
+  #lb .row.me .tag { color:var(--accent,#58a6ff); opacity:.7; }
+  #lbBody .youare { color:#8b949e; font-size:12px; margin:-4px 2px 12px; }
+  #lbBody .youare b { color:#c9d1d9; }
+  #lb .lbtabs { display:flex; gap:8px; padding:12px 18px 0; }
+  #lb .lbtabs button { flex:1; padding:8px; border-radius:8px; border:1px solid #30363d;
+    background:#161b22; color:#8b949e; font-weight:700; font-size:13px; cursor:pointer; }
+  #lb .lbtabs button.active { background:#21262d; color:#e6edf3; border-color:var(--accent,#58a6ff); }
+
+  /* ---- shop overlay ---- */
+  #shop { position:fixed; inset:0; z-index:20; display:none;
+    background:rgba(8,11,16,.78); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
+  #shop.open { display:flex; }
+  #shop .panel { width:min(520px,92vw); max-height:84vh; overflow:hidden; display:flex; flex-direction:column;
+    background:#0f141b; border:1px solid #30363d; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  #shop .shead { display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; border-bottom:1px solid #21262d; }
+  #shop .shead h2 { margin:0; font-size:18px; letter-spacing:1px; color:#e6edf3; }
+  #shop .coins { color:#f1c40f; font-weight:700; font-size:15px; }
+  #shopClose { width:32px; height:32px; border-radius:8px; border:1px solid #30363d;
+    background:#161b22; color:#e6edf3; cursor:pointer; font-size:16px; }
+  #shopBody { padding:8px 20px 20px; overflow-y:auto; }
+  #shop .cat { color:#8b949e; font-size:12px; letter-spacing:1px; margin:16px 0 8px; }
+  #shop .item { display:flex; align-items:center; gap:12px; padding:9px 10px; border-radius:10px; }
+  #shop .item:hover { background:#161b22; }
+  #shop .sw { width:26px; height:26px; border-radius:50%; flex:0 0 auto; box-shadow:0 0 8px rgba(0,0,0,.4) inset;
+    display:flex; align-items:center; justify-content:center; font-size:15px; line-height:1; }
+  #shop .nm { flex:1; color:#e6edf3; font-size:14px; }
+  #shop .item button { min-width:88px; padding:7px 10px; border-radius:8px; border:1px solid #30363d;
+    background:#21262d; color:#e6edf3; font-size:13px; cursor:pointer; }
+  #shop .item button:hover:not(:disabled) { border-color:#8b949e; }
+  #shop .item button:disabled { opacity:.45; cursor:default; }
+  #shop .item button.buy { background:#1f6feb; border-color:#1f6feb; }
+  #shop .item button.equipped { background:#238636; border-color:#238636; }
+  #shop .kofi { display:block; text-align:center; margin:20px 2px 4px; padding:12px; border-radius:10px;
+    background:#ff5e5b; color:#fff; font-weight:800; font-size:14px; text-decoration:none; }
+  #shop .kofi:hover { background:#ff726f; }
+
+  /* ---- phone tweaks: smaller chrome, less clutter ---- */
+  @media (max-width: 600px){
+    #title { display:none; }                 /* branding hidden during play to avoid button overlap */
+    #ui { top:10px; right:10px; gap:7px; }
+    #ui button { width:38px; height:38px; font-size:15px; border-radius:10px; }
+    #hint { font-size:11px; bottom:12px; padding:5px 11px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">1 MORE <b>SWING</b></div>
+<div id="ui">
+  <button id="modeBtn" title="Daily / Free Play">&#128197;</button>
+  <button id="shopBtn" title="Shop">&#128722;</button>
+  <button id="muteBtn" title="Mute">&#128266;</button>
+  <button id="colorBtn" title="Toggle colour"><span class="dot"></span></button>
+  <button id="pauseBtn" title="Pause">&#10074;&#10074;</button>
+</div>
+<div id="overBtns">
+  <button id="reviveBtn">▶ Continue · Ad</button>
+  <button id="shareBtn">Share result</button>
+  <button id="lbOpenBtn">🏆 Leaderboard</button>
+</div>
+<div id="gameoverAd"></div>
+<div id="footer"><a href="/about.html">About</a> &middot; <a href="/privacy.html">Privacy</a></div>
+<script>/* Mobile app build only: load the AdMob rewarded glue inside Capacitor. No-op on the web. */
+if (window.Capacitor) { var _s = document.createElement('script'); _s.src = 'mobile-ads.js'; document.head.appendChild(_s); }</script>
+<div id="lb">
+  <div class="panel">
+    <div class="shead">
+      <h2 id="lbTitle">LEADERBOARD</h2>
+      <button id="lbClose">&#10005;</button>
+    </div>
+    <div class="lbtabs">
+      <button id="tabToday" class="active">Today</button>
+      <button id="tabWins">All-Time Wins</button>
+    </div>
+    <div id="lbBody"></div>
+  </div>
+</div>
+<div id="shop">
+  <div class="panel">
+    <div class="shead">
+      <h2>SHOP</h2>
+      <span class="coins"><span id="shopCoins">0</span> coins</span>
+      <button id="shopClose">&#10005;</button>
+    </div>
+    <div id="shopBody"></div>
+  </div>
+</div>
+<div id="hint">Hold to swing &amp; <b>pump</b> &middot; release to launch &middot; skip dots for bonus &middot; drop on a <b>BANK</b> pad</div>
+<script>
+/* =========================================================================
+   1 MORE SWING — PHASE 3: swing + greed/banking + skip bonus + JUICE.
+   Bank to lock in score (resets multiplier); fall to lose everything unbanked.
+   Skip dots and still land a grapple = big multiplier + bonus.
+   Juice: camera zoom/shake, hit-pause, clutch slow-mo, particles, synth SFX,
+   pulsing multiplier + escalating heat. Re-tune via the K constants below.
+   ========================================================================= */
+const K = {
+  GRAVITY:        2100,   // downward pull (px/s^2). Higher = heavier, faster falls.
+  GRAPPLE_RANGE:  340,    // how far you can reach to latch an anchor (px).
+  MAX_ROPE:       340,    // longest rope you can swing on (px). Match range = no snap.
+  AIR_DRAG:       0.9994, // velocity kept per step while flying (1 = none).
+  SWING_DRAG:     0.9990, // velocity kept per step while swinging.
+  SWING_PUMP:     2600,   // how hard HOLDING pumps the swing at the bottom (px/s^2). 0 = no pump.
+  MAX_SWING_SPEED:1200,   // cap on swing speed from pumping (keeps launches sane).
+  RELEASE_BOOST:  1.10,   // momentum multiplier the instant you let go (snappy launch).
+  ANCHOR_SPACING: 250,    // avg horizontal gap between anchors (px).
+  SPACING_VAR:    55,     // +/- random on spacing.
+  ANCHOR_VSTEP:   60,     // max height change between neighbouring anchors (keeps chains reachable).
+  ANCHOR_Y_MIN:   0.10,   // anchor band top    (fraction of screen height).
+  ANCHOR_Y_MAX:   0.44,   // anchor band bottom (fraction of screen height).
+  START_ROPE:     190,    // rope length you begin swinging on.
+  DEATH_FRAC:     0.92,   // fall below this fraction of height = run over.
+  START_VX:       560,    // initial forward swing speed.
+  CAM_X_ANCHOR:   0.34,   // player's resting screen-x (fraction of width).
+
+  // --- scoring / banking / skip bonus (Phase 2) ---
+  ANCHOR_POINTS:   100,   // base score for grabbing a fresh anchor.
+  COIN_RATE:       0.10,  // coins earned per banked point (lower = grindier shop). Global economy dial.
+  MULT_PER_ANCHOR: 0.5,   // multiplier gained per anchor in the chain.
+  SKIP_MULT_BONUS: 0.5,   // EXTRA multiplier per dot skipped in a single jump.
+  SKIP_POINTS:     150,   // EXTRA base score per dot skipped.
+  PLATFORM_EVERY:  7,     // a safe bank platform appears every ~N anchors.
+  PLATFORM_W:      160,   // platform width (px) — wider = easier to land/bank.
+  PLATFORM_Y:      0.64,  // platform height (fraction of screen).
+  LAUNCH_ANCHOR_UP:250,   // relaunch anchor sits this far above each platform.
+  DAILY_LENGTH:    40,    // anchors in a daily route (finite, same for everyone). Free Play is endless.
+  TIME_BONUS_CAP_S:180,   // finishing at/after this many seconds earns no time bonus.
+  TIME_BONUS_PER_S:100,   // time-bonus points per second saved under the cap (faster = more).
+
+  // --- juice (Phase 3): camera / shake / feel ---
+  // (speed-zoom DISABLED for motion comfort — see updateCamera; knobs kept if ever re-enabled)
+  ZOOM_SPEED_LO:   520,
+  ZOOM_SPEED_HI:   1700,
+  MIN_ZOOM:        0.80,
+  BIG_LAUNCH:      900,   // launch speed that earns a camera punch + hit-pause.
+  NEARMISS:        240,   // if your flight dipped within this many px of the death line, the save = clutch slow-mo.
+};
+
+/* ============================ MONETIZATION CONFIG ============================
+   Everything here is OFF by default so the live site stays clean until you
+   wire real providers. Flip the flags + fill the IDs when ready.            */
+const REWARDED_ENABLED = false;  // (A) true once a rewarded-video SDK is connected (e.g. AdMob on mobile).
+                                 //     While false the Free-Play "Continue · Ad" button stays hidden.
+const ADSENSE_CLIENT   = 'ca-pub-4322452976770818'; // (B) publisher id — loads the AdSense library + verification meta.
+const ADS_ENABLED      = false;  //     AFTER approval, set true to start showing the game-over ad unit.
+const ADSENSE_SLOT     = '';     //     the game-over display unit's slot id, e.g. '1234567890'
+const AD_MIN_INTERVAL  = 90000;  //     min ms between game-over ad refreshes (be gentle = policy-safe).
+
+const DT = 1/60;                  // fixed physics step
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+let debug = false, runCount = 0, best = 0, paused = false;
+
+// ---- colour themes (accent / inner glow / rgb for translucent fx) ----
+const THEMES = {
+  blue:    { accent:'#58a6ff', glow:'#cfe6ff', rgb:'88,166,255'  },
+  red:     { accent:'#ff5d5d', glow:'#ffd2d2', rgb:'255,93,93'   },
+  space:     { accent:'#34d399', glow:'#c6ffe9', rgb:'52,211,153',  bg:'space'     },
+  vapor:     { accent:'#2de2e6', glow:'#bff8ff', rgb:'45,226,230',  bg:'vapor'     },  // cyan on a pink sunset
+  unicorn:   { accent:'#ff8fd6', glow:'#ffe1f3', rgb:'255,143,214', bg:'unicorn'   },
+  cyber:     { accent:'#fcee21', glow:'#fff7a8', rgb:'252,238,33',  bg:'cyber'     },
+  y2k:       { accent:'#00e0ff', glow:'#bff6ff', rgb:'0,224,255',   bg:'y2k'       },
+  synthwave: { accent:'#ff3caf', glow:'#ffc6ec', rgb:'255,60,175',  bg:'synthwave' },
+  biopunk:   { accent:'#3dffa0', glow:'#c4ffe4', rgb:'61,255,160',  bg:'biopunk'   },
+  kawaii:    { accent:'#a9c7ff', glow:'#e3edff', rgb:'169,199,255', bg:'kawaii'    },
+  solar:     { accent:'#a8e063', glow:'#e8ffc4', rgb:'168,224,99',  bg:'solar'     },
+  twitch:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'twitch'    },  // stream purple + chat spam
+};
+let themeName = 'blue';
+function TH(){ return THEMES[themeName]; }
+
+// ---- cosmetics (bought with the coin wallet; purely visual — never affect score) ----
+const COSMETICS = {
+  theme: [
+    { id:'blue',  name:'Classic Blue', cost:0 },
+    { id:'red',     name:'Crimson',      cost:0 },
+    // premium themes: tiered coin grind on web (drives play); real-money IAP on the mobile build.
+    { id:'space',     name:'Deep Space',    cost:250000,  premium:true },
+    { id:'solar',     name:'Solarpunk',     cost:400000,  premium:true },
+    { id:'biopunk',   name:'Biopunk',       cost:600000,  premium:true },
+    { id:'kawaii',    name:'Kawaii Pastel', cost:800000,  premium:true },
+    { id:'vapor',     name:'Vaporwave',     cost:1000000, premium:true },
+    { id:'twitch',    name:'Streamer',      cost:1000000, premium:true },
+    { id:'y2k',       name:'Y2K Glitch',    cost:1250000, premium:true },
+    { id:'synthwave', name:'Synthwave',     cost:1500000, premium:true },
+    { id:'cyber',     name:'Cyberpunk',     cost:1800000, premium:true },
+    { id:'unicorn',   name:'Unicorn',       cost:2500000, premium:true },
+  ],
+  trail: [
+    { id:'classic', name:'Classic Trail', cost:0      },
+    { id:'fire',    name:'Fire Trail',    cost:12000  },
+    { id:'ice',     name:'Ice Trail',     cost:22000  },
+    { id:'neon',    name:'Neon Trail',    cost:35000  },
+    { id:'violet',  name:'Violet Trail',  cost:55000  },
+    { id:'gold',    name:'Gold Trail',    cost:85000  },
+    { id:'rainbow', name:'Rainbow Trail', cost:3000000 },
+  ],
+  orb: [
+    { id:'default', name:'Default Orb', cost:0      },
+    { id:'ember',   name:'Ember Orb',   cost:16000  },
+    { id:'eye',     name:'Eyeball',     cost:30000, emoji:'👁️' },
+    { id:'emerald', name:'Emerald Orb', cost:45000  },
+    { id:'gold',    name:'Gold Orb',    cost:95000  },
+    { id:'violet',  name:'Violet Orb',  cost:140000 },
+    { id:'smiley',  name:'Smiley Face', cost:200000, emoji:'🙂' },
+    { id:'rainbow', name:'Rainbow Orb', cost:4000000 },
+  ],
+};
+const ORB_COLORS = {
+  ember:  ['#ff7b3a','#ffd9b0'], eye:    ['#f4f7fb','#ffffff'],
+  emerald:['#2ec27e','#bff5db'], smiley: ['#ffd23f','#fff3c0'],
+  gold:   ['#ffcd46','#fff0c2'], violet: ['#a371f7','#e6d6ff'],
+};
+
+// ---- persistent wallet + unlocks ----
+let coins = 0;
+let owned    = { trail:['classic'], orb:['default'], theme:['blue','red'] };
+let equipped = { trail:'classic',   orb:'default'   };
+function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Math.random().toString(36).slice(2) + Date.now().toString(36); } }
+function saveGame(){
+  try { localStorage.setItem('oms_save', JSON.stringify({ coins, owned, equipped, themeName, muted, mode, name: playerName, pid: playerId })); } catch(e){}
+}
+function loadGame(){
+  try {
+    const s = JSON.parse(localStorage.getItem('oms_save') || '{}');
+    if (typeof s.pid  === 'string') playerId = s.pid;
+    if (typeof s.coins === 'number') coins = s.coins;
+    if (s.owned) for (const k in owned)              // union: keep defaults + anything previously owned
+      if (Array.isArray(s.owned[k])) owned[k] = Array.from(new Set([...owned[k], ...s.owned[k]]));
+    if (s.equipped) equipped = Object.assign(equipped, s.equipped);
+    if (s.themeName && THEMES[s.themeName]) themeName = s.themeName;
+    if (typeof s.muted === 'boolean') muted = s.muted;
+    if (s.mode === 'daily' || s.mode === 'free') mode = s.mode;
+    if (typeof s.name === 'string') playerName = s.name;
+  } catch(e){}
+  if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
+}
+
+// trail colour for the equipped style (frac: 0 = oldest .. 1 = newest)
+function trailColor(frac, alpha){
+  switch(equipped.trail){
+    case 'fire':    return `rgba(255,${Math.round(70+130*frac)},40,${alpha})`;
+    case 'ice':     return `rgba(${Math.round(120+80*frac)},${Math.round(200+40*frac)},255,${alpha})`;
+    case 'neon':    return `rgba(57,255,170,${alpha})`;
+    case 'violet':  return `rgba(163,113,247,${alpha})`;
+    case 'gold':    return `rgba(255,205,70,${alpha})`;
+    case 'rainbow': return `hsla(${(frac*160 + performance.now()/7)%360},90%,62%,${alpha})`;
+    default:        return `rgba(${TH().rgb},${alpha})`;
+  }
+}
+function orbColors(){
+  if (equipped.orb === 'rainbow'){
+    const h = (performance.now()/6) % 360;
+    return [`hsl(${h},85%,60%)`, `hsl(${h},95%,82%)`];
+  }
+  return ORB_COLORS[equipped.orb] || [TH().accent, TH().glow];
+}
+
+/* ============================ DAILY (Phase 4) ============================ */
+// Seed the course generator with today's date so everyone gets the same run.
+const DAILY_EPOCH = Date.UTC(2026, 5, 11);     // Day 1 = 2026-06-11 (UTC)
+function todayInfo(){
+  const n = new Date();
+  const utcMid = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+  const day  = Math.floor((utcMid - DAILY_EPOCH) / 86400000) + 1;
+  const seed = n.getUTCFullYear()*10000 + (n.getUTCMonth()+1)*100 + n.getUTCDate();
+  return { day, seed };
+}
+// mulberry32: tiny deterministic PRNG (same seed -> same sequence -> same course)
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+let rng = Math.random;     // current run's random source (set per run)
+let mode = 'daily';        // 'daily' | 'free'
+let dayNumber = 1;
+let finishX = null;        // x of the daily finish line (null = endless / Free Play)
+let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
+let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false;
+let usedRevive = false, adShowing = false;
+
+// ---- game state ----
+let p, prevP, state, anchor, ropeLen, anchors, platforms, genX, lastY, cameraX, dist, cleared, trail, lastReleased;
+let total, pending, mult, lastGrabbedX, anchorGenCount, popups;
+
+const fmt = n => Math.round(n).toLocaleString();
+const fmtTime = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function popup(wx, wy, text, color, big){ popups.push({ x:wx, y:wy, text, color, big:!!big, age:0 }); }
+
+/* ============================ JUICE (Phase 3) ============================ */
+// camera (focus-x, zoom, screen-shake) + particles + time control + SFX
+let camX = 0, zoom = 1, shakeMag = 0, shakeX = 0, shakeY = 0;
+let freezeFrames = 0, slowmoFrames = 0, particles = [], flightLowY = 0;
+
+function addShake(m){ shakeMag = Math.min(34, Math.max(shakeMag, m)); }
+function hitPause(f){ freezeFrames = Math.max(freezeFrames, f); }
+function slowmo(f){ slowmoFrames = Math.max(slowmoFrames, f); }
+
+function burst(wx, wy, n, color, spd){
+  for (let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, s = spd*(0.35+Math.random()*0.9);
+    particles.push({ x:wx, y:wy, vx:Math.cos(a)*s, vy:Math.sin(a)*s, life:1, color });
+  }
+}
+function updateParticles(){
+  for (let i=particles.length-1;i>=0;i--){
+    const q = particles[i];
+    q.x += q.vx*DT; q.y += q.vy*DT; q.vy += 700*DT; q.vx *= 0.985;
+    q.life -= DT*1.7;
+    if (q.life <= 0) particles.splice(i,1);
+  }
+}
+function updateCamera(){
+  zoom = 1;                                           // zoom disabled for motion comfort
+  camX += (p.x - camX) * 0.16;                        // smooth horizontal follow (slight lag)
+  shakeMag *= 0.86;
+  shakeX = (Math.random()*2-1) * shakeMag;
+  shakeY = (Math.random()*2-1) * shakeMag;
+}
+
+// ---- synthesized SFX (no audio files) ----
+let actx = null, muted = false;
+function audioCtx(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+function tone(freq, dur, type, vol, slideTo){
+  if (muted) return; const a = audioCtx(); if(!a) return;
+  const o=a.createOscillator(), g=a.createGain(), t0=a.currentTime;
+  o.type=type||'sine'; o.frequency.setValueAtTime(freq,t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(1,slideTo), t0+dur);
+  g.gain.setValueAtTime(vol,t0); g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.connect(g).connect(a.destination); o.start(t0); o.stop(t0+dur);
+}
+function noiseSweep(dur, vol, fStart, fEnd){
+  if (muted) return; const a = audioCtx(); if(!a) return;
+  const t0=a.currentTime, len=Math.max(1,Math.floor(a.sampleRate*dur));
+  const buf=a.createBuffer(1,len,a.sampleRate), d=buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  const n=a.createBufferSource(); n.buffer=buf;
+  const f=a.createBiquadFilter(); f.type='lowpass';
+  f.frequency.setValueAtTime(fStart,t0); f.frequency.linearRampToValueAtTime(fEnd,t0+dur);
+  const g=a.createGain(); g.gain.setValueAtTime(vol,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  n.connect(f).connect(g).connect(a.destination); n.start(t0); n.stop(t0+dur);
+}
+function sfxGrab(){ const f = 480 + Math.min(mult,14)*55; tone(f, 0.09, 'square', 0.10, f*1.7); }   // thwip — pitch climbs with greed
+function sfxRelease(speed){ noiseSweep(0.18, Math.min(0.22, 0.05 + speed/5000), 900, 180); }          // whoosh
+function sfxBank(){ tone(620,0.12,'triangle',0.16); setTimeout(()=>tone(820,0.14,'triangle',0.16),80); setTimeout(()=>tone(1240,0.20,'triangle',0.14),170); }
+function sfxSkip(n){ for (let i=0;i<=n;i++) setTimeout(()=>tone(520+i*150, 0.10, 'square', 0.12), i*50); }
+function sfxDie(){ tone(220, 0.5, 'sawtooth', 0.18, 55); }
+
+// next anchor height: random WALK from the previous one, so neighbours stay
+// close enough in height to always be reachable in a chain.
+function nextY(){
+  const a = H * K.ANCHOR_Y_MIN, b = H * K.ANCHOR_Y_MAX;
+  let y = lastY + (rng()*2-1) * K.ANCHOR_VSTEP;
+  y = Math.max(a, Math.min(b, y));
+  lastY = y;
+  return y;
+}
+
+function ensureWorld(){
+  // generate ahead of the camera, cull what's well behind it
+  const limit = cameraX + W + 500;
+  while (genX < limit){
+    // daily routes are finite: after DAILY_LENGTH anchors, drop a finish pad and stop
+    if (mode === 'daily' && anchorGenCount >= K.DAILY_LENGTH){
+      if (finishX === null){
+        genX += K.MAX_ROPE + 70;                 // gap beyond the last swing's reach
+        finishX = genX;                          // finish is just the dashed line — cross it mid-air to complete
+      }
+      break;
+    }
+    genX += K.ANCHOR_SPACING + (rng()*2-1) * K.SPACING_VAR;
+    anchorGenCount++;
+    if (anchorGenCount % K.PLATFORM_EVERY === 0){
+      // a safe BANK platform, with a relaunch anchor floating above it
+      const py = H * K.PLATFORM_Y;
+      platforms.push({ x: genX - K.PLATFORM_W/2, y: py, w: K.PLATFORM_W });
+      const ay = Math.max(H * K.ANCHOR_Y_MIN, py - K.LAUNCH_ANCHOR_UP);
+      anchors.push({ x: genX, y: ay, got:false, launch:true });
+      lastY = ay;
+    } else {
+      anchors.push({ x: genX, y: nextY(), got:false });
+    }
+  }
+  while (anchors.length  && anchors[0].x  < cameraX - 200) anchors.shift();
+  while (platforms.length && platforms[0].x + platforms[0].w < cameraX - 200) platforms.shift();
+}
+
+function newRun(){
+  runCount++;
+  // seed the course: daily = same for everyone today, free = fresh each run
+  const ti = todayInfo(); dayNumber = ti.day;
+  rng = mode === 'daily' ? mulberry32(ti.seed) : mulberry32((Math.random()*1e9)|0);
+  const ob = document.getElementById('overBtns'); if (ob) ob.classList.remove('show');
+  hideGameOverAd();
+  lastScore = 0; submittedRun = false; usedRevive = false;
+
+  anchors = []; platforms = []; cleared = 0; trail = []; popups = [];
+  lastReleased = null; anchorGenCount = 0; finishX = null; runTime = 0;
+  total = 0; pending = 0; mult = 1;
+
+  // first anchor sits right where the player starts, so we begin already swinging
+  const first = { x: 320, y: H * 0.26, got:true };
+  anchors.push(first);
+  cleared = 1;
+  lastY = first.y;
+  genX = first.x;
+  lastGrabbedX = first.x;
+
+  // hang straight below the first anchor, moving forward = bottom of the arc
+  ropeLen = K.START_ROPE;
+  p     = { x: first.x, y: first.y + ropeLen };
+  prevP = { x: p.x - K.START_VX * DT, y: p.y };
+  anchor = first;
+  state  = 'swinging';
+
+  cameraX = p.x - W * K.CAM_X_ANCHOR;
+  dist = Math.floor(p.x / 10);
+  ensureWorld();
+
+  // reset juice
+  camX = p.x; zoom = 1; shakeMag = shakeX = shakeY = 0;
+  freezeFrames = slowmoFrames = 0; particles = []; flightLowY = p.y;
+}
+
+// pick the best anchor a press would grab: in range, prefer ahead, then nearest
+function pickTarget(){
+  let bestA = null, bestScore = Infinity;
+  for (const a of anchors){
+    if (a === lastReleased) continue;          // can't instantly re-grab the peg you just left
+    const dx = a.x - p.x, dy = a.y - p.y;
+    const d = Math.hypot(dx, dy);
+    if (d > K.GRAPPLE_RANGE) continue;
+    // bias toward anchors ahead of the player so chains move forward
+    const aheadPenalty = a.x < p.x - 40 ? 600 : 0;
+    const score = d + aheadPenalty;
+    if (score < bestScore){ bestScore = score; bestA = a; }
+  }
+  return bestA;
+}
+
+function press(){
+  const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
+  if (paused || shopOpen || lbOpen) return;
+  const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
+  if (state === 'dead' || state === 'finished'){ newRun(); return; }
+  if (state !== 'flying' && state !== 'landed') return;
+  const clutch = flightLowY > H*K.DEATH_FRAC - K.NEARMISS;   // dipped scary-low this flight = a save
+  const t = pickTarget();
+  if (!t) return; // whiff — no anchor in reach
+  anchor = t;
+  ropeLen = Math.min(Math.hypot(p.x-t.x, p.y-t.y), K.MAX_ROPE);
+
+  let skipped = 0;
+  if (!t.got){
+    // how many fresh dots did we fly clean past to reach this one?
+    for (const a of anchors)
+      if (a !== t && !a.got && a.x > lastGrabbedX + 1 && a.x < t.x - 1) skipped++;
+
+    t.got = true; cleared++;
+    mult += K.MULT_PER_ANCHOR + skipped * K.SKIP_MULT_BONUS;
+    const gained = Math.round((K.ANCHOR_POINTS + skipped * K.SKIP_POINTS) * mult);
+    pending += gained;
+
+    if (skipped > 0) popup(t.x, t.y - 26, `SKIP ×${skipped}!  +${fmt(gained)}`, TH().accent, true);
+    else             popup(t.x, t.y - 22, `+${fmt(gained)}`, '#8b949e');
+  }
+  lastGrabbedX = t.x;
+  state = 'swinging';
+
+  // --- juice ---
+  const [oc] = orbColors();
+  sfxGrab();
+  burst(t.x, t.y, 7 + skipped*4, oc, 90 + skipped*40);
+  addShake(2.4 + skipped*2.5);
+  if (skipped > 0){ sfxSkip(skipped); if (skipped >= 2) hitPause(4); }
+  if (clutch){ slowmo(22); addShake(6); popup(t.x, t.y - 46, 'CLUTCH!', '#ffd95e', true); }
+}
+
+function bank(){
+  if (pending > 0){
+    total += pending;
+    coins += Math.round(pending * K.COIN_RATE);   // lifetime spendable wallet (persists across runs)
+    saveGame();
+    popup(p.x, p.y - 34, `BANKED +${fmt(pending)}`, '#3fb950', true);
+    sfxBank(); burst(p.x, p.y, 26, '#3fb950', 220); addShake(5); hitPause(3);
+  }
+  pending = 0; mult = 1;
+}
+
+function release(){
+  if (state !== 'swinging') return;
+  // Verlet velocity carries automatically; nudge it for a snappy launch
+  const vx = (p.x - prevP.x) * K.RELEASE_BOOST;
+  const vy = (p.y - prevP.y) * K.RELEASE_BOOST;
+  prevP.x = p.x - vx; prevP.y = p.y - vy;
+  lastReleased = anchor;        // locked out until we fly clear of its range
+  anchor = null; state = 'flying';
+  flightLowY = p.y;             // start tracking how low this flight dips
+
+  // --- juice ---
+  const launch = Math.hypot(vx, vy) / DT;
+  sfxRelease(launch);
+  if (launch > K.BIG_LAUNCH){ addShake(Math.min(16, launch/90)); hitPause(3); }
+}
+
+function physics(){
+  updateParticles();   // run inside the sim step so hit-pause / slow-mo affect them too
+  if (state !== 'flying' && state !== 'swinging') return;
+  runTime += DT;       // active play time only (excludes pause / menus / landed)
+  const drag = state === 'swinging' ? K.SWING_DRAG : K.AIR_DRAG;
+
+  // Verlet integration (momentum is implicit in p - prevP)
+  const nx = p.x + (p.x - prevP.x) * drag;
+  const ny = p.y + (p.y - prevP.y) * drag + K.GRAVITY * DT * DT;
+  prevP.x = p.x; prevP.y = p.y;
+  p.x = nx; p.y = ny;
+
+  // rope constraint — also imparts tangential velocity for free
+  if (state === 'swinging' && anchor){
+    // --- active pump: holding builds the swing, strongest at the bottom of the arc ---
+    let rx = p.x-anchor.x, ry = p.y-anchor.y;
+    const rl = Math.hypot(rx, ry) || 1; rx/=rl; ry/=rl;     // radial unit (anchor -> player)
+    const tx = -ry, ty = rx;                                // tangent unit
+    const vx = (p.x-prevP.x)/DT, vy = (p.y-prevP.y)/DT;
+    const tang = vx*tx + vy*ty;                             // signed speed along the arc
+    const weight = Math.max(0, ry);                         // ~1 at the bottom, 0 at the sides
+    if (Math.abs(tang) < K.MAX_SWING_SPEED){
+      const dir = Math.abs(tang) > 30 ? Math.sign(tang)    // amplify the way you're already going
+                                      : (tx > 0 ? 1 : -1); // dead hang: kick toward forward progress
+      const add = K.SWING_PUMP * weight * dir * DT * DT;
+      p.x += tx * add; p.y += ty * add;
+    }
+    for (let i=0;i<2;i++){
+      const dx = p.x - anchor.x, dy = p.y - anchor.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const diff = (d - ropeLen) / d;
+      p.x -= dx * diff; p.y -= dy * diff;
+    }
+  }
+
+  // land on a safe platform while falling -> BANK the pending score
+  if (state === 'flying' && p.y >= prevP.y){
+    for (const pl of platforms){
+      const landY = pl.y - 11;
+      if (p.x > pl.x && p.x < pl.x + pl.w && prevP.y <= landY && p.y >= landY){
+        p.y = landY; prevP.x = p.x; prevP.y = p.y;       // come to rest on the ledge
+        state = 'landed'; lastReleased = null; lastGrabbedX = p.x;
+        bank();
+        break;
+      }
+    }
+  }
+
+  // once we've flown clear of the just-released peg, it's grabbable again
+  if (lastReleased && Math.hypot(p.x-lastReleased.x, p.y-lastReleased.y) > K.GRAPPLE_RANGE)
+    lastReleased = null;
+
+  // bookkeeping
+  if (state === 'flying') flightLowY = Math.max(flightLowY, p.y);   // deepest dip this flight
+  cameraX = p.x - W * K.CAM_X_ANCHOR;
+  dist = Math.max(dist, Math.floor(p.x / 10));
+  ensureWorld();
+
+  trail.push({ x:p.x, y:p.y }); if (trail.length > 22) trail.shift();
+
+  if (mode === 'daily' && finishX !== null && p.x >= finishX){ finish(); return; }
+  if (p.y > H * K.DEATH_FRAC){ die(); }
+}
+
+// show the end-of-run buttons (shared by death + daily finish)
+function showOverButtons(){
+  const ob = document.getElementById('overBtns'); if (ob) ob.classList.add('show');
+  const lo = document.getElementById('lbOpenBtn'); if (lo) lo.style.display = mode === 'daily' ? '' : 'none';
+  const rv = document.getElementById('reviveBtn');
+  if (rv){
+    // revive: Free Play only, on death, once per run, and only when a rewarded provider is available
+    rv.style.display = (rewardedAvailable() && mode === 'free' && !usedRevive && state === 'dead') ? '' : 'none';
+    rv.textContent = '▶ Continue · Ad'; rv.disabled = false;
+  }
+  showGameOverAd();
+}
+
+function die(){
+  best = Math.max(best, total);   // best = highest BANKED score
+  state = 'dead';
+  sfxDie(); addShake(16); burst(p.x, p.y, 30, '#f85149', 260);
+  lastScore = total; submittedRun = false;
+  showOverButtons();
+}
+
+// reached the end of a daily route — complete the run, banking what's left
+function finish(){
+  bank();                         // lock in remaining pending as a completion reward
+  finishTime = runTime;
+  finishBonus = Math.round(Math.max(0, K.TIME_BONUS_CAP_S - runTime) * K.TIME_BONUS_PER_S);
+  total += finishBonus;           // faster finish = bigger time bonus
+  best = Math.max(best, total);
+  state = 'finished';
+  lastScore = total; submittedRun = false;
+  sfxBank(); addShake(8); burst(p.x, p.y, 34, '#ffd95e', 240);
+  showOverButtons();
+}
+
+// resume a dead run from the nearest anchor, keeping score/multiplier (Free Play only)
+function revive(){
+  let best = null, bd = Infinity;
+  for (const a of anchors){ const d = Math.abs(a.x - p.x); if (d < bd){ bd = d; best = a; } }
+  if (!best){ best = { x: p.x, y: H * 0.30, got: true }; anchors.push(best); }
+  anchor = best; ropeLen = K.START_ROPE;
+  p.x = best.x; p.y = best.y + ropeLen;
+  prevP.x = p.x - 220 * DT; prevP.y = p.y;     // gentle forward nudge
+  state = 'swinging'; lastReleased = null; flightLowY = p.y;
+  usedRevive = true;
+  const ob = document.getElementById('overBtns'); if (ob) ob.classList.remove('show');
+  hideGameOverAd();
+  addShake(6); burst(p.x, p.y, 18, TH().accent, 150);
+}
+
+// ---------- input ----------
+let spaceDown = false, pointerActive = false;
+cv.addEventListener('pointerdown', e=>{ e.preventDefault(); pointerActive = true; press(); });
+window.addEventListener('pointerup', ()=>{ if (pointerActive){ pointerActive = false; release(); } });
+window.addEventListener('keydown', e=>{
+  if (e.code === 'Space'){ e.preventDefault(); if(!spaceDown){ spaceDown=true; press(); } }
+  else if (e.key === 'd' || e.key === 'D') debug = !debug;
+  else if (e.key === 'r' || e.key === 'R') newRun();
+  else if (e.key === 'p' || e.key === 'P') togglePause();
+  else if (e.key === 'l' || e.key === 'L'){ lbOpen ? closeLeaderboard() : openLeaderboard(); }
+  else if (e.key === 'Escape'){ if (shopOpen) closeShop(); else if (lbOpen) closeLeaderboard(); }
+});
+window.addEventListener('keyup', e=>{ if (e.code==='Space'){ spaceDown=false; release(); } });
+
+// ---------- UI buttons ----------
+const colorBtn = document.getElementById('colorBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const muteBtn  = document.getElementById('muteBtn');
+const modeBtn  = document.getElementById('modeBtn');
+const shareBtn = document.getElementById('shareBtn');
+function syncUI(){
+  document.documentElement.style.setProperty('--accent', TH().accent);
+  colorBtn.querySelector('.dot').style.color = TH().accent;     // drives the glow + fill
+  colorBtn.querySelector('.dot').style.background = TH().accent;
+  pauseBtn.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;'; // ▶ / ❚❚
+  pauseBtn.title = paused ? 'Resume' : 'Pause';
+  muteBtn.innerHTML = muted ? '&#128263;' : '&#128266;';        // 🔇 / 🔊
+  muteBtn.title = muted ? 'Unmute' : 'Mute';
+  modeBtn.innerHTML = mode === 'daily' ? '&#128197; Daily' : '&#8734; Free'; // 📅 Daily / ∞ Free
+  modeBtn.title = mode === 'daily' ? 'Daily challenge — tap for Free Play' : 'Free Play — tap for Daily';
+  // favicon follows the current colour scheme
+  const fav = document.getElementById('favicon');
+  if (fav){
+    const c = TH().accent.replace('#', '%23');
+    fav.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='${c}' opacity='0.25'/><circle cx='32' cy='32' r='21' fill='${c}'/></svg>`;
+  }
+}
+function togglePause(){ paused = !paused; syncUI(); }
+colorBtn.addEventListener('click', ()=>{
+  const list = owned.theme || ['blue','red'];
+  themeName = list[(list.indexOf(themeName) + 1) % list.length];
+  syncUI(); saveGame();
+});
+pauseBtn.addEventListener('click', togglePause);
+muteBtn.addEventListener('click', ()=>{ muted = !muted; syncUI(); saveGame(); });
+modeBtn.addEventListener('click', ()=>{ mode = mode === 'daily' ? 'free' : 'daily'; saveGame(); newRun(); syncUI(); });
+
+// ---------- share result (spoiler-free) ----------
+function shareText(){
+  const tag = mode === 'daily' ? `  ·  Day ${dayNumber}` : '';
+  return `🪝 1 More Swing — banked ${fmt(total)}${tag}`;
+}
+async function doShare(){
+  const text = shareText(), url = 'https://1moreswing.com';
+  try { if (navigator.share){ await navigator.share({ text, url }); return; } } catch(e){ if (e && e.name === 'AbortError') return; }
+  try {
+    await navigator.clipboard.writeText(`${text}\nbeat me → ${url}`);
+    const old = shareBtn.textContent; shareBtn.textContent = 'Copied! ✓';
+    setTimeout(()=>{ shareBtn.textContent = old; }, 1600);
+  } catch(e){}
+}
+shareBtn.addEventListener('click', doShare);
+
+// ---------- shop ----------
+const shopEl = document.getElementById('shop');
+let shopOpen = false;
+function swatchStyle(cat, id){
+  if (cat === 'theme'){
+    if (id === 'space')     return 'radial-gradient(circle at 32% 30%, #34d399, #05070d 78%)';
+    if (id === 'vapor')     return 'linear-gradient(135deg,#2de2e6,#ff71ce 70%)';
+    if (id === 'unicorn')   return 'conic-gradient(#ff8fd6,#c9a7ff,#a0e9ff,#ffd6a0,#ff8fd6)';
+    if (id === 'cyber')     return 'linear-gradient(135deg,#fcee21,#ff2e97,#00e0ff)';
+    if (id === 'y2k')       return 'linear-gradient(135deg,#00e0ff,#aab,#ff00a0)';
+    if (id === 'synthwave') return 'linear-gradient(180deg,#2a0a4a,#ff2d95 70%,#ffcf3a)';
+    if (id === 'biopunk')   return 'radial-gradient(circle at 35% 35%, #3dffa0, #06120e 80%)';
+    if (id === 'kawaii')    return 'linear-gradient(135deg,#a9c7ff,#ffc2e2)';
+    if (id === 'solar')     return 'linear-gradient(135deg,#ffd56b,#7bed9f)';
+    if (id === 'twitch')    return 'linear-gradient(135deg,#9146ff,#6441a5)';
+    return (THEMES[id] && THEMES[id].accent) || '#888';
+  }
+  if (id === 'rainbow') return 'conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red)';
+  if (cat === 'trail'){
+    switch(id){
+      case 'fire':   return 'linear-gradient(135deg,#ffce3a,#ff5722)';
+      case 'ice':    return 'linear-gradient(135deg,#aee9ff,#3aa0ff)';
+      case 'neon':   return '#39ffaa';
+      case 'violet': return '#a371f7';
+      case 'gold':   return '#ffcd46';
+      default:       return TH().accent;      // classic
+    }
+  }
+  return (ORB_COLORS[id] && ORB_COLORS[id][0]) || TH().accent;
+}
+function renderShop(){
+  document.getElementById('shopCoins').textContent = fmt(coins);
+  let html = '';
+  for (const [cat,label] of [['theme','THEMES'],['trail','TRAILS'],['orb','ORBS']]){
+    html += `<div class="cat">${label}</div>`;
+    for (const it of COSMETICS[cat]){
+      const isOwned = owned[cat].includes(it.id);
+      const isEq    = cat === 'theme' ? themeName === it.id : equipped[cat] === it.id;
+      let btn;
+      if (isEq)          btn = `<button class="equipped" disabled>Equipped</button>`;
+      else if (isOwned)  btn = `<button data-act="equip" data-cat="${cat}" data-id="${it.id}">Equip</button>`;
+      else               btn = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}>Buy &middot; ${fmt(it.cost)}</button>`;
+      html += `<div class="item"><span class="sw" style="background:${swatchStyle(cat,it.id)}">${it.emoji||''}</span>`
+            + `<span class="nm">${it.name}</span>${btn}</div>`;
+    }
+  }
+  html += `<a class="kofi" href="https://ko-fi.com/natemakesstuff" target="_blank" rel="noopener">☕ Support development on Ko-fi</a>`;
+  const body = document.getElementById('shopBody');
+  body.innerHTML = html;
+  body.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', () => {
+    const { act, cat, id } = b.dataset;
+    if (act === 'buy') buyItem(cat, id); else equipItem(cat, id);
+  }));
+}
+function buyItem(cat, id){
+  const it = COSMETICS[cat].find(x => x.id === id);
+  if (!it || owned[cat].includes(id) || coins < it.cost) return;
+  coins -= it.cost; owned[cat].push(id);
+  if (cat === 'theme'){ themeName = id; syncUI(); } else equipped[cat] = id;
+  saveGame(); renderShop();
+}
+function equipItem(cat, id){
+  if (!owned[cat].includes(id)) return;
+  if (cat === 'theme'){ themeName = id; syncUI(); } else equipped[cat] = id;
+  saveGame(); renderShop();
+}
+function openShop(){ shopOpen = true; shopEl.classList.add('open'); renderShop(); }
+function closeShop(){ shopOpen = false; shopEl.classList.remove('open'); }
+document.getElementById('shopBtn').addEventListener('click', openShop);
+document.getElementById('shopClose').addEventListener('click', closeShop);
+shopEl.addEventListener('click', e => { if (e.target === shopEl) closeShop(); }); // click backdrop to close
+
+// ---------- leaderboard (Cloudflare D1 via /api/scores) ----------
+const lbEl   = document.getElementById('lb');
+const lbBody = document.getElementById('lbBody');
+// API base: relative on the real site, absolute everywhere else (app webview, preview) so /api works
+const API_BASE = /(^|\.)1moreswing\.com$/.test(location.hostname) ? '' : 'https://1moreswing.com';
+function lbSign(day, score){ const s=`${day}:${score}:oms_v1`; let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h.toString(36); }
+function tagOf(pid){ let h=5381; const s=String(pid); for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return String(h % 10000); }  // matches server
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// profanity filter (must match the server's isClean in functions/api/scores.js)
+const BANNED = [
+  'fuck','shit','bitch','cunt','asshole','bastard','slut','whore','piss','dick',
+  'pussy','dildo','jizz','wank','twat','bollock','boner','semen','ejaculat',
+  'masturbat','blowjob','handjob','cumshot','cocksuck','cockhead','motherfuck',
+  'bullshit','dumbass','jackass','dickhead','nigger','nigga','faggot','retard',
+  'rapist','molest','pedo','paedo','nazi','kike','spic','chink','coon','wetback',
+  'tranny','dyke','porn','hentai','fellatio','goatse','scrotum'
+];
+function deleet(s){
+  return String(s).toLowerCase()
+    .replace(/[\s._\-]+/g,'')
+    .replace(/ph/g,'f')
+    .replace(/0/g,'o').replace(/1/g,'i').replace(/3/g,'e').replace(/4/g,'a')
+    .replace(/5/g,'s').replace(/7/g,'t').replace(/8/g,'b').replace(/9/g,'g')
+    .replace(/\$/g,'s').replace(/@/g,'a').replace(/\+/g,'t').replace(/!/g,'i')
+    .replace(/v/g,'u')
+    .replace(/[^a-z]/g,'');
+}
+function isClean(name){
+  const n = deleet(name), c = n.replace(/(.)\1+/g,'$1');
+  return !BANNED.some(w => n.includes(w) || c.includes(w));
+}
+async function fetchScores(day){ try{ const r=await fetch(`${API_BASE}/api/scores?day=${day}`); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
+async function submitScoreNow(){
+  const day = dayNumber, score = Math.floor(lastScore);
+  if (score <= 0) return null;
+  try{
+    const r = await fetch(`${API_BASE}/api/scores`, { method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify({ name: playerName||'anon', score, day, pid: playerId, sig: lbSign(day, score) }) });
+    if (!r.ok) return null; return await r.json();
+  } catch(e){ return null; }
+}
+function renderLB(data){
+  let html = `<input id="lbName" maxlength="16" placeholder="enter a name" value="${escapeHtml(playerName)}" />`;
+  html += `<div class="youare">You appear as <b>${escapeHtml(playerName||'anon')}<span class="tag">#${tagOf(playerId)}</span></b></div>`;
+  if (mode==='daily' && lastScore>0 && !submittedRun)
+    html += `<button class="submit" id="lbSubmit">Submit my ${fmt(lastScore)}</button>`;
+  else if (submittedRun && data && data.rank)
+    html += `<div class="msg" style="padding:4px 0 12px">You're #${data.rank} today 🎉</div>`;
+
+  if (!data || !data.scores)
+    html += `<div class="msg">Leaderboard offline.<br><span style="font-size:12px">(activates once deployed with the D1 database connected)</span></div>`;
+  else if (!data.scores.length)
+    html += `<div class="msg">No scores yet today — be the first! 🏆</div>`;
+  else {
+    const myTag = tagOf(playerId);
+    data.scores.forEach((s,i)=>{
+      const me = (s.tag === myTag) ? ' me' : '';
+      html += `<div class="row${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(s.name)}<span class="tag">#${s.tag||'?'}</span></span><span class="sc">${fmt(s.score)}</span></div>`;
+    });
+  }
+  lbBody.innerHTML = html;
+
+  const inp = document.getElementById('lbName');
+  if (inp) inp.addEventListener('input', ()=>{ playerName = inp.value.trim().slice(0,16); saveGame(); });
+  const sub = document.getElementById('lbSubmit');
+  if (sub) sub.addEventListener('click', async ()=>{
+    const nm = (inp.value.trim().slice(0,16)) || 'anon';
+    if (!isClean(nm)){
+      sub.textContent = 'Please pick a cleaner name'; sub.style.background = '#f85149'; sub.style.color = '#fff';
+      setTimeout(()=>{ sub.textContent = `Submit my ${fmt(lastScore)}`; sub.style.background = ''; sub.style.color = ''; }, 2000);
+      return;
+    }
+    playerName = nm; saveGame();
+    sub.textContent = 'Submitting…'; sub.disabled = true;
+    const res = await submitScoreNow();
+    submittedRun = !!res;
+    renderLB(res);
+  });
+}
+let lbTab = 'today';
+async function fetchWins(){ try{ const r = await fetch(`${API_BASE}/api/wins`); if(!r.ok) return null; return await r.json(); } catch(e){ return null; } }
+function renderWins(data){
+  const myTag = tagOf(playerId);
+  let html = '';
+  if (!data || !data.champions)    html += `<div class="msg">Leaderboard offline.</div>`;
+  else if (!data.champions.length) html += `<div class="msg">No champions yet — win a daily to be the first! 👑</div>`;
+  else data.champions.forEach((c,i)=>{
+    const me = (c.tag === myTag) ? ' me' : '';
+    html += `<div class="row${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(c.name)}<span class="tag">#${c.tag}</span></span><span class="sc">${c.wins} 🏆</span></div>`;
+  });
+  lbBody.innerHTML = html;
+}
+async function showTab(){
+  document.getElementById('tabToday').classList.toggle('active', lbTab==='today');
+  document.getElementById('tabWins').classList.toggle('active', lbTab==='wins');
+  document.getElementById('lbTitle').textContent = lbTab==='today' ? `DAILY · DAY ${dayNumber}` : 'ALL-TIME WINS';
+  lbBody.innerHTML = '<div class="msg">Loading…</div>';
+  if (lbTab==='today') renderLB(await fetchScores(dayNumber));
+  else                 renderWins(await fetchWins());
+}
+function setTab(t){ lbTab = t; showTab(); }
+async function openLeaderboard(){ lbOpen = true; lbEl.classList.add('open'); lbTab = 'today'; showTab(); }
+function closeLeaderboard(){ lbOpen = false; lbEl.classList.remove('open'); }
+document.getElementById('lbClose').addEventListener('click', closeLeaderboard);
+document.getElementById('lbOpenBtn').addEventListener('click', openLeaderboard);
+document.getElementById('tabToday').addEventListener('click', ()=>setTab('today'));
+document.getElementById('tabWins').addEventListener('click', ()=>setTab('wins'));
+lbEl.addEventListener('click', e => { if (e.target === lbEl) closeLeaderboard(); });
+
+// ---------- rewarded "continue" (Free Play only) ----------
+const reviveBtn = document.getElementById('reviveBtn');
+// TODO: plug in a real rewarded-video SDK here. AdSense does NOT support rewarded
+// ads — use Google AdMob (mobile app), Google Ad Manager rewarded, or an HTML5
+// game ad network (GameMonetize, AdinPlay, etc.). Call onReward() ONLY when the
+// ad finishes; call nothing (and re-enable the button) if the user skips/closes.
+// A rewarded provider is "available" if the gate flag is on OR the host app has
+// injected window.OMS_showRewarded (e.g. the AdMob/Capacitor wrapper — see MOBILE.md).
+function rewardedAvailable(){ return REWARDED_ENABLED || typeof window.OMS_showRewarded === 'function'; }
+function showRewardedAd(onReward){
+  if (adShowing) return;
+  adShowing = true;
+  reviveBtn.textContent = 'Loading ad…'; reviveBtn.disabled = true;
+  const done = (rewarded) => {
+    adShowing = false; reviveBtn.disabled = false; reviveBtn.textContent = '▶ Continue · Ad';
+    if (rewarded) onReward();           // only revive if the ad actually completed
+  };
+  // Preferred path: a real rewarded provider injected by the host app.
+  // It should return a Promise<boolean> (true = watched to completion).
+  if (typeof window.OMS_showRewarded === 'function'){
+    Promise.resolve(window.OMS_showRewarded()).then(done).catch(() => done(false));
+    return;
+  }
+  // Dev-only placeholder (reachable only when REWARDED_ENABLED=true with no provider wired).
+  setTimeout(() => done(true), 800);
+}
+reviveBtn.addEventListener('click', () => showRewardedAd(revive));
+
+// ---------- AdSense game-over display ad (passive; both modes) ----------
+// Inert until ADS_ENABLED + IDs are set in the MONETIZATION CONFIG above.
+// The AdSense library + verification meta are loaded STATICALLY in <head>
+// (AdSense's verifier reads raw HTML and doesn't run JS, so the tag must be static).
+const gameoverAd = document.getElementById('gameoverAd');
+let lastAdAt = 0;
+function showGameOverAd(){
+  if (!ADS_ENABLED || !ADSENSE_CLIENT || !ADSENSE_SLOT) return;
+  const now = Date.now();
+  // frequency cap: reuse the existing ad unless enough time has passed
+  if (gameoverAd.childElementCount && now - lastAdAt < AD_MIN_INTERVAL){ gameoverAd.classList.add('show'); return; }
+  lastAdAt = now;
+  gameoverAd.innerHTML =
+    `<ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}" ` +
+    `data-ad-slot="${ADSENSE_SLOT}" data-ad-format="auto" data-full-width-responsive="false"></ins>`;
+  gameoverAd.classList.add('show');
+  try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
+}
+function hideGameOverAd(){ gameoverAd.classList.remove('show'); }
+
+// ---------- render ----------
+function sx(x){ return x - cameraX; }
+
+let stars = null;
+function makeStars(){
+  stars = [];
+  for (let i=0;i<140;i++)
+    stars.push({ x:Math.random(), y:Math.random(), r:Math.random()*1.5+0.4, par:Math.random()*0.35+0.05, ph:Math.random()*6.28 });
+}
+const EMOTES = ['💜','😂','🔥','🎮','👾','💀','⭐','🗿','😎','🎉','👀','💯'];
+let emotes = null;
+function makeEmotes(){
+  emotes = [];
+  for (let i=0;i<16;i++)
+    emotes.push({ x:Math.random(), y:Math.random(), ch:EMOTES[(Math.random()*EMOTES.length)|0],
+                  size:18+Math.random()*16, spd:0.3+Math.random()*0.6, ph:Math.random()*6.28 });
+}
+function drawBackground(){
+  if (TH().bg === 'space'){
+    ctx.fillStyle = '#05070d'; ctx.fillRect(0,0,W,H);
+    let neb = ctx.createRadialGradient(W*0.72,H*0.28,0, W*0.72,H*0.28,H*0.85);
+    neb.addColorStop(0,'rgba(52,211,153,0.10)'); neb.addColorStop(1,'rgba(52,211,153,0)');
+    ctx.fillStyle = neb; ctx.fillRect(0,0,W,H);
+    neb = ctx.createRadialGradient(W*0.2,H*0.78,0, W*0.2,H*0.78,H*0.7);
+    neb.addColorStop(0,'rgba(120,90,220,0.08)'); neb.addColorStop(1,'rgba(120,90,220,0)');
+    ctx.fillStyle = neb; ctx.fillRect(0,0,W,H);
+    if (!stars) makeStars();
+    const t = performance.now()/1000;
+    ctx.fillStyle = '#dfe8ff';
+    for (const s of stars){
+      const px = ((s.x*W - cameraX*s.par) % W + W) % W;   // parallax wrap
+      ctx.globalAlpha = 0.35 + 0.5*Math.max(0, Math.sin(t*2 + s.ph));
+      ctx.beginPath(); ctx.arc(px, s.y*H, s.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  } else if (TH().bg === 'vapor'){
+    // vaporwave sunset (dark up top where the HUD sits, neon pink toward the horizon)
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#241046'); g.addColorStop(0.42,'#5b1a8a');
+    g.addColorStop(0.6,'#ff6ad5'); g.addColorStop(0.74,'#ff8c6b'); g.addColorStop(1,'#190a2e');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    // banded retro sun
+    const sunY = H*0.58, sunR = H*0.17;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(W*0.5, sunY, sunR, 0, Math.PI*2); ctx.clip();
+    const sg = ctx.createLinearGradient(0, sunY-sunR, 0, sunY+sunR);
+    sg.addColorStop(0,'#fff07a'); sg.addColorStop(1,'#ff5dae');
+    ctx.fillStyle = sg; ctx.fillRect(W*0.5-sunR, sunY-sunR, sunR*2, sunR*2);
+    ctx.fillStyle = '#190a2e';
+    for (let i=0;i<7;i++){ const by = sunY + 2 + i*7; ctx.fillRect(W*0.5-sunR, by, sunR*2, 2+i); }
+    ctx.restore();
+    // neon perspective grid floor
+    const horizon = H*0.66;
+    ctx.strokeStyle = 'rgba(45,226,230,0.35)'; ctx.lineWidth = 1;
+    for (let i=1;i<=10;i++){ const t=i/10, y=horizon+(H-horizon)*t*t;
+      ctx.globalAlpha = 0.45*(1-t)+0.1; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+    const vp = W*0.5, off = (cameraX*0.25) % 70;
+    for (let i=-14;i<=14;i++){ const x = vp + i*70 - off;
+      ctx.beginPath(); ctx.moveTo(vp, horizon); ctx.lineTo(vp + (x-vp)*4, H); ctx.stroke(); }
+  } else if (TH().bg === 'unicorn'){
+    // dreamy pink/purple with rainbow sparkles
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#1f0b22'); g.addColorStop(1,'#2c0f30');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    let r = ctx.createRadialGradient(W*0.3,H*0.3,0, W*0.3,H*0.3,H*0.75);
+    r.addColorStop(0,'rgba(255,120,200,0.16)'); r.addColorStop(1,'rgba(255,120,200,0)');
+    ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r = ctx.createRadialGradient(W*0.76,H*0.62,0, W*0.76,H*0.62,H*0.65);
+    r.addColorStop(0,'rgba(150,120,255,0.14)'); r.addColorStop(1,'rgba(150,120,255,0)');
+    ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    if (!stars) makeStars();
+    const t = performance.now()/1000;
+    for (const s of stars){
+      const px = ((s.x*W - cameraX*s.par) % W + W) % W, py = s.y*H;
+      const a = 0.35 + 0.5*Math.max(0, Math.sin(t*2 + s.ph)), rr = s.r*1.8;
+      ctx.globalAlpha = a; ctx.fillStyle = `hsl(${(s.ph*57 + t*18)%360},100%,80%)`;
+      ctx.beginPath();                                   // 4-point sparkle
+      ctx.moveTo(px,py-rr); ctx.lineTo(px+rr*0.28,py); ctx.lineTo(px,py+rr); ctx.lineTo(px-rr*0.28,py); ctx.closePath();
+      ctx.moveTo(px-rr,py); ctx.lineTo(px,py+rr*0.28); ctx.lineTo(px+rr,py); ctx.lineTo(px,py-rr*0.28); ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  } else if (TH().bg === 'cyber'){
+    // neon-noir cityscape
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#0a0a18'); g.addColorStop(0.55,'#1a0e2e'); g.addColorStop(1,'#06060f');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.25,H*0.32,0,W*0.25,H*0.32,H*0.6);
+    r.addColorStop(0,'rgba(255,46,151,0.16)'); r.addColorStop(1,'rgba(255,46,151,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.8,H*0.5,0,W*0.8,H*0.5,H*0.55);
+    r.addColorStop(0,'rgba(0,224,255,0.12)'); r.addColorStop(1,'rgba(0,224,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    const baseY=H*0.74, tile=120, off=((cameraX*0.3)%tile+tile)%tile, n0=Math.floor((cameraX*0.3)/tile);
+    for(let i=-1;i<W/tile+2;i++){
+      const seed=n0+i, bh=70+((seed*97)%140), bx=i*tile-off;
+      ctx.fillStyle='#0c0c1e'; ctx.fillRect(bx, baseY-bh, tile-16, bh+(H-baseY));
+      ctx.fillStyle='rgba(0,224,255,0.45)';
+      let col=0;
+      for(let wx=bx+6; wx<bx+tile-24; wx+=14, col++){ let row=0;
+        for(let wy=baseY-bh+10; wy<baseY-8; wy+=15, row++){ if(((seed*31+col*7+row*13)%5)<2) ctx.fillRect(wx,wy,4,6); } }
+    }
+  } else if (TH().bg === 'y2k'){
+    // digital glitch / chrome
+    ctx.fillStyle='#0b0f1a'; ctx.fillRect(0,0,W,H);
+    let g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'rgba(0,224,255,0.06)'); g.addColorStop(0.5,'rgba(170,170,210,0.05)'); g.addColorStop(1,'rgba(255,0,160,0.06)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,0.03)';
+    for(let y=0;y<H;y+=4) ctx.fillRect(0,y,W,1);
+    const t=performance.now();
+    for(let i=0;i<8;i++){
+      const seed=Math.floor(t/110)+i*53, gx=(seed*131)%W, gy=(seed*197)%H, gw=20+((seed*7)%170), gh=4+((seed*3)%16);
+      ctx.fillStyle=['rgba(0,224,255,0.18)','rgba(255,0,160,0.18)','rgba(57,255,20,0.14)'][seed%3];
+      ctx.fillRect(gx,gy,gw,gh);
+      ctx.fillStyle='rgba(255,0,160,0.10)'; ctx.fillRect(gx+3,gy,gw,gh);
+    }
+  } else if (TH().bg === 'synthwave'){
+    // outrun night drive
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#08010f'); g.addColorStop(0.45,'#2a0a4a'); g.addColorStop(0.6,'#ff2d95'); g.addColorStop(0.65,'#3a0a2e'); g.addColorStop(1,'#0a0118');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    if(!stars) makeStars();
+    const t=performance.now()/1000; ctx.fillStyle='#ffd6f5';
+    for(const s of stars){ if(s.y>0.5) continue; const px=((s.x*W - cameraX*s.par)%W+W)%W;
+      ctx.globalAlpha=0.35+0.4*Math.max(0,Math.sin(t*2+s.ph)); ctx.beginPath(); ctx.arc(px,s.y*H*0.9,s.r,0,Math.PI*2); ctx.fill(); }
+    ctx.globalAlpha=1;
+    const horizon=H*0.62;
+    ctx.strokeStyle='#ffcf3a'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(W*0.5,horizon,H*0.15,Math.PI,0); ctx.stroke();
+    ctx.strokeStyle='rgba(255,45,149,0.5)'; ctx.lineWidth=1;
+    for(let i=1;i<=12;i++){ const tt=i/12, y=horizon+(H-horizon)*tt*tt; ctx.globalAlpha=0.5*(1-tt)+0.1; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    ctx.globalAlpha=1;
+    const vp=W*0.5, off=(cameraX*0.3)%60;
+    for(let i=-16;i<=16;i++){ const x=vp+i*60-off; ctx.beginPath(); ctx.moveTo(vp,horizon); ctx.lineTo(vp+(x-vp)*4,H); ctx.stroke(); }
+  } else if (TH().bg === 'biopunk'){
+    // bioluminescent organic
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#04120c'); g.addColorStop(1,'#08160f');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.3,H*0.6,0,W*0.3,H*0.6,H*0.7);
+    r.addColorStop(0,'rgba(61,255,160,0.12)'); r.addColorStop(1,'rgba(61,255,160,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.75,H*0.3,0,W*0.75,H*0.3,H*0.6);
+    r.addColorStop(0,'rgba(0,200,180,0.10)'); r.addColorStop(1,'rgba(0,200,180,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    if(!stars) makeStars();
+    const t=performance.now()/1000;
+    for(const s of stars){
+      const px=((s.x*W - cameraX*s.par - t*8*s.par)%W+W)%W, py=s.y*H+Math.sin(t*0.5+s.ph)*8;
+      ctx.fillStyle='#5dffb0'; ctx.globalAlpha=0.12+0.16*Math.max(0,Math.sin(t+s.ph));
+      ctx.beginPath(); ctx.arc(px,py,s.r*3,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=0.4+0.4*Math.max(0,Math.sin(t+s.ph));
+      ctx.beginPath(); ctx.arc(px,py,s.r*1.2,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  } else if (TH().bg === 'kawaii'){
+    // soft dreamy pastel with clouds
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#2b2750'); g.addColorStop(1,'#4a2f55');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.3,H*0.35,0,W*0.3,H*0.35,H*0.7);
+    r.addColorStop(0,'rgba(169,199,255,0.12)'); r.addColorStop(1,'rgba(169,199,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.7,H*0.6,0,W*0.7,H*0.6,H*0.6);
+    r.addColorStop(0,'rgba(255,180,220,0.12)'); r.addColorStop(1,'rgba(255,180,220,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    const t=performance.now()/1000;
+    ctx.fillStyle='rgba(255,225,245,0.09)';
+    for(let i=0;i<5;i++){
+      const cx=((i*240 - cameraX*0.15 - t*6)%(W+220)+(W+220))%(W+220)-110, cy=H*(0.18+0.14*i)+Math.sin(t*0.4+i)*6;
+      ctx.beginPath(); ctx.ellipse(cx,cy,46,20,0,0,Math.PI*2); ctx.ellipse(cx+28,cy+4,32,16,0,0,Math.PI*2); ctx.ellipse(cx-28,cy+4,30,15,0,0,Math.PI*2); ctx.fill();
+    }
+    if(!stars) makeStars();
+    for(const s of stars){ if(s.x>0.6) continue; const px=((s.x*W - cameraX*s.par)%W+W)%W;
+      ctx.globalAlpha=0.3+0.4*Math.max(0,Math.sin(t*1.5+s.ph)); ctx.fillStyle=s.ph>3?'#ffc2e2':'#bcd3ff';
+      ctx.beginPath(); ctx.arc(px,s.y*H,s.r,0,Math.PI*2); ctx.fill(); }
+    ctx.globalAlpha=1;
+  } else if (TH().bg === 'solar'){
+    // hopeful eco-future
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#16321f'); g.addColorStop(0.6,'#1d3a22'); g.addColorStop(1,'#0e2417');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.6,H*0.2,0,W*0.6,H*0.2,H*0.85);
+    r.addColorStop(0,'rgba(255,213,107,0.16)'); r.addColorStop(1,'rgba(255,213,107,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.2,H*0.7,0,W*0.2,H*0.7,H*0.6);
+    r.addColorStop(0,'rgba(120,230,140,0.10)'); r.addColorStop(1,'rgba(120,230,140,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    if(!stars) makeStars();
+    const t=performance.now()/1000; ctx.fillStyle='#ffe9a8';
+    for(const s of stars){ const px=((s.x*W - cameraX*s.par - t*5*s.par)%W+W)%W, py=s.y*H+Math.sin(t*0.4+s.ph)*10;
+      ctx.globalAlpha=0.22+0.4*Math.max(0,Math.sin(t+s.ph)); ctx.beginPath(); ctx.arc(px,py,s.r,0,Math.PI*2); ctx.fill(); }
+    ctx.globalAlpha=1;
+    ctx.fillStyle='rgba(8,28,17,0.9)';
+    const base=H*0.93, lt=90, loff=((cameraX*0.25)%lt+lt)%lt;
+    for(let i=-1;i<W/lt+2;i++){ const lx=i*lt-loff; ctx.beginPath(); ctx.moveTo(lx,H); ctx.quadraticCurveTo(lx+lt*0.3, base-26, lx+lt*0.5, base); ctx.quadraticCurveTo(lx+lt*0.7, base-26, lx+lt, H); ctx.fill(); }
+  } else if (TH().bg === 'twitch'){
+    // stream purple with drifting chat-emote spam
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#160d28'); g.addColorStop(1,'#0e0a18');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.3,H*0.3,0,W*0.3,H*0.3,H*0.7);
+    r.addColorStop(0,'rgba(145,70,255,0.16)'); r.addColorStop(1,'rgba(145,70,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.75,H*0.65,0,W*0.75,H*0.65,H*0.6);
+    r.addColorStop(0,'rgba(188,120,255,0.10)'); r.addColorStop(1,'rgba(188,120,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    if (!emotes) makeEmotes();
+    const t = performance.now()/1000;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    for (const e of emotes){
+      const yy = ((e.y - t*e.spd*0.05) % 1 + 1) % 1;       // float upward, wrap
+      const px = e.x*W + Math.sin(t*0.5 + e.ph)*14;
+      let a = 0.5;
+      if (yy < 0.15) a *= yy/0.15;                         // fade out near top
+      if (yy > 0.9)  a *= (1-yy)/0.1;                       // fade in near bottom
+      ctx.globalAlpha = a; ctx.font = `${e.size}px sans-serif`;
+      ctx.fillText(e.ch, px, yy*H);
+    }
+    ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
+  } else {
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#0d1117'); g.addColorStop(1,'#161b22');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
+}
+
+function draw(){
+  drawBackground();
+
+  const target = (state==='flying' || state==='landed') ? pickTarget() : null;
+  const deathY = H*K.DEATH_FRAC;
+  const wLeft  = camX - (W*K.CAM_X_ANCHOR)/zoom - 60;
+  const wRight = camX + (W*(1-K.CAM_X_ANCHOR))/zoom + 60;
+
+  // ===== WORLD (camera zoom + screen shake) =====
+  ctx.save();
+  ctx.translate(W*K.CAM_X_ANCHOR + shakeX, H*0.5 + shakeY);
+  ctx.scale(zoom, zoom);
+  ctx.translate(-camX, -H*0.5);
+
+  // death zone
+  ctx.fillStyle = 'rgba(248,81,73,0.09)';
+  ctx.fillRect(wLeft, deathY, wRight-wLeft, H);
+  ctx.strokeStyle = 'rgba(248,81,73,0.55)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(wLeft,deathY); ctx.lineTo(wRight,deathY); ctx.stroke();
+
+  // safe bank platforms (and the gold finish pad)
+  for (const pl of platforms){
+    if (pl.x > wRight || pl.x + pl.w < wLeft) continue;
+    if (pl.finish){
+      ctx.fillStyle = '#e3b341'; ctx.fillRect(pl.x, pl.y, pl.w, 12);
+      ctx.fillStyle = 'rgba(255,217,94,0.4)'; ctx.fillRect(pl.x, pl.y, pl.w, 4);
+    } else {
+      ctx.fillStyle = '#238636'; ctx.fillRect(pl.x, pl.y, pl.w, 12);
+      ctx.fillStyle = 'rgba(63,185,80,0.35)'; ctx.fillRect(pl.x, pl.y, pl.w, 4);
+      ctx.fillStyle = 'rgba(63,185,80,0.85)'; ctx.font = '700 11px ui-sans-serif, system-ui';
+      ctx.textAlign = 'center'; ctx.fillText('BANK', pl.x + pl.w/2, pl.y - 7);
+    }
+  }
+
+  // daily finish line
+  if (finishX !== null && finishX > wLeft && finishX < wRight){
+    ctx.strokeStyle = '#ffd95e'; ctx.lineWidth = 3; ctx.setLineDash([9,7]);
+    ctx.beginPath(); ctx.moveTo(finishX, 46); ctx.lineTo(finishX, deathY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffd95e'; ctx.font = '800 15px ui-sans-serif, system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('FINISH', finishX, 38);
+  }
+
+  // anchors
+  for (const a of anchors){
+    if (a.x < wLeft || a.x > wRight) continue;
+    const isTarget = a === target;
+    ctx.beginPath(); ctx.arc(a.x, a.y, isTarget?9:6, 0, Math.PI*2);
+    ctx.fillStyle = a===anchor ? TH().accent
+                  : a.got      ? '#3b4655'
+                  : a.launch   ? '#3fb950'   // relaunch peg above a platform
+                  : '#7d8590';
+    ctx.fill();
+    if (isTarget){
+      ctx.beginPath(); ctx.arc(a.x, a.y, 15, 0, Math.PI*2);
+      ctx.strokeStyle = `rgba(${TH().rgb},0.7)`; ctx.lineWidth = 2; ctx.stroke();
+    }
+    if (debug){
+      ctx.beginPath(); ctx.arc(a.x, a.y, K.GRAPPLE_RANGE, 0, Math.PI*2);
+      ctx.strokeStyle='rgba(125,133,144,0.06)'; ctx.lineWidth=1; ctx.stroke();
+    }
+  }
+
+  // target preview line
+  if (target){
+    ctx.setLineDash([4,6]); ctx.strokeStyle=`rgba(${TH().rgb},0.5)`; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(target.x,target.y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // rope
+  if (state==='swinging' && anchor){
+    ctx.strokeStyle='#8b949e'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(anchor.x,anchor.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+  }
+
+  // trail (equipped style)
+  for (let i=0;i<trail.length;i++){
+    const t = trail[i], al = i/trail.length;
+    ctx.beginPath(); ctx.arc(t.x, t.y, 2 + al*7, 0, Math.PI*2);
+    ctx.fillStyle = trailColor(al, al*0.30); ctx.fill();
+  }
+
+  // particles (grab / bank / death bursts)
+  for (const q of particles){
+    ctx.globalAlpha = Math.max(0, q.life);
+    ctx.beginPath(); ctx.arc(q.x, q.y, 1 + q.life*4, 0, Math.PI*2);
+    ctx.fillStyle = q.color; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // player (equipped orb skin, with glow)
+  if (state!=='dead'){
+    const [oc, ic] = orbColors();
+    ctx.globalAlpha = 0.45; ctx.beginPath(); ctx.arc(p.x, p.y, 17, 0, Math.PI*2);
+    ctx.fillStyle = oc; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, Math.PI*2); ctx.fillStyle = oc; ctx.fill();
+    if (equipped.orb === 'smiley'){
+      ctx.fillStyle = '#1a1206';
+      ctx.beginPath(); ctx.arc(p.x-3.6, p.y-3, 1.7, 0, Math.PI*2); ctx.fill();   // eyes
+      ctx.beginPath(); ctx.arc(p.x+3.6, p.y-3, 1.7, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#1a1206'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';   // smile
+      ctx.beginPath(); ctx.arc(p.x, p.y+1, 5, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
+    } else if (equipped.orb === 'eye'){
+      const vx = p.x - prevP.x, vy = p.y - prevP.y, m = Math.hypot(vx, vy) || 1;
+      const ox = (vx/m)*3.4, oy = (vy/m)*3.4;            // pupil glances toward motion
+      ctx.fillStyle = '#2f80ed'; ctx.beginPath(); ctx.arc(p.x+ox, p.y+oy, 4.6, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0b0e14'; ctx.beginPath(); ctx.arc(p.x+ox, p.y+oy, 2.3, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(p.x+ox-1.2, p.y+oy-1.2, 1.0, 0, Math.PI*2); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fillStyle = ic; ctx.fill();
+    }
+  }
+
+  // debug velocity vector (world)
+  if (debug){
+    const vx = (p.x-prevP.x)/DT, vy = (p.y-prevP.y)/DT;
+    ctx.strokeStyle='#f0883e'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+vx*0.12, p.y+vy*0.12); ctx.stroke();
+  }
+
+  // floating score popups (world space, so they ride the camera)
+  for (let i = popups.length - 1; i >= 0; i--){
+    const f = popups[i];
+    if (!paused){ f.age++; f.y -= 0.7; }
+    const al = Math.max(0, 1 - f.age/95);
+    if (al <= 0){ popups.splice(i,1); continue; }
+    ctx.globalAlpha = al; ctx.textAlign = 'center'; ctx.fillStyle = f.color;
+    ctx.font = `${f.big ? 800 : 600} ${f.big ? 20 : 14}px ui-sans-serif, system-ui`;
+    ctx.fillText(f.text, f.x, f.y);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+  // ===== end WORLD =====
+
+  // escalating "heat" — edge glow intensifies as the multiplier climbs
+  const heat = Math.min((mult-1)/10, 1);
+  if (heat > 0.02){
+    const rg = ctx.createRadialGradient(W/2,H/2, H*0.30, W/2,H/2, H*0.85);
+    rg.addColorStop(0, 'rgba(0,0,0,0)');
+    rg.addColorStop(1, `rgba(${TH().rgb},${0.22*heat})`);
+    ctx.fillStyle = rg; ctx.fillRect(0,0,W,H);
+  }
+
+  // HUD — banked score (top-left). Compact on phones, fuller on desktop.
+  const small = W < 600;
+  ctx.textAlign = 'left';
+  if (small){
+    ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
+    ctx.font = '800 10px ui-sans-serif, system-ui'; ctx.letterSpacing = '1px';
+    ctx.fillText(mode==='daily' ? `DAY ${dayNumber} · ${fmtTime(runTime)}` : 'FREE PLAY', 14, 21);
+    ctx.letterSpacing = '0px';
+    ctx.fillStyle = '#e6edf3'; ctx.font = '800 23px ui-sans-serif, system-ui';
+    ctx.fillText(fmt(total), 13, 46);
+    let yy = 65;
+    if (pending > 0){
+      ctx.fillStyle = TH().accent; ctx.font = '600 13px ui-sans-serif, system-ui';
+      ctx.fillText(`+${fmt(pending)} at risk`, 14, yy); yy += 17;
+    }
+    ctx.fillStyle = '#ffd95e'; ctx.font = '700 11px ui-sans-serif, system-ui';
+    ctx.fillText(`★ ${fmt(best)}`, 14, yy);
+  } else {
+    ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
+    ctx.font = '800 12px ui-sans-serif, system-ui'; ctx.letterSpacing = '1px';
+    ctx.fillText(mode==='daily' ? `DAILY · DAY ${dayNumber} · ${fmtTime(runTime)}` : 'FREE PLAY', 21, 28);
+    ctx.letterSpacing = '0px';
+    ctx.fillStyle = '#8b949e'; ctx.font = '11px ui-sans-serif, system-ui';
+    ctx.fillText('BANKED', 22, 52);
+    ctx.fillStyle = '#e6edf3'; ctx.font = '800 30px ui-sans-serif, system-ui';
+    ctx.fillText(fmt(total), 20, 80);
+    if (pending > 0){
+      ctx.fillStyle = TH().accent; ctx.font = '600 15px ui-sans-serif, system-ui';
+      ctx.fillText(`+${fmt(pending)} at risk`, 21, 102);
+    }
+    ctx.fillStyle = '#6e7681'; ctx.font = '12px ui-sans-serif, system-ui';
+    ctx.fillText(`${dist} m  ·  run ${runCount}`, 21, 122);
+    ctx.fillStyle = '#ffd95e'; ctx.font = '800 15px ui-sans-serif, system-ui';
+    ctx.fillText(`★ BEST  ${fmt(best)}`, 21, 144);
+    ctx.fillStyle = '#c9a227'; ctx.font = '600 13px ui-sans-serif, system-ui';
+    ctx.fillText(`${fmt(coins)} coins`, 21, 166);
+  }
+
+  // daily progress bar (thin, top edge) — shows how far through the route you are
+  if (mode === 'daily' && finishX !== null && state !== 'finished'){
+    const prog = Math.max(0, Math.min(1, (p.x - 320) / (finishX - 320)));
+    ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(0, 0, W, 3);
+    ctx.fillStyle = TH().accent; ctx.fillRect(0, 0, W * prog, 3);
+  }
+
+  // multiplier — huge & pulsing, glowing hotter with greed
+  if (state!=='dead' && state!=='finished'){
+    const big = mult > 1;
+    const pulse = big ? 1 + 0.05*Math.sin(performance.now()/90) + heat*0.12 : 1;
+    ctx.save();
+    ctx.translate(W/2, 100); ctx.scale(pulse, pulse);
+    ctx.textAlign='center';
+    ctx.font = `800 ${24 + Math.min((mult-1)*9, 36)}px ui-sans-serif, system-ui`;
+    ctx.fillStyle = big ? TH().accent : '#6e7681';
+    if (big){ ctx.shadowColor = TH().accent; ctx.shadowBlur = 8 + 22*heat; }
+    ctx.fillText(`×${mult.toFixed(1)}`, 0, 0);
+    ctx.restore();
+    ctx.shadowBlur = 0;
+  }
+
+  // debug overlay (text; the velocity vector is drawn in the world layer)
+  if (debug){
+    const vx = (p.x-prevP.x)/DT, vy = (p.y-prevP.y)/DT;
+    ctx.fillStyle='#f0883e'; ctx.font='12px monospace'; ctx.textAlign='left';
+    ctx.fillText(`|v|=${Math.hypot(vx,vy)|0}  zoom=${zoom.toFixed(2)}  state=${state}  parts=${particles.length}`, 20, H-20);
+  }
+
+  // death overlay
+  if (state==='dead'){
+    ctx.fillStyle='rgba(13,17,23,0.80)'; ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center';
+    ctx.fillStyle='#e6edf3'; ctx.font='700 34px ui-sans-serif, system-ui';
+    ctx.fillText('Run over', W/2, H/2 - 100);
+    ctx.fillStyle='#8b949e'; ctx.font='600 13px ui-sans-serif, system-ui'; ctx.letterSpacing = '2px';
+    ctx.fillText('SCORE', W/2, H/2 - 52);
+    ctx.letterSpacing = '0px';
+    ctx.fillStyle='#e6edf3'; ctx.font='800 52px ui-sans-serif, system-ui';
+    ctx.fillText(fmt(total), W/2, H/2 + 8);
+    if (pending > 0){
+      ctx.fillStyle='#f85149'; ctx.font='600 17px ui-sans-serif, system-ui';
+      ctx.fillText(`${fmt(pending)} unbanked — should've banked!`, W/2, H/2 + 48);
+    }
+    ctx.fillStyle=TH().accent; ctx.font='600 16px ui-sans-serif, system-ui';
+    ctx.fillText('press / tap / Space to swing again', W/2, H/2 + 94);
+  }
+
+  // daily finish overlay
+  if (state==='finished'){
+    ctx.fillStyle='rgba(13,17,23,0.82)'; ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center';
+    ctx.fillStyle='#3fb950'; ctx.font='800 22px ui-sans-serif, system-ui'; ctx.letterSpacing='1px';
+    ctx.fillText('DAILY COMPLETE', W/2, H/2 - 100); ctx.letterSpacing='0px';
+    ctx.fillStyle='#8b949e'; ctx.font='600 13px ui-sans-serif, system-ui'; ctx.letterSpacing='2px';
+    ctx.fillText(`DAY ${dayNumber} · SCORE`, W/2, H/2 - 52); ctx.letterSpacing='0px';
+    ctx.fillStyle='#e6edf3'; ctx.font='800 52px ui-sans-serif, system-ui';
+    ctx.fillText(fmt(total), W/2, H/2 + 8);
+    ctx.fillStyle='#8b949e'; ctx.font='600 14px ui-sans-serif, system-ui';
+    ctx.fillText(`Finished in ${fmtTime(finishTime)}   ·   +${fmt(finishBonus)} time bonus`, W/2, H/2 + 44);
+    ctx.fillStyle=TH().accent; ctx.font='600 16px ui-sans-serif, system-ui';
+    ctx.fillText('press / tap / Space to replay', W/2, H/2 + 94);
+  }
+
+  // pause overlay
+  if (paused && state!=='dead' && state!=='finished'){
+    ctx.fillStyle='rgba(13,17,23,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center'; ctx.fillStyle='#e6edf3';
+    ctx.font='700 38px ui-sans-serif, system-ui';
+    ctx.fillText('Paused', W/2, H/2 - 6);
+    ctx.fillStyle='#8b949e'; ctx.font='15px ui-sans-serif, system-ui';
+    ctx.fillText('press P or the ❚❚ button to resume', W/2, H/2 + 26);
+  }
+}
+
+// ---------- loop ----------
+let last = performance.now(), acc = 0;
+function frame(now){
+  let ft = (now-last)/1000; last = now;
+  if (!paused && !shopOpen && !lbOpen){
+    let timeScale = 1;
+    if      (freezeFrames > 0){ freezeFrames--; timeScale = 0;   }  // hit-pause: full freeze
+    else if (slowmoFrames > 0){ slowmoFrames--; timeScale = 0.4; }  // clutch slow-mo
+    ft = Math.min(ft, 0.25); acc += ft * timeScale;
+    let steps = 0;
+    while (acc >= DT && steps < 5){ physics(); acc -= DT; steps++; }
+    updateCamera();
+  } else {
+    acc = 0;   // don't fast-forward simulation on resume
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+loadGame();
+newRun();
+syncUI();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
