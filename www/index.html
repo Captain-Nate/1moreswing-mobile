@@ -598,8 +598,9 @@ function ensureWorld(){
       anchors.push({ x: genX, y: nextY(), got:false });
     }
   }
-  while (anchors.length  && anchors[0].x  < cameraX - 200) anchors.shift();
-  while (platforms.length && platforms[0].x + platforms[0].w < cameraX - 200) platforms.shift();
+  // Anchors & platforms are kept persistent (they no longer vanish once you pass them).
+  // The draw loop already skips off-screen items and pickTarget runs over a small list
+  // even on long runs, so the memory/CPU cost is negligible in practice.
 }
 
 function newRun(){
@@ -1518,16 +1519,24 @@ function draw(){
   ctx.strokeStyle = 'rgba(248,81,73,0.55)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(wLeft,deathY); ctx.lineTo(wRight,deathY); ctx.stroke();
 
-  // safe bank platforms (and the gold finish pad)
+  // safe bank platforms (and the gold finish pad) — glowing, rounded, with a top highlight
   for (const pl of platforms){
     if (pl.x > wRight || pl.x + pl.w < wLeft) continue;
-    if (pl.finish){
-      ctx.fillStyle = '#e3b341'; ctx.fillRect(pl.x, pl.y, pl.w, 12);
-      ctx.fillStyle = 'rgba(255,217,94,0.4)'; ctx.fillRect(pl.x, pl.y, pl.w, 4);
-    } else {
-      ctx.fillStyle = '#238636'; ctx.fillRect(pl.x, pl.y, pl.w, 12);
-      ctx.fillStyle = 'rgba(63,185,80,0.35)'; ctx.fillRect(pl.x, pl.y, pl.w, 4);
-      ctx.fillStyle = 'rgba(63,185,80,0.85)'; ctx.font = '700 11px ui-sans-serif, system-ui';
+    const isFinish = !!pl.finish;
+    const body = isFinish ? '#e3b341' : '#2ea043';
+    const glow = isFinish ? '#ffd95e' : '#3fb950';
+    const top  = isFinish ? 'rgba(255,240,170,0.65)' : 'rgba(120,230,140,0.6)';
+    ctx.save();
+    ctx.shadowColor = glow; ctx.shadowBlur = 16;            // soft glow (2 passes to read clearly)
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 12, 4); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 12, 4); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = top;                                    // bright top edge
+    ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 3.5, 2); ctx.fill();
+    ctx.restore();
+    if (!isFinish){
+      ctx.fillStyle = 'rgba(63,185,80,0.95)'; ctx.font = '700 11px ui-sans-serif, system-ui';
       ctx.textAlign = 'center'; ctx.fillText('BANK', pl.x + pl.w/2, pl.y - 7);
     }
   }
