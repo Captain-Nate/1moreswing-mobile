@@ -166,6 +166,24 @@
     background:rgba(22,27,34,.92); color:#e6edf3; font-weight:700; font-size:14px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; }
   #toTitleBtn.show { display:block; }
+
+  /* ---- in-app About / Privacy pages ---- */
+  #info { position:fixed; inset:0; z-index:22; display:none;
+    background:rgba(8,11,16,.82); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
+  #info.open { display:flex; }
+  #info .panel { width:min(460px,92vw); max-height:84vh; overflow:hidden; display:flex; flex-direction:column;
+    background:#0f141b; border:1px solid #30363d; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  #info .shead { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #21262d; }
+  #info .shead h2 { margin:0; font-size:15px; letter-spacing:1px; color:#e6edf3; }
+  #infoClose { width:32px; height:32px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#e6edf3; cursor:pointer; font-size:16px; }
+  #infoBody { padding:4px 20px 22px; overflow-y:auto; color:#c9d1d9; font-size:14px; line-height:1.55; }
+  #infoBody h3 { color:#e6edf3; font-size:19px; margin:18px 0 6px; }
+  #infoBody h4 { color:#e6edf3; font-size:14px; margin:16px 0 4px; }
+  #infoBody p { margin:6px 0; }
+  #infoBody ul { margin:6px 0; padding-left:20px; }
+  #infoBody li { margin:3px 0; }
+  #infoBody a { color:var(--accent,#58a6ff); }
+  #infoBody .muted { color:#8b949e; font-size:12.5px; }
 </style>
 </head>
 <body>
@@ -190,9 +208,16 @@
   <p class="tagline">Swing &middot; skip &middot; bank &middot; don't fall</p>
   <button id="playBtn">&#9654; Play</button>
   <div class="titleLinks">
-    <a href="https://1moreswing.com/about.html" target="_blank" rel="noopener">About</a>
-    &middot;
-    <a href="https://1moreswing.com/privacy.html" target="_blank" rel="noopener">Privacy</a>
+    <a href="#" id="aboutLink">About</a> &middot; <a href="#" id="privacyLink">Privacy</a>
+  </div>
+</div>
+<div id="info">
+  <div class="panel">
+    <div class="shead">
+      <h2 id="infoTitle">ABOUT</h2>
+      <button id="infoClose">&#10005;</button>
+    </div>
+    <div id="infoBody"></div>
   </div>
 </div>
 <script>/* Mobile app build only: load the AdMob rewarded glue inside Capacitor. No-op on the web. */
@@ -625,7 +650,7 @@ function pickTarget(){
 
 function press(){
   const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
-  if (paused || shopOpen || lbOpen || titleOpen) return;
+  if (paused || shopOpen || lbOpen || titleOpen || infoOpen) return;
   const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
   if (state === 'dead' || state === 'finished'){ newRun(); consumeRelease = true; return; }
   if (state !== 'flying' && state !== 'landed') return;
@@ -815,7 +840,7 @@ window.addEventListener('keydown', e=>{
   else if (e.key === 'r' || e.key === 'R') newRun();
   else if (e.key === 'p' || e.key === 'P') togglePause();
   else if (e.key === 'l' || e.key === 'L'){ lbOpen ? closeLeaderboard() : openLeaderboard(); }
-  else if (e.key === 'Escape'){ if (shopOpen) closeShop(); else if (lbOpen) closeLeaderboard(); }
+  else if (e.key === 'Escape'){ if (infoOpen) closeInfo(); else if (shopOpen) closeShop(); else if (lbOpen) closeLeaderboard(); }
 });
 window.addEventListener('keyup', e=>{ if (e.code==='Space'){ spaceDown=false; release(); } });
 
@@ -851,6 +876,66 @@ function showTitle(){ titleOpen = true;  paused = false; syncUI(); }   // back t
 function startGame(){ titleOpen = false; paused = false; newRun(); syncUI(); }  // Play
 document.getElementById('playBtn').addEventListener('click', startGame);
 document.getElementById('toTitleBtn').addEventListener('click', showTitle);
+
+// ---------- in-app About / Privacy ----------
+const infoEl = document.getElementById('info');
+let infoOpen = false;
+const INFO = {
+  about: { title:'ABOUT', html: `
+    <h3>1 More Swing</h3>
+    <p>A one-thumb arcade swinger. Grab a peg, build your swing, and let go at the
+       right moment to fly to the next one. The longer your chain, the bigger your
+       multiplier — but land on a green pad to <b>bank</b> it before you fall, or you
+       lose what you haven't banked.</p>
+    <h4>How to play</h4>
+    <ul>
+      <li><b>Hold</b> to swing on a peg, <b>release</b> to launch.</li>
+      <li><b>Skip</b> pegs mid-flight for bonus points and a higher multiplier.</li>
+      <li>Land on a green <b>BANK</b> pad to lock in your score.</li>
+      <li>Don't fall off the bottom — that ends the run.</li>
+    </ul>
+    <h4>Modes</h4>
+    <p><b>Daily</b> — the same course for everyone each day; compete on the
+       leaderboard. <b>Free Play</b> — an endless, fresh course every run.</p>
+    <p class="muted">Mobile app version · made by Captain Nate.</p>` },
+  privacy: { title:'PRIVACY', html: `
+    <h3>Privacy Policy</h3>
+    <p class="muted">Last updated June 2026 · mobile app</p>
+    <p>1 More Swing is built to need as little of your data as possible. Here's
+       exactly what the app does.</p>
+    <h4>Stored on your device</h4>
+    <p>Your progress, coins, unlocked items, settings, chosen display name, and a
+       randomly generated player ID are saved locally on your device — no account,
+       no sign-in. Deleting the app removes them.</p>
+    <h4>Leaderboard</h4>
+    <p>If you submit a score, the app sends your chosen display name (you can stay
+       anonymous), your score, the day number, and your random player ID to the
+       leaderboard server at 1moreswing.com. We do not collect your real name,
+       email, or contacts.</p>
+    <h4>Ads</h4>
+    <p>The app shows ads via Google AdMob, including optional rewarded videos you
+       can watch to continue a run. Google may use device and advertising
+       identifiers to serve and measure ads. On first use, the app asks (through
+       Apple's App Tracking Transparency) whether to allow tracking — you can
+       decline, and change it anytime in iOS <i>Settings ▸ Privacy &amp; Security ▸
+       Tracking</i>. Details: <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">policies.google.com/technologies/ads</a>.</p>
+    <h4>Children</h4>
+    <p>The app is for a general audience and does not knowingly collect personal
+       information from children.</p>
+    <h4>Contact</h4>
+    <p>Questions? Email <a href="mailto:captainnatecontact@gmail.com">captainnatecontact@gmail.com</a>.</p>` },
+};
+function openInfo(which){
+  const d = INFO[which]; if (!d) return;
+  document.getElementById('infoTitle').textContent = d.title;
+  document.getElementById('infoBody').innerHTML = d.html;
+  infoOpen = true; infoEl.classList.add('open');
+}
+function closeInfo(){ infoOpen = false; infoEl.classList.remove('open'); }
+document.getElementById('aboutLink').addEventListener('click',   e=>{ e.preventDefault(); openInfo('about'); });
+document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventDefault(); openInfo('privacy'); });
+document.getElementById('infoClose').addEventListener('click', closeInfo);
+infoEl.addEventListener('click', e=>{ if (e.target === infoEl) closeInfo(); });   // tap backdrop to close
 colorBtn.addEventListener('click', ()=>{
   const list = owned.theme || ['blue','red'];
   themeName = list[(list.indexOf(themeName) + 1) % list.length];
@@ -1590,7 +1675,7 @@ function draw(){
 let last = performance.now(), acc = 0;
 function frame(now){
   let ft = (now-last)/1000; last = now;
-  if (!paused && !shopOpen && !lbOpen && !titleOpen){
+  if (!paused && !shopOpen && !lbOpen && !titleOpen && !infoOpen){
     let timeScale = 1;
     if      (freezeFrames > 0){ freezeFrames--; timeScale = 0;   }  // hit-pause: full freeze
     else if (slowmoFrames > 0){ slowmoFrames--; timeScale = 0.4; }  // clutch slow-mo

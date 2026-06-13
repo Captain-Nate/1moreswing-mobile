@@ -74,9 +74,9 @@ then `npx cap sync`.
 >   (`SAFE_TOP`/`SAFE_BOTTOM`/`SAFE_LEFT`/`SAFE_RIGHT`) shift the canvas HUD.
 > - **Title screen** (`#titleScreen` + `titleOpen`): tap **Play** to start; the
 >   pause overlay's **Menu** button (`#toTitleBtn`) returns here. **About/Privacy**
->   live here and point to `https://1moreswing.com/{about,privacy}.html` with
->   `target="_blank"` (opens in the system browser) — update those URLs if the
->   pages move.
+>   open in-app pages (`#info` modal); the content lives in the `INFO` object in
+>   the script and is written for the *app* (AdMob/ATT, on-device save, leaderboard
+>   data) — edit those strings to change the copy.
 > - **No `Co-Authored-By` trailer** and assorted feel tweaks (restart into the
 >   looping ready-state, multiplier placement, long-press loupe disabled).
 
