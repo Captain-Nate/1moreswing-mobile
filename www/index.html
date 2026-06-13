@@ -870,6 +870,8 @@ const pauseBtn = document.getElementById('pauseBtn');
 const muteBtn  = document.getElementById('muteBtn');
 const modeBtn  = document.getElementById('modeBtn');
 const shareBtn = document.getElementById('shareBtn');
+// crisp house icon for the run-over "Home" button (the ⌂ glyph is tiny/unclear)
+const HOME_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>';
 function syncUI(){
   document.documentElement.style.setProperty('--accent', TH().accent);
   colorBtn.querySelector('.dot').style.color = TH().accent;     // drives the glow + fill
@@ -896,7 +898,7 @@ function syncUI(){
   // top-right button: hidden on the title screen; a Home (⌂) button on the run-over screen
   // (nothing to pause there, and it avoids overlapping the "Tap to swing again" text); else Pause/Resume
   pauseBtn.style.display = titleOpen ? 'none' : '';
-  if (over){ pauseBtn.innerHTML = '&#8962;'; pauseBtn.title = 'Menu'; }
+  if (over){ pauseBtn.innerHTML = HOME_ICON; pauseBtn.title = 'Menu'; }
   else     { pauseBtn.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;'; pauseBtn.title = paused ? 'Resume' : 'Pause'; }
 }
 function togglePause(){ paused = !paused; syncUI(); }
