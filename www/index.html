@@ -168,15 +168,17 @@
   #toTitleBtn.show { display:block; }
 
   /* ---- in-app About / Privacy pages ---- */
-  #info { position:fixed; inset:0; z-index:22; display:none;
+  #info { position:fixed; inset:0; z-index:22; display:none; box-sizing:border-box;
+    padding:calc(14px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));
     background:rgba(8,11,16,.82); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
   #info.open { display:flex; }
-  #info .panel { width:min(460px,92vw); max-height:84vh; overflow:hidden; display:flex; flex-direction:column;
+  #info .panel { width:min(460px,92vw); max-height:100%; overflow:hidden; display:flex; flex-direction:column;
     background:#0f141b; border:1px solid #30363d; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
   #info .shead { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #21262d; }
   #info .shead h2 { margin:0; font-size:15px; letter-spacing:1px; color:#e6edf3; }
   #infoClose { width:32px; height:32px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#e6edf3; cursor:pointer; font-size:16px; }
-  #infoBody { padding:4px 20px 22px; overflow-y:auto; color:#c9d1d9; font-size:14px; line-height:1.55; }
+  #infoBody { flex:1 1 auto; min-height:0; padding:4px 20px 22px; overflow-y:auto;
+    -webkit-overflow-scrolling:touch; color:#c9d1d9; font-size:14px; line-height:1.55; }
   #infoBody h3 { color:#e6edf3; font-size:19px; margin:18px 0 6px; }
   #infoBody h4 { color:#e6edf3; font-size:14px; margin:16px 0 4px; }
   #infoBody p { margin:6px 0; }
@@ -897,7 +899,7 @@ const INFO = {
     <h4>Modes</h4>
     <p><b>Daily</b> — the same course for everyone each day; compete on the
        leaderboard. <b>Free Play</b> — an endless, fresh course every run.</p>
-    <p class="muted">Mobile app version · made by Captain Nate.</p>` },
+    <p class="muted">Mobile app version.</p>` },
   privacy: { title:'PRIVACY', html: `
     <h3>Privacy Policy</h3>
     <p class="muted">Last updated June 2026 · mobile app</p>
@@ -921,9 +923,7 @@ const INFO = {
        Tracking</i>. Details: <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">policies.google.com/technologies/ads</a>.</p>
     <h4>Children</h4>
     <p>The app is for a general audience and does not knowingly collect personal
-       information from children.</p>
-    <h4>Contact</h4>
-    <p>Questions? Email <a href="mailto:captainnatecontact@gmail.com">captainnatecontact@gmail.com</a>.</p>` },
+       information from children.</p>` },
 };
 function openInfo(which){
   const d = INFO[which]; if (!d) return;
