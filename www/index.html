@@ -1452,8 +1452,8 @@ function draw(){
     const big = mult > 1;
     const pulse = big ? 1 + 0.05*Math.sin(performance.now()/90) + heat*0.12 : 1;
     ctx.save();
-    // phones: float it in the open lower-middle space; desktop: keep it up top under the HUD
-    const multY = small ? H * 0.68 : SAFE_TOP + 100;
+    // phones: float it low, below the bank-pad band (PLATFORM_Y 0.64); desktop: keep it up top under the HUD
+    const multY = small ? H * 0.78 : SAFE_TOP + 100;
     ctx.translate(W/2, multY); ctx.scale(pulse, pulse);
     ctx.textAlign='center';
     ctx.font = `800 ${24 + Math.min((mult-1)*9, 36)}px ui-sans-serif, system-ui`;
