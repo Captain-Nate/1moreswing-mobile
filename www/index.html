@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>1 More Swing</title>
 <meta name="description" content="One button. Grapple, pump, and chain swings — then bank your score or risk it all for 1 more swing. How greedy can you get?" />
 <meta name="theme-color" content="#0d1117" />
@@ -29,20 +29,20 @@
   html, body { margin:0; height:100%; background:#0d1117; overflow:hidden;
     font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; touch-action:none; }
   #c { display:block; width:100vw; height:100vh; cursor:pointer; }
-  #title { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:10;
+  #title { position:fixed; top:calc(14px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:10;
     color:#e6edf3; font-weight:800; font-size:20px; letter-spacing:1px; pointer-events:none;
     text-shadow:0 2px 10px rgba(0,0,0,.5); }
   #title b { color:var(--accent,#58a6ff); font-weight:800; }
-  #hint { position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+  #hint { position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translateX(-50%);
     color:#8b949e; font-size:13px; letter-spacing:.3px; pointer-events:none; text-align:center;
     background:rgba(13,17,23,.55); padding:6px 12px; border-radius:999px; max-width:min(680px,92vw);
     transition:opacity .45s ease; }
   #hint.hide { opacity:0; }
-  #footer { position:fixed; left:12px; bottom:10px; z-index:9; font-size:12.5px;
+  #footer { position:fixed; left:calc(12px + env(safe-area-inset-left)); bottom:calc(10px + env(safe-area-inset-bottom)); z-index:9; font-size:12.5px;
     background:rgba(13,17,23,.6); padding:5px 12px; border-radius:999px; }
   #footer a { color:#9aa4b0; text-decoration:underline; }
   #footer a:hover { color:#e6edf3; }
-  #ui { position:fixed; top:16px; right:16px; display:flex; gap:10px; z-index:10; }
+  #ui { position:fixed; top:calc(16px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); display:flex; gap:10px; z-index:10; }
   #ui button { width:42px; height:42px; border-radius:12px; border:1px solid #30363d;
     background:rgba(22,27,34,.85); color:#e6edf3; font-size:16px; cursor:pointer;
     display:flex; align-items:center; justify-content:center; line-height:1;
@@ -242,14 +242,34 @@ const DT = 1/60;                  // fixed physics step
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
+// safe-area insets (notch / Dynamic Island / home indicator), in CSS px
+let SAFE_TOP = 0, SAFE_BOTTOM = 0, SAFE_LEFT = 0, SAFE_RIGHT = 0;
+// hidden probe whose padding resolves env(safe-area-inset-*) to real px
+const safeProbe = document.createElement('div');
+safeProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;'
+  + 'pointer-events:none;padding-top:env(safe-area-inset-top);'
+  + 'padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);'
+  + 'padding-left:env(safe-area-inset-left);';
+document.documentElement.appendChild(safeProbe);
 function resize(){
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   W = window.innerWidth; H = window.innerHeight;
   cv.width = W * DPR; cv.height = H * DPR;
   ctx.setTransform(DPR,0,0,DPR,0,0);
+  const ps = getComputedStyle(safeProbe);
+  SAFE_TOP = parseFloat(ps.paddingTop) || 0;
+  SAFE_RIGHT = parseFloat(ps.paddingRight) || 0;
+  SAFE_BOTTOM = parseFloat(ps.paddingBottom) || 0;
+  SAFE_LEFT = parseFloat(ps.paddingLeft) || 0;
 }
 window.addEventListener('resize', resize);
+// Safe-area insets aren't applied until WebKit processes viewport-fit, which can
+// land a frame or two after first paint — recompute once layout has settled and
+// whenever the device rotates.
+window.addEventListener('orientationchange', () => setTimeout(resize, 100));
+window.addEventListener('load', resize);
 resize();
+setTimeout(resize, 200); setTimeout(resize, 600);
 
 let debug = false, runCount = 0, best = 0, paused = false;
 
@@ -1380,6 +1400,7 @@ function draw(){
 
   // HUD — banked score (top-left). Compact on phones, fuller on desktop.
   const small = W < 600;
+  ctx.save(); ctx.translate(SAFE_LEFT, SAFE_TOP);  // keep clear of notch / Dynamic Island
   ctx.textAlign = 'left';
   if (small){
     ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
@@ -1415,12 +1436,13 @@ function draw(){
     ctx.fillStyle = '#c9a227'; ctx.font = '600 13px ui-sans-serif, system-ui';
     ctx.fillText(`${fmt(coins)} coins`, 21, 166);
   }
+  ctx.restore();
 
   // daily progress bar (thin, top edge) — shows how far through the route you are
   if (mode === 'daily' && finishX !== null && state !== 'finished'){
     const prog = Math.max(0, Math.min(1, (p.x - 320) / (finishX - 320)));
-    ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(0, 0, W, 3);
-    ctx.fillStyle = TH().accent; ctx.fillRect(0, 0, W * prog, 3);
+    ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(0, SAFE_TOP, W, 3);
+    ctx.fillStyle = TH().accent; ctx.fillRect(0, SAFE_TOP, W * prog, 3);
   }
 
   // multiplier — huge & pulsing, glowing hotter with greed

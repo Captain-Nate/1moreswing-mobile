@@ -56,5 +56,14 @@ When the web `index.html` changes, re-copy it into `www/` and delete the two
 AdSense `<head>` lines (`google-adsense-account` meta + `adsbygoogle.js` script),
 then `npx cap sync`.
 
+> **Don't clobber the mobile safe-area handling.** `www/index.html` carries
+> mobile-only tweaks so the HUD clears the notch / Dynamic Island / home
+> indicator: `viewport-fit=cover` on the viewport meta, `env(safe-area-inset-*)`
+> offsets on the DOM HUD (`#title`/`#ui`/`#footer`/`#hint`), and a JS `safeProbe`
+> whose insets (`SAFE_TOP`/`SAFE_BOTTOM`/`SAFE_LEFT`/`SAFE_RIGHT`) shift the
+> canvas-drawn HUD. These are no-ops on the web (insets are 0), so the cleanest
+> fix is to fold them into the live-site source — otherwise re-apply them after
+> each re-copy.
+
 > Apple/Google **require** digital purchases (premium themes) to use native
 > in-app purchase (StoreKit / Play Billing) — not Stripe — in the app.
