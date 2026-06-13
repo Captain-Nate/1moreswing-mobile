@@ -134,8 +134,9 @@
   #shop .item .btns { display:flex; flex-direction:column; gap:5px; flex:0 0 auto; align-items:stretch; }
   #shop .item .btns button { min-width:96px; }
   #shop .item button.iap { background:#8957e5; border-color:#8957e5; color:#fff; font-weight:700; }
-  #shop .item button .ci { display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:4px;
-    vertical-align:-1px; background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
+  #shop .item button .ci { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
+    border-radius:50%; margin-right:5px; vertical-align:-2px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
+    background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
   #shop .unlockall { display:flex; align-items:center; gap:12px; padding:11px 12px; margin:2px 0 12px;
     border-radius:10px; background:rgba(137,87,229,.12); border:1px solid #8957e5; }
   #shop .unlockall .nm { flex:1; color:#e6edf3; font-size:14px; font-weight:700; }
@@ -885,6 +886,7 @@ function syncUI(){
   // screens: title overlay + the pause "Menu" button
   const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
   const tt = document.getElementById('toTitleBtn');  if (tt) tt.classList.toggle('show', paused && !titleOpen);
+  const ot = document.getElementById('title'); if (ot) ot.style.display = titleOpen ? 'none' : '';  // the title screen has its own big title — avoid a 2nd one up top (e.g. landscape, where the phone media query doesn't hide it)
   pauseBtn.style.display = titleOpen ? 'none' : '';   // nothing to pause on the title screen
 }
 function togglePause(){ paused = !paused; syncUI(); }
@@ -1028,7 +1030,7 @@ function renderShop(){
       if (isEq)          btns = `<button class="equipped" disabled>Equipped</button>`;
       else if (isOwned)  btns = `<button data-act="equip" data-cat="${cat}" data-id="${it.id}">Equip</button>`;
       else {
-        btns = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}><span class="ci"></span>${fmt(it.cost)}</button>`;
+        btns = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}><span class="ci">C</span>${fmt(it.cost)}</button>`;
         if (cat === 'theme' && it.premium && iapReady){               // real-money alternative to grinding coins
           const p = iap.priceForTheme(it.id);
           if (p) btns += `<button class="iap" data-act="iapbuy" data-id="${it.id}">${p}</button>`;
