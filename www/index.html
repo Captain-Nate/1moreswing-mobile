@@ -633,6 +633,7 @@ function newRun(){
   // reset juice
   camX = p.x; zoom = 1; shakeMag = shakeX = shakeY = 0;
   freezeFrames = slowmoFrames = 0; particles = []; flightLowY = p.y;
+  syncUI();   // revert the top-right button from Home (⌂) back to Pause
 }
 
 // guarantee a relaunch peg above a platform so you can never get stranded on it
@@ -816,6 +817,7 @@ function die(){
   sfxDie(); addShake(16); burst(p.x, p.y, 30, '#f85149', 260);
   lastScore = total; submittedRun = false;
   showOverButtons();
+  syncUI();   // swap the top-right Pause button to a Home (⌂) button
 }
 
 // reached the end of a daily route — complete the run, banking what's left
@@ -829,6 +831,7 @@ function finish(){
   lastScore = total; submittedRun = false;
   sfxBank(); addShake(8); burst(p.x, p.y, 34, '#ffd95e', 240);
   showOverButtons();
+  syncUI();   // swap the top-right Pause button to a Home (⌂) button
 }
 
 // resume a dead run from the nearest anchor, keeping score/multiplier (Free Play only)
@@ -871,8 +874,6 @@ function syncUI(){
   document.documentElement.style.setProperty('--accent', TH().accent);
   colorBtn.querySelector('.dot').style.color = TH().accent;     // drives the glow + fill
   colorBtn.querySelector('.dot').style.background = TH().accent;
-  pauseBtn.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;'; // ▶ / ❚❚
-  pauseBtn.title = paused ? 'Resume' : 'Pause';
   muteBtn.innerHTML = muted ? '&#128263;' : '&#128266;';        // 🔇 / 🔊
   muteBtn.title = muted ? 'Unmute' : 'Mute';
   modeBtn.innerHTML = mode === 'daily' ? '&#128197; Daily' : '&#8734; Free'; // 📅 Daily / ∞ Free
@@ -883,11 +884,20 @@ function syncUI(){
     const c = TH().accent.replace('#', '%23');
     fav.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='${c}' opacity='0.25'/><circle cx='32' cy='32' r='21' fill='${c}'/></svg>`;
   }
-  // screens: title overlay + the pause "Menu" button
+  // screens: title overlay, top-right button mode, and the pause "Menu" button
+  const over = (state === 'dead' || state === 'finished');
   const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
-  const tt = document.getElementById('toTitleBtn');  if (tt) tt.classList.toggle('show', paused && !titleOpen);
+  const tt = document.getElementById('toTitleBtn');  if (tt) tt.classList.toggle('show', paused && !titleOpen && !over);
+  if (titleOpen){   // going Home from the run-over screen: clear the game-over buttons/ad that sit above the title
+    const ob = document.getElementById('overBtns');   if (ob) ob.classList.remove('show');
+    const ga = document.getElementById('gameoverAd');  if (ga) ga.classList.remove('show');
+  }
   const ot = document.getElementById('title'); if (ot) ot.style.display = titleOpen ? 'none' : '';  // the title screen has its own big title — avoid a 2nd one up top (e.g. landscape, where the phone media query doesn't hide it)
-  pauseBtn.style.display = titleOpen ? 'none' : '';   // nothing to pause on the title screen
+  // top-right button: hidden on the title screen; a Home (⌂) button on the run-over screen
+  // (nothing to pause there, and it avoids overlapping the "Tap to swing again" text); else Pause/Resume
+  pauseBtn.style.display = titleOpen ? 'none' : '';
+  if (over){ pauseBtn.innerHTML = '&#8962;'; pauseBtn.title = 'Menu'; }
+  else     { pauseBtn.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;'; pauseBtn.title = paused ? 'Resume' : 'Pause'; }
 }
 function togglePause(){ paused = !paused; syncUI(); }
 function showTitle(){ titleOpen = true;  paused = false; syncUI(); }   // back to the title from pause
@@ -957,7 +967,9 @@ colorBtn.addEventListener('click', ()=>{
   themeName = list[(list.indexOf(themeName) + 1) % list.length];
   syncUI(); saveGame();
 });
-pauseBtn.addEventListener('click', togglePause);
+pauseBtn.addEventListener('click', () => {   // doubles as Home (→ title) on the run-over screen
+  if (state === 'dead' || state === 'finished') showTitle(); else togglePause();
+});
 muteBtn.addEventListener('click', ()=>{ muted = !muted; syncUI(); saveGame(); });
 modeBtn.addEventListener('click', ()=>{ mode = mode === 'daily' ? 'free' : 'daily'; saveGame(); newRun(); syncUI(); });
 
