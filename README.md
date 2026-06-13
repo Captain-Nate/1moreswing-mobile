@@ -56,6 +56,11 @@ npx cap open ios          # build / run in Xcode
 - CocoaPods setup on a fresh Mac: the system Ruby (2.6) is too old, so install via
   Homebrew (`brew install cocoapods`) and point the toolchain at the full Xcode
   app — `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`.
+- **App icon / splash:** the source art lives in `assets/` (`icon-only.png`,
+  `splash.png`, `splash-dark.png` — a blue orb on the dark game background).
+  Generated icons land in the per-machine `ios/`, so after `npx cap add ios` run
+  `npm run assets` to (re)generate them. To change the icon, edit the `assets/`
+  images directly, or re-run the generator: `swift scripts/icongen.swift`.
 
 ## AdMob ad units
 Put your real **Rewarded** ad unit IDs in `www/mobile-ads.js` (it ships with

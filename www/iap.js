@@ -44,13 +44,15 @@
     }
     function applyOwned() {
       productIds.forEach(function (id) {
-        if (store.owned(id) && window.OMS_applyEntitlement) window.OMS_applyEntitlement(id);
+        var own = false; try { own = store.owned(id); } catch (e) {}
+        if (own && window.OMS_applyEntitlement) window.OMS_applyEntitlement(id);
       });
     }
     function refresh() { applyOwned(); if (window.OMS_onIapUpdated) window.OMS_onIapUpdated(); }
 
     store.when()
       .productUpdated(refresh)
+      .receiptUpdated(refresh)      // ownership reloads (restore / launch entitlements) surface here
       .approved(function (t) { t.verify(); })
       .verified(function (r) { r.finish(); refresh(); });
     store.error(function (e) { console.warn('[IAP]', (e && e.message) || e); });
@@ -61,10 +63,13 @@
       priceForTheme: function (themeId) { var pid = pidForTheme[themeId]; return pid ? priceOf(pid) : null; },
       buyTheme: function (themeId) { var pid = pidForTheme[themeId]; if (pid) order(pid); },
       buyAll: function () { order(cfg.allProduct); },
-      restore: function () { store.restorePurchases(); }
+      restore: function () {
+        var r = store.restorePurchases();
+        if (r && r.then) r.then(refresh).catch(function () {});
+      }
     };
 
-    store.initialize([APPLE]).then(refresh);
+    store.initialize([APPLE]).then(refresh).catch(function () {});
   }
   init();
 })();
