@@ -66,14 +66,19 @@ When the web `index.html` changes, re-copy it into `www/` and delete the two
 AdSense `<head>` lines (`google-adsense-account` meta + `adsbygoogle.js` script),
 then `npx cap sync`.
 
-> **Don't clobber the mobile safe-area handling.** `www/index.html` carries
-> mobile-only tweaks so the HUD clears the notch / Dynamic Island / home
-> indicator: `viewport-fit=cover` on the viewport meta, `env(safe-area-inset-*)`
-> offsets on the DOM HUD (`#title`/`#ui`/`#footer`/`#hint`), and a JS `safeProbe`
-> whose insets (`SAFE_TOP`/`SAFE_BOTTOM`/`SAFE_LEFT`/`SAFE_RIGHT`) shift the
-> canvas-drawn HUD. These are no-ops on the web (insets are 0), so the cleanest
-> fix is to fold them into the live-site source — otherwise re-apply them after
-> each re-copy.
+> **Don't clobber the mobile-only changes in `www/index.html`** — a web→mobile
+> re-copy will wipe these; fold them into the live-site source or re-apply them:
+> - **Safe-area handling** so the HUD clears the notch / Dynamic Island / home
+>   indicator: `viewport-fit=cover`, `env(safe-area-inset-*)` offsets on the DOM
+>   HUD (`#title`/`#ui`/`#hint`), and a JS `safeProbe` whose insets
+>   (`SAFE_TOP`/`SAFE_BOTTOM`/`SAFE_LEFT`/`SAFE_RIGHT`) shift the canvas HUD.
+> - **Title screen** (`#titleScreen` + `titleOpen`): tap **Play** to start; the
+>   pause overlay's **Menu** button (`#toTitleBtn`) returns here. **About/Privacy**
+>   live here and point to `https://1moreswing.com/{about,privacy}.html` with
+>   `target="_blank"` (opens in the system browser) — update those URLs if the
+>   pages move.
+> - **No `Co-Authored-By` trailer** and assorted feel tweaks (restart into the
+>   looping ready-state, multiplier placement, long-press loupe disabled).
 
 > Apple/Google **require** digital purchases (premium themes) to use native
 > in-app purchase (StoreKit / Play Billing) — not Stripe — in the app.

@@ -137,9 +137,35 @@
     /* keep insets here too — this query overrides the base rules' env() offsets */
     #ui { top:calc(10px + env(safe-area-inset-top)); right:calc(10px + env(safe-area-inset-right)); gap:7px; }
     #ui button { width:38px; height:38px; font-size:15px; border-radius:10px; }
-    /* lift above the home indicator AND clear the About/Privacy footer (hint fades on first touch) */
+    /* lift above the home indicator (hint fades on first touch) */
     #hint { font-size:11px; bottom:calc(46px + env(safe-area-inset-bottom)); padding:5px 11px; max-width:88vw; }
   }
+
+  /* ---- title screen (sits below the top #ui bar so those buttons stay tappable) ---- */
+  #titleScreen { position:fixed; inset:0; z-index:8; display:none;
+    flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    padding:calc(env(safe-area-inset-top)) 0 calc(env(safe-area-inset-bottom));
+    background:radial-gradient(120% 90% at 50% 22%, #161b22 0%, #0d1117 72%);
+    -webkit-user-select:none; user-select:none; }
+  #titleScreen.show { display:flex; }
+  #titleScreen .bigtitle { margin:0; color:#e6edf3; font-weight:800; font-size:44px;
+    letter-spacing:1px; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.55); }
+  #titleScreen .bigtitle b { color:var(--accent,#58a6ff); }
+  #titleScreen .tagline { margin:0 0 4px; color:#8b949e; font-size:14px; letter-spacing:.4px; }
+  #playBtn { padding:14px 40px; border:none; border-radius:999px; background:var(--accent,#58a6ff);
+    color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.45);
+    transition:transform .08s; }
+  #playBtn:active { transform:scale(.95); }
+  #titleScreen .titleLinks { position:absolute; bottom:calc(16px + env(safe-area-inset-bottom));
+    color:#8b949e; font-size:13px; }
+  #titleScreen .titleLinks a { color:#9aa4b0; text-decoration:underline; }
+  /* "Menu" button shown over the pause overlay to return to the title */
+  #toTitleBtn { position:fixed; left:50%; top:calc(50% + 62px); transform:translateX(-50%);
+    z-index:16; display:none; padding:10px 22px; border-radius:999px; border:1px solid #30363d;
+    background:rgba(22,27,34,.92); color:#e6edf3; font-weight:700; font-size:14px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; }
+  #toTitleBtn.show { display:block; }
 </style>
 </head>
 <body>
@@ -158,7 +184,17 @@
   <button id="lbOpenBtn">🏆 Leaderboard</button>
 </div>
 <div id="gameoverAd"></div>
-<div id="footer"><a href="/about.html">About</a> &middot; <a href="/privacy.html">Privacy</a></div>
+<button id="toTitleBtn">&#8962; Menu</button>
+<div id="titleScreen" class="show">
+  <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
+  <p class="tagline">Swing &middot; skip &middot; bank &middot; don't fall</p>
+  <button id="playBtn">&#9654; Play</button>
+  <div class="titleLinks">
+    <a href="https://1moreswing.com/about.html" target="_blank" rel="noopener">About</a>
+    &middot;
+    <a href="https://1moreswing.com/privacy.html" target="_blank" rel="noopener">Privacy</a>
+  </div>
+</div>
 <script>/* Mobile app build only: load the AdMob rewarded glue inside Capacitor. No-op on the web. */
 if (window.Capacitor) { var _s = document.createElement('script'); _s.src = 'mobile-ads.js'; document.head.appendChild(_s); }</script>
 <div id="lb">
@@ -410,6 +446,7 @@ let dayNumber = 1;
 let finishX = null;        // x of the daily finish line (null = endless / Free Play)
 let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
 let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false;
+let titleOpen = true;      // start on the title screen; pauses the game loop until Play
 let usedRevive = false, adShowing = false;
 
 // ---- game state ----
@@ -588,7 +625,7 @@ function pickTarget(){
 
 function press(){
   const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
-  if (paused || shopOpen || lbOpen) return;
+  if (paused || shopOpen || lbOpen || titleOpen) return;
   const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
   if (state === 'dead' || state === 'finished'){ newRun(); consumeRelease = true; return; }
   if (state !== 'flying' && state !== 'landed') return;
@@ -636,6 +673,7 @@ function bank(){
 }
 
 function release(){
+  if (titleOpen) return;
   if (consumeRelease){ consumeRelease = false; return; }   // ignore the same tap that restarted the run
   if (state !== 'swinging') return;
   // Verlet velocity carries automatically; nudge it for a snappy launch
@@ -803,8 +841,16 @@ function syncUI(){
     const c = TH().accent.replace('#', '%23');
     fav.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='${c}' opacity='0.25'/><circle cx='32' cy='32' r='21' fill='${c}'/></svg>`;
   }
+  // screens: title overlay + the pause "Menu" button
+  const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
+  const tt = document.getElementById('toTitleBtn');  if (tt) tt.classList.toggle('show', paused && !titleOpen);
+  pauseBtn.style.display = titleOpen ? 'none' : '';   // nothing to pause on the title screen
 }
 function togglePause(){ paused = !paused; syncUI(); }
+function showTitle(){ titleOpen = true;  paused = false; syncUI(); }   // back to the title from pause
+function startGame(){ titleOpen = false; paused = false; newRun(); syncUI(); }  // Play
+document.getElementById('playBtn').addEventListener('click', startGame);
+document.getElementById('toTitleBtn').addEventListener('click', showTitle);
 colorBtn.addEventListener('click', ()=>{
   const list = owned.theme || ['blue','red'];
   themeName = list[(list.indexOf(themeName) + 1) % list.length];
@@ -1544,7 +1590,7 @@ function draw(){
 let last = performance.now(), acc = 0;
 function frame(now){
   let ft = (now-last)/1000; last = now;
-  if (!paused && !shopOpen && !lbOpen){
+  if (!paused && !shopOpen && !lbOpen && !titleOpen){
     let timeScale = 1;
     if      (freezeFrames > 0){ freezeFrames--; timeScale = 0;   }  // hit-pause: full freeze
     else if (slowmoFrames > 0){ slowmoFrames--; timeScale = 0.4; }  // clutch slow-mo
