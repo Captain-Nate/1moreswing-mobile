@@ -172,6 +172,10 @@
     -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.45);
     transition:transform .08s; }
   #playBtn:active { transform:scale(.95); }
+  #quitBtn { margin-top:14px; padding:9px 26px; border-radius:999px; border:1px solid #30363d;
+    background:transparent; color:#8b949e; font-weight:600; font-size:14px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; }
+  #quitBtn:active { transform:scale(.95); }
   #titleScreen .titleLinks { position:absolute; bottom:calc(16px + env(safe-area-inset-bottom));
     color:#8b949e; font-size:13px; }
   #titleScreen .titleLinks a { color:#9aa4b0; text-decoration:underline; }
@@ -221,9 +225,10 @@
 <div id="gameoverAd"></div>
 <button id="toTitleBtn">&#8962; Menu</button>
 <div id="titleScreen" class="show">
-  <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
+  <h1 class="bigtitle">1 MORE <b>swing</b></h1>
   <p class="tagline">Swing &middot; skip &middot; bank &middot; don't fall</p>
   <button id="playBtn">&#9654; Play</button>
+  <button id="quitBtn">Quit</button>
   <div class="titleLinks">
     <a href="#" id="aboutLink">About</a> &middot; <a href="#" id="privacyLink">Privacy</a>
   </div>
@@ -906,6 +911,9 @@ function showTitle(){ titleOpen = true;  paused = false; syncUI(); }   // back t
 function startGame(){ titleOpen = false; paused = false; newRun(); syncUI(); }  // Play
 document.getElementById('playBtn').addEventListener('click', startGame);
 document.getElementById('toTitleBtn').addEventListener('click', showTitle);
+document.getElementById('quitBtn').addEventListener('click', function () {   // close the app (Android-normal; discouraged on iOS — hide before App Store submit)
+  try { if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) Capacitor.Plugins.App.exitApp(); } catch (e) {}
+});
 
 // ---------- in-app About / Privacy ----------
 const infoEl = document.getElementById('info');
