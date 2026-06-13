@@ -33,8 +33,19 @@ npx cap add ios
 npx cap sync
 npx cap open ios          # build / run in Xcode
 ```
-- Add `GADApplicationIdentifier` (your AdMob iOS App ID) + ATT keys to
-  `ios/App/App/Info.plist`.
+- **Two iOS fixes are applied automatically** by `scripts/patch-ios.js` (wired to
+  Capacitor's `add`/`sync` hooks in `package.json`), since the `ios/` folder is
+  regenerated per-machine and these live inside it:
+  1. Pins **GoogleUserMessagingPlatform** to `2.3.0` in the Podfile — CocoaPods
+     otherwise pulls 3.x, which renamed an API and breaks the AdMob plugin build.
+  2. Adds a **`GADApplicationIdentifier`** (Google's *test* App ID) + ATT key to
+     `Info.plist` — without it the AdMob SDK crashes the app on launch.
+
+  Before release, replace the **test** `GADApplicationIdentifier` in
+  `scripts/patch-ios.js` with your real AdMob iOS App ID (`ca-app-pub-XXXX~YYYY`).
+- CocoaPods setup on a fresh Mac: the system Ruby (2.6) is too old, so install via
+  Homebrew (`brew install cocoapods`) and point the toolchain at the full Xcode
+  app — `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`.
 
 ## AdMob ad units
 Put your real **Rewarded** ad unit IDs in `www/mobile-ads.js` (it ships with

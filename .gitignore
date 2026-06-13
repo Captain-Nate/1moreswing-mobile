@@ -2,6 +2,8 @@ node_modules/
 # native projects are generated per-machine via `npx cap add <platform>`
 /android
 /ios
+# Xcode build output from command-line builds
+/build
 .DS_Store
 *.log
 .gradle/

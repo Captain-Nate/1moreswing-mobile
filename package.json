@@ -4,7 +4,10 @@
   "private": true,
   "description": "Native iOS/Android wrapper for 1 More Swing (Capacitor)",
   "scripts": {
-    "sync": "cap sync"
+    "sync": "cap sync",
+    "patch:ios": "node scripts/patch-ios.js",
+    "capacitor:add:after": "node scripts/patch-ios.js",
+    "capacitor:sync:before": "node scripts/patch-ios.js"
   },
   "dependencies": {
     "@capacitor/core": "^6.0.0",
