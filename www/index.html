@@ -556,6 +556,20 @@ function newRun(){
   freezeFrames = slowmoFrames = 0; particles = []; flightLowY = p.y;
 }
 
+// guarantee a relaunch peg above a platform so you can never get stranded on it
+// (the world is generated forward-only; a peg can be culled while its pad survives,
+//  so swinging back onto an old pad could leave nothing to grab)
+function ensureLaunchAnchor(pl){
+  const ax = pl.x + pl.w/2;
+  const ay = Math.max(H * K.ANCHOR_Y_MIN, pl.y - K.LAUNCH_ANCHOR_UP);
+  for (const a of anchors)
+    if (Math.abs(a.x - ax) < 8 && Math.abs(a.y - ay) < 8) return;   // already there
+  const peg = { x: ax, y: ay, got:false, launch:true };
+  let i = anchors.length;                                            // keep anchors x-sorted (cull reads from front)
+  while (i > 0 && anchors[i-1].x > ax) i--;
+  anchors.splice(i, 0, peg);
+}
+
 // pick the best anchor a press would grab: in range, prefer ahead, then nearest
 function pickTarget(){
   let bestA = null, bestScore = Infinity;
@@ -680,6 +694,7 @@ function physics(){
       if (p.x > pl.x && p.x < pl.x + pl.w && prevP.y <= landY && p.y >= landY){
         p.y = landY; prevP.x = p.x; prevP.y = p.y;       // come to rest on the ledge
         state = 'landed'; lastReleased = null; lastGrabbedX = p.x;
+        ensureLaunchAnchor(pl);   // never get stranded — make sure there's a peg above this pad
         bank();
         break;
       }
