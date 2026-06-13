@@ -130,6 +130,18 @@
   #shop .kofi { display:block; text-align:center; margin:20px 2px 4px; padding:12px; border-radius:10px;
     background:#ff5e5b; color:#fff; font-weight:800; font-size:14px; text-decoration:none; }
   #shop .kofi:hover { background:#ff726f; }
+  /* real-money (StoreKit) purchase UI */
+  #shop .item .btns { display:flex; flex-direction:column; gap:5px; flex:0 0 auto; align-items:stretch; }
+  #shop .item .btns button { min-width:96px; }
+  #shop .item button.iap { background:#8957e5; border-color:#8957e5; color:#fff; font-weight:700; }
+  #shop .unlockall { display:flex; align-items:center; gap:12px; padding:11px 12px; margin:2px 0 12px;
+    border-radius:10px; background:rgba(137,87,229,.12); border:1px solid #8957e5; }
+  #shop .unlockall .nm { flex:1; color:#e6edf3; font-size:14px; font-weight:700; }
+  #shop .unlockall button { flex:0 0 auto; min-width:0; padding:8px 16px; border-radius:8px; border:none;
+    background:#8957e5; color:#fff; font-weight:800; font-size:14px; cursor:pointer; }
+  #shop .restore { display:block; width:100%; margin:16px 0 2px; padding:10px; border-radius:9px;
+    border:1px solid #30363d; background:transparent; color:#9aa4b0; font-size:13px; cursor:pointer; }
+  #shop .restore:hover { color:#e6edf3; border-color:#8b949e; }
 
   /* ---- phone tweaks: smaller chrome, less clutter ---- */
   @media (max-width: 600px){
@@ -222,8 +234,8 @@
     <div id="infoBody"></div>
   </div>
 </div>
-<script>/* Mobile app build only: load the AdMob rewarded glue inside Capacitor. No-op on the web. */
-if (window.Capacitor) { var _s = document.createElement('script'); _s.src = 'mobile-ads.js'; document.head.appendChild(_s); }</script>
+<script>/* Mobile app build only: load AdMob glue + StoreKit in-app purchases inside Capacitor. No-op on the web. */
+if (window.Capacitor) { ['mobile-ads.js','iap.js'].forEach(function(src){ var s = document.createElement('script'); s.src = src; document.head.appendChild(s); }); }</script>
 <div id="lb">
   <div class="panel">
     <div class="shead">
@@ -993,26 +1005,49 @@ function swatchStyle(cat, id){
 }
 function renderShop(){
   document.getElementById('shopCoins').textContent = fmt(coins);
+  const iap = window.OMS_IAP;
+  const iapReady = !!(iap && iap.ready);
   let html = '';
   for (const [cat,label] of [['theme','THEMES'],['trail','TRAILS'],['orb','ORBS']]){
     html += `<div class="cat">${label}</div>`;
+    // real-money "Unlock ALL themes" bundle (only when StoreKit is available and not everything's owned)
+    if (cat === 'theme' && iapReady){
+      const premium = COSMETICS.theme.filter(t => t.premium);
+      if (!premium.every(t => owned.theme.includes(t.id))){
+        const price = iap.priceForAll();
+        if (price) html += `<div class="unlockall"><span class="sw" style="background:linear-gradient(135deg,#8957e5,#58a6ff)">✨</span>`
+              + `<span class="nm">Unlock ALL themes</span><button data-act="iapall">${price}</button></div>`;
+      }
+    }
     for (const it of COSMETICS[cat]){
       const isOwned = owned[cat].includes(it.id);
       const isEq    = cat === 'theme' ? themeName === it.id : equipped[cat] === it.id;
-      let btn;
-      if (isEq)          btn = `<button class="equipped" disabled>Equipped</button>`;
-      else if (isOwned)  btn = `<button data-act="equip" data-cat="${cat}" data-id="${it.id}">Equip</button>`;
-      else               btn = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}>Buy &middot; ${fmt(it.cost)}</button>`;
+      let btns;
+      if (isEq)          btns = `<button class="equipped" disabled>Equipped</button>`;
+      else if (isOwned)  btns = `<button data-act="equip" data-cat="${cat}" data-id="${it.id}">Equip</button>`;
+      else {
+        btns = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}>🪙 ${fmt(it.cost)}</button>`;
+        if (cat === 'theme' && it.premium && iapReady){               // real-money alternative to grinding coins
+          const p = iap.priceForTheme(it.id);
+          if (p) btns += `<button class="iap" data-act="iapbuy" data-id="${it.id}">${p}</button>`;
+        }
+      }
       html += `<div class="item"><span class="sw" style="background:${swatchStyle(cat,it.id)}">${it.emoji||''}</span>`
-            + `<span class="nm">${it.name}</span>${btn}</div>`;
+            + `<span class="nm">${it.name}</span><span class="btns">${btns}</span></div>`;
     }
   }
-  html += `<a class="kofi" href="https://ko-fi.com/natemakesstuff" target="_blank" rel="noopener">☕ Support development on Ko-fi</a>`;
+  if (iapReady) html += `<button class="restore" data-act="restore">Restore purchases</button>`;
+  // Ko-fi only on the web — external payment links aren't allowed in the App Store build
+  if (!window.Capacitor) html += `<a class="kofi" href="https://ko-fi.com/natemakesstuff" target="_blank" rel="noopener">☕ Support development on Ko-fi</a>`;
   const body = document.getElementById('shopBody');
   body.innerHTML = html;
   body.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', () => {
     const { act, cat, id } = b.dataset;
-    if (act === 'buy') buyItem(cat, id); else equipItem(cat, id);
+    if (act === 'buy') buyItem(cat, id);
+    else if (act === 'equip') equipItem(cat, id);
+    else if (act === 'iapbuy') iap.buyTheme(id);
+    else if (act === 'iapall') iap.buyAll();
+    else if (act === 'restore') iap.restore();
   }));
 }
 function buyItem(cat, id){
@@ -1032,6 +1067,26 @@ function closeShop(){ shopOpen = false; shopEl.classList.remove('open'); }
 document.getElementById('shopBtn').addEventListener('click', openShop);
 document.getElementById('shopClose').addEventListener('click', closeShop);
 shopEl.addEventListener('click', e => { if (e.target === shopEl) closeShop(); }); // click backdrop to close
+
+// ---------- in-app purchases bridge (native StoreKit via cordova-plugin-purchase; see iap.js) ----------
+const IAP_APP_ID = 'com.captainnate.onemoreswing';
+window.OMS_IAP_CONFIG = (() => {
+  const premium = COSMETICS.theme.filter(t => t.premium).map(t => t.id);
+  const themeProducts = {};
+  premium.forEach(id => { themeProducts[`${IAP_APP_ID}.theme.${id}`] = id; });   // productId -> theme id
+  return { allProduct: `${IAP_APP_ID}.themes.all`, themeProducts, allThemeIds: premium };
+})();
+// iap.js calls this when a product becomes owned (fresh purchase OR restore)
+window.OMS_applyEntitlement = function(productId){
+  const cfg = window.OMS_IAP_CONFIG; let changed = false;
+  const unlock = id => { if (!owned.theme.includes(id)){ owned.theme.push(id); changed = true; } };
+  if (productId === cfg.allProduct) cfg.allThemeIds.forEach(unlock);
+  else if (cfg.themeProducts[productId]) unlock(cfg.themeProducts[productId]);
+  if (changed) saveGame();
+  if (shopOpen) renderShop();
+};
+// iap.js calls this when store prices load or change
+window.OMS_onIapUpdated = function(){ if (shopOpen) renderShop(); };
 
 // ---------- leaderboard (Cloudflare D1 via /api/scores) ----------
 const lbEl   = document.getElementById('lb');

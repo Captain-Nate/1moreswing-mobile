@@ -61,6 +61,14 @@ npx cap open ios          # build / run in Xcode
 Put your real **Rewarded** ad unit IDs in `www/mobile-ads.js` (it ships with
 Google's test IDs). Set `isTesting: false` for production.
 
+## In-app purchases (premium themes)
+Premium themes are sold via native **StoreKit** (`cordova-plugin-purchase`):
+$0.99 per theme or **$2.99 to unlock all**, with coins kept as a free alternative.
+Integration is `www/iap.js` + the IAP bridge in `www/index.html`. **Setup, the exact
+product IDs to create in App Store Connect, and how to test locally are in
+[IAP-SETUP.md](IAP-SETUP.md).** Until the products exist, the shop just shows coin
+prices.
+
 ## Updating the game
 When the web `index.html` changes, re-copy it into `www/` and delete the two
 AdSense `<head>` lines (`google-adsense-account` meta + `adsbygoogle.js` script),
@@ -79,6 +87,8 @@ then `npx cap sync`.
 >   data) — edit those strings to change the copy.
 > - **No `Co-Authored-By` trailer** and assorted feel tweaks (restart into the
 >   looping ready-state, multiplier placement, long-press loupe disabled).
+> - **Shop real-money buttons + Restore + hidden Ko-fi** (IAP bridge, `renderShop`).
 
 > Apple/Google **require** digital purchases (premium themes) to use native
-> in-app purchase (StoreKit / Play Billing) — not Stripe — in the app.
+> in-app purchase (StoreKit / Play Billing) — not Stripe. Done on iOS — see
+> [IAP-SETUP.md](IAP-SETUP.md). (Android Play Billing still TODO.)
