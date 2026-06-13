@@ -18,6 +18,16 @@ generates its own with `npx cap add <platform>`.
 npm install
 ```
 
+> **Heads-up — history was rewritten on 2026-06-13** (commit authorship cleaned
+> up). If you have an **older clone** on another machine (e.g. the Windows PC for
+> the Android build), don't `git push` from it — it carries the old commits and
+> would re-introduce them. Either re-clone fresh, or sync the existing clone to
+> the rewritten history:
+> ```
+> git fetch origin
+> git reset --hard origin/main
+> ```
+
 ## Android  (Windows or Mac — needs Android Studio installed)
 ```
 npx cap add android
