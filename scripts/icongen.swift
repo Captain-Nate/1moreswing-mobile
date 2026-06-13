@@ -40,7 +40,7 @@ func draw(px: Int, bg: (CGFloat, CGFloat, CGFloat), dotFrac: CGFloat, glowFrac: 
 
 // app icon = the colour button box: #161b22 bg, dot 18/38 ≈ 0.474 diameter (radius 0.237),
 // glow 8/38 ≈ 0.21 of the box but kept subtle (1 layer) so the dark margin still reads
-draw(px: 1024, bg: (22, 27, 34), dotFrac: 0.237, glowFrac: 0.055, glowLayers: 1, path: "assets/icon-only.png")
+draw(px: 1024, bg: (22, 27, 34), dotFrac: 0.237, glowFrac: 0.14, glowLayers: 1, path: "assets/icon-only.png")
 // splash = game background (#0d1117) with a small centred glowing dot
 draw(px: 2732, bg: (13, 17, 23), dotFrac: 0.085, glowFrac: 0.03, glowLayers: 1, path: "assets/splash.png")
 draw(px: 2732, bg: (13, 17, 23), dotFrac: 0.085, glowFrac: 0.03, glowLayers: 1, path: "assets/splash-dark.png")
