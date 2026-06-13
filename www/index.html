@@ -539,12 +539,13 @@ function newRun(){
   genX = first.x;
   lastGrabbedX = first.x;
 
-  // hang straight below the first anchor, moving forward = bottom of the arc
+  // begin in an infinite full-circle spin around the first anchor; tap to launch out of it
   ropeLen = K.START_ROPE;
+  anchor  = first;
+  spinAngle = 0;                                  // 0 = hanging straight below the anchor
   p     = { x: first.x, y: first.y + ropeLen };
-  prevP = { x: p.x - K.START_VX * DT, y: p.y };
-  anchor = first;
-  state  = 'swinging';
+  prevP = { x: p.x, y: p.y };
+  state = 'spin';
 
   cameraX = p.x - W * K.CAM_X_ANCHOR;
   dist = Math.floor(p.x / 10);
@@ -575,7 +576,7 @@ function press(){
   const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
   if (paused || shopOpen || lbOpen) return;
   const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
-  if (state === 'dead' || state === 'finished'){ newRun(); return; }
+  if (state === 'dead' || state === 'finished'){ newRun(); consumeRelease = true; return; }
   if (state !== 'flying' && state !== 'landed') return;
   const clutch = flightLowY > H*K.DEATH_FRAC - K.NEARMISS;   // dipped scary-low this flight = a save
   const t = pickTarget();
@@ -621,6 +622,18 @@ function bank(){
 }
 
 function release(){
+  if (consumeRelease){ consumeRelease = false; return; }   // ignore the same tap that restarted the run
+  if (state === 'spin'){
+    // tap to launch out of the spin — reuse the normal release feel, but never fling backward
+    let vx = (p.x - prevP.x) * K.RELEASE_BOOST;
+    let vy = (p.y - prevP.y) * K.RELEASE_BOOST;
+    if (vx < 0) vx = -vx;
+    prevP.x = p.x - vx; prevP.y = p.y - vy;
+    lastReleased = anchor; anchor = null; state = 'flying'; flightLowY = p.y;
+    const launch = Math.hypot(vx, vy) / DT; sfxRelease(launch);
+    if (launch > K.BIG_LAUNCH){ addShake(Math.min(16, launch/90)); hitPause(3); }
+    return;
+  }
   if (state !== 'swinging') return;
   // Verlet velocity carries automatically; nudge it for a snappy launch
   const vx = (p.x - prevP.x) * K.RELEASE_BOOST;
@@ -638,6 +651,14 @@ function release(){
 
 function physics(){
   updateParticles();   // run inside the sim step so hit-pause / slow-mo affect them too
+  if (state === 'spin' && anchor){             // infinite first-hook spin (kinematic, pre-launch)
+    spinAngle += (K.START_VX / K.START_ROPE) * DT;  // tangential speed ≈ START_VX so launch keeps current feel
+    prevP.x = p.x; prevP.y = p.y;                    // trail prevP so release() reads the right velocity
+    p.x = anchor.x + Math.sin(spinAngle) * ropeLen;
+    p.y = anchor.y + Math.cos(spinAngle) * ropeLen;
+    trail.push({ x:p.x, y:p.y }); if (trail.length > 22) trail.shift();
+    return;
+  }
   if (state !== 'flying' && state !== 'swinging') return;
   runTime += DT;       // active play time only (excludes pause / menus / landed)
   const drag = state === 'swinging' ? K.SWING_DRAG : K.AIR_DRAG;
@@ -751,6 +772,7 @@ function revive(){
 
 // ---------- input ----------
 let spaceDown = false, pointerActive = false;
+let spinAngle = 0, consumeRelease = false;   // first-hook spin state + swallow the tap that restarts a run
 cv.addEventListener('pointerdown', e=>{ e.preventDefault(); pointerActive = true; press(); });
 window.addEventListener('pointerup', ()=>{ if (pointerActive){ pointerActive = false; release(); } });
 window.addEventListener('keydown', e=>{
@@ -1331,7 +1353,7 @@ function draw(){
   }
 
   // rope
-  if (state==='swinging' && anchor){
+  if ((state==='swinging' || state==='spin') && anchor){
     ctx.strokeStyle='#8b949e'; ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(anchor.x,anchor.y); ctx.lineTo(p.x,p.y); ctx.stroke();
   }
