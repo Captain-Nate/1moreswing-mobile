@@ -225,8 +225,8 @@
 <div id="gameoverAd"></div>
 <button id="toTitleBtn">&#8962; Menu</button>
 <div id="titleScreen" class="show">
-  <h1 class="bigtitle">1 MORE <b>swing</b></h1>
-  <p class="tagline">Swing &middot; skip &middot; bank &middot; don't fall</p>
+  <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
+  <p class="tagline">swing &middot; skip &middot; bank &middot; don't fall</p>
   <button id="playBtn">&#9654; Play</button>
   <button id="quitBtn">Quit</button>
   <div class="titleLinks">
@@ -911,9 +911,17 @@ function showTitle(){ titleOpen = true;  paused = false; syncUI(); }   // back t
 function startGame(){ titleOpen = false; paused = false; newRun(); syncUI(); }  // Play
 document.getElementById('playBtn').addEventListener('click', startGame);
 document.getElementById('toTitleBtn').addEventListener('click', showTitle);
-document.getElementById('quitBtn').addEventListener('click', function () {   // close the app (Android-normal; discouraged on iOS — hide before App Store submit)
-  try { if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) Capacitor.Plugins.App.exitApp(); } catch (e) {}
-});
+(function () {   // Quit: only on Android (iOS HIG forbids a quit button; web can't exit)
+  var quit = document.getElementById('quitBtn');
+  if (!quit) return;
+  if (window.Capacitor && Capacitor.getPlatform && Capacitor.getPlatform() === 'android') {
+    quit.addEventListener('click', function () {
+      try { Capacitor.Plugins.App.exitApp(); } catch (e) {}
+    });
+  } else {
+    quit.style.display = 'none';
+  }
+})();
 
 // ---------- in-app About / Privacy ----------
 const infoEl = document.getElementById('info');
