@@ -286,7 +286,7 @@ const K = {
   ANCHOR_Y_MIN:   0.10,   // anchor band top    (fraction of screen height).
   ANCHOR_Y_MAX:   0.44,   // anchor band bottom (fraction of screen height).
   START_ROPE:     190,    // rope length you begin swinging on.
-  DEATH_FRAC:     0.92,   // fall below this fraction of height = run over.
+  DEATH_FRAC:     0.95,   // fall below this fraction of height = run over.
   START_VX:       560,    // initial forward swing speed.
   CAM_X_ANCHOR:   0.34,   // player's resting screen-x (fraction of width).
 
@@ -1496,7 +1496,11 @@ function draw(){
   ctx.scale(zoom, zoom);
   ctx.translate(-camX, -H*0.5);
 
-  // (death-zone red overlay removed — falling off the bottom still ends the run)
+  // death zone
+  ctx.fillStyle = 'rgba(248,81,73,0.09)';
+  ctx.fillRect(wLeft, deathY, wRight-wLeft, H);
+  ctx.strokeStyle = 'rgba(248,81,73,0.55)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(wLeft,deathY); ctx.lineTo(wRight,deathY); ctx.stroke();
 
   // safe bank platforms (and the gold finish pad)
   for (const pl of platforms){
