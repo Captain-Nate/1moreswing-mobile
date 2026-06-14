@@ -1314,6 +1314,19 @@ function makeEmotes(){
     emotes.push({ x:Math.random(), y:Math.random(), ch:EMOTES[(Math.random()*EMOTES.length)|0],
                   size:18+Math.random()*16, spd:0.3+Math.random()*0.6, ph:Math.random()*6.28 });
 }
+// solid two-colour split background (top half / bottom half) with a soft same-colour
+// glow in each half and a thin divider — used by the comic-inspired themes.
+// glow args are "r,g,b" strings (or null to skip that half's glow).
+function splitBg(topFill, botFill, topGlow, botGlow){
+  const mid = Math.round(H*0.5);
+  ctx.fillStyle=topFill; ctx.fillRect(0, 0, W, mid);
+  ctx.fillStyle=botFill; ctx.fillRect(0, mid, W, H-mid);
+  if (topGlow){ const r=ctx.createRadialGradient(W*0.3,H*0.26,0, W*0.3,H*0.26,H*0.42);
+    r.addColorStop(0,`rgba(${topGlow},0.20)`); r.addColorStop(1,`rgba(${topGlow},0)`); ctx.fillStyle=r; ctx.fillRect(0,0,W,mid); }
+  if (botGlow){ const r=ctx.createRadialGradient(W*0.7,H*0.74,0, W*0.7,H*0.74,H*0.42);
+    r.addColorStop(0,`rgba(${botGlow},0.20)`); r.addColorStop(1,`rgba(${botGlow},0)`); ctx.fillStyle=r; ctx.fillRect(0,mid,W,H-mid); }
+  ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(0, mid-1, W, 2);   // thin divider
+}
 function drawBackground(){
   if (TH().bg === 'space'){
     ctx.fillStyle = '#05070d'; ctx.fillRect(0,0,W,H);
@@ -1508,38 +1521,10 @@ function drawBackground(){
       ctx.fillText(e.ch, px, yy*H);
     }
     ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
-  } else if (TH().bg === 'bman'){
-    // black + a yellow searchlight glow
-    ctx.fillStyle='#0a0a0c'; ctx.fillRect(0,0,W,H);
-    let r=ctx.createRadialGradient(W*0.5,H*0.34,0, W*0.5,H*0.34,H*0.62);
-    r.addColorStop(0,'rgba(255,210,63,0.16)'); r.addColorStop(1,'rgba(255,210,63,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    r=ctx.createRadialGradient(W*0.5,H*1.12,0, W*0.5,H*1.12,H*0.95);
-    r.addColorStop(0,'rgba(255,210,63,0.06)'); r.addColorStop(1,'rgba(255,210,63,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-  } else if (TH().bg === 'sman'){
-    // bold red/blue split — solid halves (no gradient blend, so no purple cast)
-    ctx.fillStyle='#0a1a4d'; ctx.fillRect(0, 0, W, H*0.5);        // blue top
-    ctx.fillStyle='#3a0a14'; ctx.fillRect(0, H*0.5, W, H*0.5);    // red bottom
-    let r=ctx.createRadialGradient(W*0.3,H*0.26,0, W*0.3,H*0.26,H*0.42);   // glow stays in the blue half
-    r.addColorStop(0,'rgba(59,109,255,0.20)'); r.addColorStop(1,'rgba(59,109,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H*0.5);
-    r=ctx.createRadialGradient(W*0.7,H*0.74,0, W*0.7,H*0.74,H*0.42);       // glow stays in the red half
-    r.addColorStop(0,'rgba(238,59,59,0.20)'); r.addColorStop(1,'rgba(238,59,59,0)'); ctx.fillStyle=r; ctx.fillRect(0,H*0.5,W,H*0.5);
-    ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(0, H*0.5-1, W, 2);  // thin divider
-  } else if (TH().bg === 'joker'){
-    // purple + green
-    const g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#1a0a2e'); g.addColorStop(1,'#0c0518'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    let r=ctx.createRadialGradient(W*0.7,H*0.3,0,W*0.7,H*0.3,H*0.7);
-    r.addColorStop(0,'rgba(115,255,94,0.12)'); r.addColorStop(1,'rgba(115,255,94,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    r=ctx.createRadialGradient(W*0.25,H*0.65,0,W*0.25,H*0.65,H*0.6);
-    r.addColorStop(0,'rgba(150,60,255,0.14)'); r.addColorStop(1,'rgba(150,60,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-  } else if (TH().bg === 'harley'){
-    // red on one side, blue on the other
-    const g=ctx.createLinearGradient(0,0,W,H);
-    g.addColorStop(0,'#2a0712'); g.addColorStop(0.5,'#120a1e'); g.addColorStop(1,'#0a1430'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    let r=ctx.createRadialGradient(W*0.22,H*0.32,0,W*0.22,H*0.32,H*0.7);
-    r.addColorStop(0,'rgba(255,59,99,0.15)'); r.addColorStop(1,'rgba(255,59,99,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    r=ctx.createRadialGradient(W*0.8,H*0.66,0,W*0.8,H*0.66,H*0.6);
-    r.addColorStop(0,'rgba(59,109,255,0.15)'); r.addColorStop(1,'rgba(59,109,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+  } else if (TH().bg === 'bman'){   splitBg('#0a0a0c', '#3a2e08', null,          '255,210,63');  // black / yellow
+  } else if (TH().bg === 'sman'){   splitBg('#3a0a14', '#0a1a4d', '238,59,59',   '59,109,255');  // red / blue
+  } else if (TH().bg === 'joker'){  splitBg('#0a2a18', '#18092c', '115,255,94',  '150,60,255');  // green / purple
+  } else if (TH().bg === 'harley'){ splitBg('#3f6fc8', '#c85f97', '170,210,255', '255,200,225');  // light blue / light pink
   } else {
     const g = ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#0d1117'); g.addColorStop(1,'#161b22');
