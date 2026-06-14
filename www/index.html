@@ -1519,20 +1519,21 @@ function draw(){
   ctx.strokeStyle = 'rgba(248,81,73,0.55)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(wLeft,deathY); ctx.lineTo(wRight,deathY); ctx.stroke();
 
-  // safe bank platforms (and the gold finish pad) — glowing, rounded, with a top highlight
+  // safe bank platforms (rounded, flat green) and the gold finish pad (glowing + top edge)
   for (const pl of platforms){
     if (pl.x > wRight || pl.x + pl.w < wLeft) continue;
     const isFinish = !!pl.finish;
-    const body = isFinish ? '#e3b341' : '#238636';         // single solid (darker) green for bank bars
-    const glow = isFinish ? '#ffd95e' : '#3fb950';
     ctx.save();
-    ctx.shadowColor = glow; ctx.shadowBlur = 16;            // soft glow (2 passes to read clearly)
-    ctx.fillStyle = body;
-    ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 12, 4); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 12, 4); ctx.fill();
-    if (isFinish){                                          // keep the bright top edge on the gold finish pad only
+    if (isFinish){
+      ctx.shadowColor = '#ffd95e'; ctx.shadowBlur = 16;
+      ctx.fillStyle = '#e3b341';
+      ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 12, 4); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 12, 4); ctx.fill();
       ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,240,170,0.65)';
       ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 3.5, 2); ctx.fill();
+    } else {
+      ctx.fillStyle = '#238636';                            // flat green bank bar, no glow
+      ctx.beginPath(); ctx.roundRect(pl.x, pl.y, pl.w, 12, 4); ctx.fill();
     }
     ctx.restore();
     if (!isFinish){
