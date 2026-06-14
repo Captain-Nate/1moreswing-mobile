@@ -859,6 +859,10 @@ function revive(){
 let spaceDown = false, pointerActive = false;
 let consumeRelease = false;   // swallow the tap that restarts a run so it doesn't also launch
 cv.addEventListener('pointerdown', e=>{ e.preventDefault(); pointerActive = true; press(); });
+// Kill the iOS long-press magnifier/loupe during a hold on the playfield. user-select:none
+// alone doesn't always stop it; preventing the touch gesture does (pointer events still fire).
+cv.addEventListener('touchstart', e=>{ e.preventDefault(); }, { passive:false });
+cv.addEventListener('touchmove',  e=>{ e.preventDefault(); }, { passive:false });
 window.addEventListener('pointerup', ()=>{ if (pointerActive){ pointerActive = false; release(); } });
 window.addEventListener('keydown', e=>{
   if (e.code === 'Space'){ e.preventDefault(); if(!spaceDown){ spaceDown=true; press(); } }
