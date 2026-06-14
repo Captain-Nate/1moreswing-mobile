@@ -20,6 +20,10 @@ Two purchase types (both **Non-Consumable**):
 | `com.captainnate.onemoreswing.theme.synthwave` | $0.99 | Synthwave |
 | `com.captainnate.onemoreswing.theme.cyber` | $0.99 | Cyberpunk |
 | `com.captainnate.onemoreswing.theme.unicorn` | $0.99 | Unicorn |
+| `com.captainnate.onemoreswing.theme.bman` | $0.99 | Bman (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.sman` | $0.99 | Sman (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.joker` | $0.99 | J (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.harley` | $0.99 | H (mobile-exclusive) |
 
 > Product IDs are derived in code from the premium themes in `COSMETICS.theme`
 > (`<appId>.theme.<id>`, plus `<appId>.themes.all`). If you add a premium theme,

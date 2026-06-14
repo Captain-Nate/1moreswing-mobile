@@ -166,6 +166,66 @@
       "productID": "com.captainnate.onemoreswing.theme.unicorn",
       "referenceName": "Unicorn Theme",
       "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "EF930216-D6D0-40C1-B317-1B339C65D025",
+      "localizations": [
+        {
+          "description": "Unlock the Bman theme.",
+          "displayName": "Bman Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.bman",
+      "referenceName": "Bman Theme",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "47BE2044-8F00-42A4-B644-DB2DC82A3DEB",
+      "localizations": [
+        {
+          "description": "Unlock the Sman theme.",
+          "displayName": "Sman Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.sman",
+      "referenceName": "Sman Theme",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "F0B9C0A2-B0D5-46D7-9FC3-4C63F567BEBB",
+      "localizations": [
+        {
+          "description": "Unlock the J theme.",
+          "displayName": "J Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.joker",
+      "referenceName": "J Theme",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "2BBA90D2-2290-43E3-A409-6B972DA43A4B",
+      "localizations": [
+        {
+          "description": "Unlock the H theme.",
+          "displayName": "H Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.harley",
+      "referenceName": "H Theme",
+      "type": "NonConsumable"
     }
   ],
   "settings": {

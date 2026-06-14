@@ -377,6 +377,11 @@ const THEMES = {
   kawaii:    { accent:'#a9c7ff', glow:'#e3edff', rgb:'169,199,255', bg:'kawaii'    },
   solar:     { accent:'#a8e063', glow:'#e8ffc4', rgb:'168,224,99',  bg:'solar'     },
   twitch:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'twitch'    },  // stream purple + chat spam
+  // mobile-exclusive, comic-inspired palettes
+  bman:      { accent:'#ffd23f', glow:'#fff0b8', rgb:'255,210,63',  bg:'bman'      },  // black + signal yellow
+  sman:      { accent:'#3b6dff', glow:'#cfe0ff', rgb:'59,109,255',  bg:'sman'      },  // red + blue
+  joker:     { accent:'#73ff5e', glow:'#caffc0', rgb:'115,255,94',  bg:'joker'     },  // purple + green
+  harley:    { accent:'#ff4f9b', glow:'#ffd0e6', rgb:'255,79,155',  bg:'harley'    },  // red/blue + pink
 };
 let themeName = 'blue';
 function TH(){ return THEMES[themeName]; }
@@ -397,6 +402,11 @@ const COSMETICS = {
     { id:'synthwave', name:'Synthwave',     cost:1500000, premium:true },
     { id:'cyber',     name:'Cyberpunk',     cost:1800000, premium:true },
     { id:'unicorn',   name:'Unicorn',       cost:2500000, premium:true },
+    // mobile-app-exclusive themes (comic-inspired) — coins or real-money IAP
+    { id:'bman',      name:'Bman',          cost:1200000, premium:true, mobileOnly:true },
+    { id:'sman',      name:'Sman',          cost:1400000, premium:true, mobileOnly:true },
+    { id:'joker',     name:'J',             cost:1700000, premium:true, mobileOnly:true },
+    { id:'harley',    name:'H',             cost:2000000, premium:true, mobileOnly:true },
   ],
   trail: [
     { id:'classic', name:'Classic Trail', cost:0      },
@@ -1498,6 +1508,37 @@ function drawBackground(){
       ctx.fillText(e.ch, px, yy*H);
     }
     ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
+  } else if (TH().bg === 'bman'){
+    // black + a yellow searchlight glow
+    ctx.fillStyle='#0a0a0c'; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.5,H*0.34,0, W*0.5,H*0.34,H*0.62);
+    r.addColorStop(0,'rgba(255,210,63,0.16)'); r.addColorStop(1,'rgba(255,210,63,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.5,H*1.12,0, W*0.5,H*1.12,H*0.95);
+    r.addColorStop(0,'rgba(255,210,63,0.06)'); r.addColorStop(1,'rgba(255,210,63,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+  } else if (TH().bg === 'sman'){
+    // red + blue
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#0a1a4d'); g.addColorStop(1,'#2a0a14'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.25,H*0.3,0,W*0.25,H*0.3,H*0.7);
+    r.addColorStop(0,'rgba(59,109,255,0.16)'); r.addColorStop(1,'rgba(59,109,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.78,H*0.7,0,W*0.78,H*0.7,H*0.6);
+    r.addColorStop(0,'rgba(238,59,59,0.16)'); r.addColorStop(1,'rgba(238,59,59,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+  } else if (TH().bg === 'joker'){
+    // purple + green
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#1a0a2e'); g.addColorStop(1,'#0c0518'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.7,H*0.3,0,W*0.7,H*0.3,H*0.7);
+    r.addColorStop(0,'rgba(115,255,94,0.12)'); r.addColorStop(1,'rgba(115,255,94,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.25,H*0.65,0,W*0.25,H*0.65,H*0.6);
+    r.addColorStop(0,'rgba(150,60,255,0.14)'); r.addColorStop(1,'rgba(150,60,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+  } else if (TH().bg === 'harley'){
+    // red on one side, blue on the other
+    const g=ctx.createLinearGradient(0,0,W,H);
+    g.addColorStop(0,'#2a0712'); g.addColorStop(0.5,'#120a1e'); g.addColorStop(1,'#0a1430'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    let r=ctx.createRadialGradient(W*0.22,H*0.32,0,W*0.22,H*0.32,H*0.7);
+    r.addColorStop(0,'rgba(255,59,99,0.15)'); r.addColorStop(1,'rgba(255,59,99,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.8,H*0.66,0,W*0.8,H*0.66,H*0.6);
+    r.addColorStop(0,'rgba(59,109,255,0.15)'); r.addColorStop(1,'rgba(59,109,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
   } else {
     const g = ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#0d1117'); g.addColorStop(1,'#161b22');
