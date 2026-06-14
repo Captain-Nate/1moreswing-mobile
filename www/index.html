@@ -379,7 +379,7 @@ const THEMES = {
   twitch:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'twitch'    },  // stream purple + chat spam
   // mobile-exclusive, comic-inspired palettes
   bman:      { accent:'#ffd23f', glow:'#fff0b8', rgb:'255,210,63',  bg:'bman'      },  // black + signal yellow
-  sman:      { accent:'#3b6dff', glow:'#cfe0ff', rgb:'59,109,255',  bg:'sman'      },  // red + blue
+  sman:      { accent:'#ff3b3b', glow:'#ffd2d2', rgb:'255,59,59',   bg:'sman'      },  // red orb on red/blue
   joker:     { accent:'#73ff5e', glow:'#caffc0', rgb:'115,255,94',  bg:'joker'     },  // purple + green
   harley:    { accent:'#ff4f9b', glow:'#ffd0e6', rgb:'255,79,155',  bg:'harley'    },  // red/blue + pink
 };
@@ -403,8 +403,8 @@ const COSMETICS = {
     { id:'cyber',     name:'Cyberpunk',     cost:1800000, premium:true },
     { id:'unicorn',   name:'Unicorn',       cost:2500000, premium:true },
     // mobile-app-exclusive themes (comic-inspired) — coins or real-money IAP
-    { id:'bman',      name:'Bman',          cost:1200000, premium:true, mobileOnly:true },
-    { id:'sman',      name:'Sman',          cost:1400000, premium:true, mobileOnly:true },
+    { id:'sman',      name:'Sman',          cost:1200000, premium:true, mobileOnly:true },
+    { id:'bman',      name:'Bman',          cost:1400000, premium:true, mobileOnly:true },
     { id:'joker',     name:'J',             cost:1700000, premium:true, mobileOnly:true },
     { id:'harley',    name:'H',             cost:2000000, premium:true, mobileOnly:true },
   ],
@@ -1521,7 +1521,7 @@ function drawBackground(){
       ctx.fillText(e.ch, px, yy*H);
     }
     ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
-  } else if (TH().bg === 'bman'){   splitBg('#0a0a0c', '#3a2e08', null,          '255,210,63');  // black / yellow
+  } else if (TH().bg === 'bman'){   ctx.fillStyle='#070708'; ctx.fillRect(0,0,W,H);  // solid black (yellow accents pop)
   } else if (TH().bg === 'sman'){   splitBg('#3a0a14', '#0a1a4d', '238,59,59',   '59,109,255');  // red / blue
   } else if (TH().bg === 'joker'){  splitBg('#0a2a18', '#18092c', '115,255,94',  '150,60,255');  // green / purple
   } else if (TH().bg === 'harley'){ splitBg('#3f6fc8', '#c85f97', '170,210,255', '255,200,225');  // light blue / light pink
