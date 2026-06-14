@@ -1751,8 +1751,8 @@ function draw(){
   if (state==='finished'){
     ctx.fillStyle='rgba(13,17,23,0.82)'; ctx.fillRect(0,0,W,H);
     ctx.textAlign='center';
-    ctx.fillStyle='#3fb950'; ctx.font='800 22px ui-sans-serif, system-ui'; ctx.letterSpacing='1px';
-    ctx.fillText('DAILY COMPLETE', W/2, H/2 - 100); ctx.letterSpacing='0px';
+    ctx.fillStyle=TH().accent; ctx.font='800 22px ui-sans-serif, system-ui'; ctx.letterSpacing='1px';
+    ctx.fillText('Daily Complete', W/2, H/2 - 100); ctx.letterSpacing='0px';
     ctx.fillStyle='#8b949e'; ctx.font='600 13px ui-sans-serif, system-ui'; ctx.letterSpacing='2px';
     ctx.fillText(`DAY ${dayNumber} · SCORE`, W/2, H/2 - 52); ctx.letterSpacing='0px';
     ctx.fillStyle='#e6edf3'; ctx.font='800 52px ui-sans-serif, system-ui';
