@@ -1516,13 +1516,14 @@ function drawBackground(){
     r=ctx.createRadialGradient(W*0.5,H*1.12,0, W*0.5,H*1.12,H*0.95);
     r.addColorStop(0,'rgba(255,210,63,0.06)'); r.addColorStop(1,'rgba(255,210,63,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
   } else if (TH().bg === 'sman'){
-    // red + blue
-    const g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#0a1a4d'); g.addColorStop(1,'#2a0a14'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    let r=ctx.createRadialGradient(W*0.25,H*0.3,0,W*0.25,H*0.3,H*0.7);
-    r.addColorStop(0,'rgba(59,109,255,0.16)'); r.addColorStop(1,'rgba(59,109,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    r=ctx.createRadialGradient(W*0.78,H*0.7,0,W*0.78,H*0.7,H*0.6);
-    r.addColorStop(0,'rgba(238,59,59,0.16)'); r.addColorStop(1,'rgba(238,59,59,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    // bold red/blue split — solid halves (no gradient blend, so no purple cast)
+    ctx.fillStyle='#0a1a4d'; ctx.fillRect(0, 0, W, H*0.5);        // blue top
+    ctx.fillStyle='#3a0a14'; ctx.fillRect(0, H*0.5, W, H*0.5);    // red bottom
+    let r=ctx.createRadialGradient(W*0.3,H*0.26,0, W*0.3,H*0.26,H*0.42);   // glow stays in the blue half
+    r.addColorStop(0,'rgba(59,109,255,0.20)'); r.addColorStop(1,'rgba(59,109,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H*0.5);
+    r=ctx.createRadialGradient(W*0.7,H*0.74,0, W*0.7,H*0.74,H*0.42);       // glow stays in the red half
+    r.addColorStop(0,'rgba(238,59,59,0.20)'); r.addColorStop(1,'rgba(238,59,59,0)'); ctx.fillStyle=r; ctx.fillRect(0,H*0.5,W,H*0.5);
+    ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(0, H*0.5-1, W, 2);  // thin divider
   } else if (TH().bg === 'joker'){
     // purple + green
     const g=ctx.createLinearGradient(0,0,0,H);
