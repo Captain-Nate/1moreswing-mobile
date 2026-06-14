@@ -43,13 +43,15 @@ npx cap add ios
 npx cap sync
 npx cap open ios          # build / run in Xcode
 ```
-- **Two iOS fixes are applied automatically** by `scripts/patch-ios.js` (wired to
+- **Three iOS fixes are applied automatically** by `scripts/patch-ios.js` (wired to
   Capacitor's `add`/`sync` hooks in `package.json`), since the `ios/` folder is
   regenerated per-machine and these live inside it:
   1. Pins **GoogleUserMessagingPlatform** to `2.3.0` in the Podfile — CocoaPods
      otherwise pulls 3.x, which renamed an API and breaks the AdMob plugin build.
   2. Adds a **`GADApplicationIdentifier`** (Google's *test* App ID) + ATT key to
      `Info.plist` — without it the AdMob SDK crashes the app on launch.
+  3. Locks **`UISupportedInterfaceOrientations`** to portrait only (iPhone + iPad) —
+     the game is portrait-only.
 
   Before release, replace the **test** `GADApplicationIdentifier` in
   `scripts/patch-ios.js` with your real AdMob iOS App ID (`ca-app-pub-XXXX~YYYY`).

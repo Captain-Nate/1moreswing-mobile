@@ -47,19 +47,29 @@ function patchPodfile() {
 function patchInfoPlist() {
   if (!fs.existsSync(plist)) return;
   let src = fs.readFileSync(plist, 'utf8');
-  if (src.includes('GADApplicationIdentifier')) return; // already present
+  const before = src;
 
-  const keys =
-    "\t<!-- Google AdMob App ID — TEST id; replace with your real ca-app-pub-XXXX~YYYY before release. (auto-applied by scripts/patch-ios.js) -->\n" +
-    "\t<key>GADApplicationIdentifier</key>\n" +
-    `\t<string>${ADMOB_TEST_APP_ID}</string>\n` +
-    "\t<key>NSUserTrackingUsageDescription</key>\n" +
-    "\t<string>This identifier will be used to deliver personalized ads to you.</string>\n";
+  // 1. AdMob App ID (+ ATT key) — once
+  if (!src.includes('GADApplicationIdentifier')) {
+    const keys =
+      "\t<!-- Google AdMob App ID — TEST id; replace with your real ca-app-pub-XXXX~YYYY before release. (auto-applied by scripts/patch-ios.js) -->\n" +
+      "\t<key>GADApplicationIdentifier</key>\n" +
+      `\t<string>${ADMOB_TEST_APP_ID}</string>\n` +
+      "\t<key>NSUserTrackingUsageDescription</key>\n" +
+      "\t<string>This identifier will be used to deliver personalized ads to you.</string>\n";
+    src = src.replace(/(<dict>\n)/, `$1${keys}`); // insert after the opening <dict>
+  }
 
-  // Insert immediately after the opening <dict>.
-  src = src.replace(/(<dict>\n)/, `$1${keys}`);
-  fs.writeFileSync(plist, src);
-  console.log('[patch-ios] Added GADApplicationIdentifier to Info.plist.');
+  // 2. Lock orientation to portrait (iPhone + iPad) — the game is portrait-only
+  src = src.replace(
+    /(<key>UISupportedInterfaceOrientations(?:~ipad)?<\/key>\s*<array>)[\s\S]*?(<\/array>)/g,
+    '$1\n\t\t<string>UIInterfaceOrientationPortrait</string>\n\t$2'
+  );
+
+  if (src !== before) {
+    fs.writeFileSync(plist, src);
+    console.log('[patch-ios] Info.plist: AdMob id + portrait-only orientation.');
+  }
 }
 
 patchPodfile();
