@@ -163,7 +163,7 @@
   #titleScreen { position:fixed; inset:0; z-index:8; display:none;
     flex-direction:column; align-items:center; justify-content:center; gap:14px;
     padding:calc(env(safe-area-inset-top)) 0 calc(env(safe-area-inset-bottom));
-    background:radial-gradient(120% 90% at 50% 22%, #161b22 0%, #0d1117 72%);
+    background:transparent;   /* show the equipped theme's canvas background through */
     -webkit-user-select:none; user-select:none; }
   #titleScreen.show { display:flex; }
   #titleScreen .bigtitle { margin:0; color:#e6edf3; font-weight:800; font-size:44px;
@@ -943,6 +943,7 @@ function syncUI(){
     const ob = document.getElementById('overBtns');   if (ob) ob.classList.remove('show');
     const ga = document.getElementById('gameoverAd');  if (ga) ga.classList.remove('show');
   }
+  const hint = document.getElementById('hint'); if (hint) hint.style.display = titleOpen ? 'none' : '';  // hint would show through the now-transparent title overlay
   const ot = document.getElementById('title'); if (ot) ot.style.display = titleOpen ? 'none' : '';  // the title screen has its own big title — avoid a 2nd one up top (e.g. landscape, where the phone media query doesn't hide it)
   // top-right button: hidden on the title screen; a Home (⌂) button on the run-over screen
   // (nothing to pause there, and it avoids overlapping the "Tap to swing again" text); else Pause/Resume
@@ -1585,6 +1586,7 @@ function drawBackground(){
 
 function draw(){
   drawBackground();
+  if (titleOpen){ return; }   // title screen shows only the equipped theme's background (overlay is transparent)
 
   const target = (state==='flying' || state==='landed') ? pickTarget() : null;
   const deathY = H*K.DEATH_FRAC;
