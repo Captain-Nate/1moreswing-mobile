@@ -134,6 +134,9 @@
   #shop .item .btns { display:flex; flex-direction:column; gap:5px; flex:0 0 auto; align-items:stretch; }
   #shop .item .btns button { min-width:96px; }
   #shop .item button.iap { background:#8957e5; border-color:#8957e5; color:#fff; font-weight:700; }
+  #shop .item button.iap.ultra { background:linear-gradient(90deg,#ff5d5d,#ffd23f,#3dffa0,#3b9dff,#b06bff); border:none;
+    color:#0d1117; font-weight:800; text-shadow:0 1px 2px rgba(255,255,255,.35); }
+  #shop .item button.iap.ultra:disabled { opacity:.85; }
   #shop .item button .ci { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
     border-radius:50%; margin-right:5px; vertical-align:middle; position:relative; top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
@@ -370,6 +373,13 @@ setTimeout(resize, 200); setTimeout(resize, 600);
 let debug = false, runCount = 0, best = 0, paused = false;
 
 // ---- colour themes (accent / inner glow / rgb for translucent fx) ----
+// Prism (ultra tier): an ever-shifting hue. Helpers compute the live colour.
+const prismHue = () => (performance.now() / 16) % 360;
+function hsl2rgb(h, s, l){            // h 0-360, s/l 0-1 -> "r,g,b"
+  const a = s * Math.min(l, 1 - l);
+  const f = n => { const k = (n + h / 30) % 12; return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
+  return `${f(0)},${f(8)},${f(4)}`;
+}
 const THEMES = {
   blue:    { accent:'#58a6ff', glow:'#cfe6ff', rgb:'88,166,255'  },
   red:     { accent:'#ff5d5d', glow:'#ffd2d2', rgb:'255,93,93'   },
@@ -390,6 +400,11 @@ const THEMES = {
   harley:    { accent:'#ff4f9b', glow:'#ffd0e6', rgb:'255,79,155',  bg:'harley'    },  // red/blue + pink
   dv:        { accent:'#ff2e2e', glow:'#ffd0d0', rgb:'255,46,46',   bg:'black'     },  // black + red (solid black bg)
   ls:        { accent:'#3b9dff', glow:'#cfe6ff', rgb:'59,157,255',  bg:'black'     },  // black + blue (solid black bg)
+  // ultra tier — continuously cycles through the whole spectrum
+  prism:     { get accent(){ return `hsl(${prismHue()},90%,62%)`; },
+               get glow(){ return `hsl(${prismHue()},100%,85%)`; },
+               get rgb(){ return hsl2rgb(prismHue(),0.9,0.62); },
+               bg:'prism' },
 };
 let themeName = 'blue';
 function TH(){ return THEMES[themeName]; }
@@ -399,6 +414,8 @@ const COSMETICS = {
   theme: [
     { id:'blue',  name:'Classic Blue', cost:0 },
     { id:'red',     name:'Crimson',      cost:0 },
+    // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
+    { id:'prism',   name:'Prism',        cost:0, premium:true, mobileOnly:true, ultra:true },
     // premium themes: tiered coin grind on web (drives play); real-money IAP on the mobile build.
     { id:'space',     name:'Deep Space',    cost:250000,  premium:true },
     { id:'solar',     name:'Solarpunk',     cost:400000,  premium:true },
@@ -1076,8 +1093,8 @@ function renderShop(){
     html += `<div class="cat">${label}</div>`;
     // real-money "Unlock ALL themes" bundle (only when StoreKit is available and not everything's owned)
     if (cat === 'theme' && iapReady){
-      const premium = COSMETICS.theme.filter(t => t.premium);
-      if (!premium.every(t => owned.theme.includes(t.id))){
+      const bundle = COSMETICS.theme.filter(t => t.premium && !t.ultra);   // ultra (Prism) is NOT in the bundle
+      if (!bundle.every(t => owned.theme.includes(t.id))){
         const price = iap.priceForAll();
         if (price) html += `<div class="unlockall"><span class="sw" style="background:linear-gradient(135deg,#8957e5,#58a6ff)">✨</span>`
               + `<span class="nm">Unlock ALL themes</span><button data-act="iapall">${price}</button></div>`;
@@ -1089,6 +1106,11 @@ function renderShop(){
       let btns;
       if (isEq)          btns = `<button class="equipped" disabled>Equipped</button>`;
       else if (isOwned)  btns = `<button data-act="equip" data-cat="${cat}" data-id="${it.id}">Equip</button>`;
+      else if (it.ultra){                                            // ultra (Prism): real-money only, no coin path
+        const p = iapReady && iap.priceForTheme(it.id);
+        btns = p ? `<button class="iap ultra" data-act="iapbuy" data-id="${it.id}">${p}</button>`
+                 : `<button class="iap ultra" disabled>$99.99</button>`;
+      }
       else {
         btns = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}><span class="ci">C</span>${fmt(it.cost)}</button>`;
         if (cat === 'theme' && it.premium && iapReady){               // real-money alternative to grinding coins
@@ -1116,7 +1138,7 @@ function renderShop(){
 }
 function buyItem(cat, id){
   const it = COSMETICS[cat].find(x => x.id === id);
-  if (!it || owned[cat].includes(id) || coins < it.cost) return;
+  if (!it || it.ultra || owned[cat].includes(id) || coins < it.cost) return;   // ultra is real-money only
   coins -= it.cost; owned[cat].push(id);
   if (cat === 'theme'){ themeName = id; syncUI(); } else equipped[cat] = id;
   saveGame(); renderShop();
@@ -1135,10 +1157,11 @@ shopEl.addEventListener('click', e => { if (e.target === shopEl) closeShop(); })
 // ---------- in-app purchases bridge (native StoreKit via cordova-plugin-purchase; see iap.js) ----------
 const IAP_APP_ID = 'com.captainnate.onemoreswing';
 window.OMS_IAP_CONFIG = (() => {
-  const premium = COSMETICS.theme.filter(t => t.premium).map(t => t.id);
+  const premium = COSMETICS.theme.filter(t => t.premium).map(t => t.id);                  // all individually buyable
+  const bundle  = COSMETICS.theme.filter(t => t.premium && !t.ultra).map(t => t.id);      // what "unlock all" grants (excludes ultra)
   const themeProducts = {};
   premium.forEach(id => { themeProducts[`${IAP_APP_ID}.theme.${id}`] = id; });   // productId -> theme id
-  return { allProduct: `${IAP_APP_ID}.themes.all`, themeProducts, allThemeIds: premium };
+  return { allProduct: `${IAP_APP_ID}.themes.all`, themeProducts, allThemeIds: bundle };
 })();
 // iap.js calls this when a product becomes owned (fresh purchase OR restore)
 window.OMS_applyEntitlement = function(productId){
@@ -1535,6 +1558,16 @@ function drawBackground(){
     }
     ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
   } else if (TH().bg === 'bman' || TH().bg === 'black'){ ctx.fillStyle='#070708'; ctx.fillRect(0,0,W,H);  // solid black (accent pops): Bman/DV/LS
+  } else if (TH().bg === 'prism'){
+    const h = prismHue();                                   // ever-shifting full-spectrum backdrop
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,   `hsl(${h},70%,12%)`);
+    g.addColorStop(0.5, `hsl(${(h+90)%360},65%,9%)`);
+    g.addColorStop(1,   `hsl(${(h+180)%360},70%,12%)`);
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    const r = ctx.createRadialGradient(W*0.5,H*0.42,0, W*0.5,H*0.42,H*0.7);
+    r.addColorStop(0, `hsla(${h},95%,60%,0.18)`); r.addColorStop(1, `hsla(${h},95%,60%,0)`);
+    ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
   } else if (TH().bg === 'sman'){   splitBg('#3a0a14', '#0a1a4d', '238,59,59',   '59,109,255');  // red / blue
   } else if (TH().bg === 'joker'){  splitBg('#0a2a18', '#18092c', '115,255,94',  '150,60,255');  // green / purple
   } else if (TH().bg === 'harley'){
@@ -1834,6 +1867,7 @@ function frame(now){
   } else {
     acc = 0;   // don't fast-forward simulation on resume
   }
+  if (themeName === 'prism') document.documentElement.style.setProperty('--accent', TH().accent);  // shift DOM accent live
   draw();
   requestAnimationFrame(frame);
 }
