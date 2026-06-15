@@ -180,7 +180,12 @@
     color:#8b949e; font-size:13px; }
   #titleScreen .titleLinks a { color:#9aa4b0; text-decoration:underline; }
   /* "Menu" button shown over the pause overlay to return to the title */
-  #toTitleBtn { position:fixed; left:50%; top:calc(50% + 62px); transform:translateX(-50%);
+  #resumeBtn { position:fixed; left:50%; top:calc(50% + 30px); transform:translateX(-50%);
+    z-index:16; display:none; padding:12px 34px; border-radius:999px; border:none;
+    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:16px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; box-shadow:0 8px 24px rgba(0,0,0,.4); }
+  #resumeBtn.show { display:block; }
+  #toTitleBtn { position:fixed; left:50%; top:calc(50% + 92px); transform:translateX(-50%);
     z-index:16; display:none; padding:10px 22px; border-radius:999px; border:1px solid #30363d;
     background:rgba(22,27,34,.92); color:#e6edf3; font-weight:700; font-size:14px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; }
@@ -223,6 +228,7 @@
   <button id="lbOpenBtn">🏆 Leaderboard</button>
 </div>
 <div id="gameoverAd"></div>
+<button id="resumeBtn">&#9654; Resume</button>
 <button id="toTitleBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:5px"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>Home</button>
 <div id="titleScreen" class="show">
   <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
@@ -909,7 +915,9 @@ function syncUI(){
   // screens: title overlay, top-right button mode, and the pause "Menu" button
   const over = (state === 'dead' || state === 'finished');
   const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
-  const tt = document.getElementById('toTitleBtn');  if (tt) tt.classList.toggle('show', paused && !titleOpen && !over);
+  const pausedMenu = paused && !titleOpen && !over;
+  const tt = document.getElementById('toTitleBtn');  if (tt) tt.classList.toggle('show', pausedMenu);
+  const rb = document.getElementById('resumeBtn');   if (rb) rb.classList.toggle('show', pausedMenu);
   if (titleOpen){   // going Home from the run-over screen: clear the game-over buttons/ad that sit above the title
     const ob = document.getElementById('overBtns');   if (ob) ob.classList.remove('show');
     const ga = document.getElementById('gameoverAd');  if (ga) ga.classList.remove('show');
@@ -926,6 +934,7 @@ function showTitle(){ titleOpen = true;  paused = false; syncUI(); }   // back t
 function startGame(){ titleOpen = false; paused = false; newRun(); syncUI(); }  // Play
 document.getElementById('playBtn').addEventListener('click', startGame);
 document.getElementById('toTitleBtn').addEventListener('click', showTitle);
+document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; syncUI(); });
 (function () {   // Quit: only on Android (iOS HIG forbids a quit button; web can't exit)
   var quit = document.getElementById('quitBtn');
   if (!quit) return;
@@ -1802,9 +1811,7 @@ function draw(){
     ctx.fillStyle='rgba(13,17,23,0.6)'; ctx.fillRect(0,0,W,H);
     ctx.textAlign='center'; ctx.fillStyle='#e6edf3';
     ctx.font='700 38px ui-sans-serif, system-ui';
-    ctx.fillText('Paused', W/2, H/2 - 6);
-    ctx.fillStyle='#8b949e'; ctx.font='15px ui-sans-serif, system-ui';
-    ctx.fillText('Tap the ▶ button to resume', W/2, H/2 + 26);
+    ctx.fillText('Paused', W/2, H/2 - 28);
   }
 }
 
