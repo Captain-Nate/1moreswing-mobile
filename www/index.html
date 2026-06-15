@@ -388,6 +388,8 @@ const THEMES = {
   sman:      { accent:'#ff3b3b', glow:'#ffd2d2', rgb:'255,59,59',   bg:'sman'      },  // red orb on red/blue
   joker:     { accent:'#73ff5e', glow:'#caffc0', rgb:'115,255,94',  bg:'joker'     },  // purple + green
   harley:    { accent:'#ff4f9b', glow:'#ffd0e6', rgb:'255,79,155',  bg:'harley'    },  // red/blue + pink
+  dv:        { accent:'#ff2e2e', glow:'#ffd0d0', rgb:'255,46,46',   bg:'black'     },  // black + red (solid black bg)
+  ls:        { accent:'#3b9dff', glow:'#cfe6ff', rgb:'59,157,255',  bg:'black'     },  // black + blue (solid black bg)
 };
 let themeName = 'blue';
 function TH(){ return THEMES[themeName]; }
@@ -413,6 +415,8 @@ const COSMETICS = {
     { id:'bman',      name:'Bman',          cost:1400000, premium:true, mobileOnly:true },
     { id:'joker',     name:'J',             cost:1700000, premium:true, mobileOnly:true },
     { id:'harley',    name:'H',             cost:2000000, premium:true, mobileOnly:true },
+    { id:'dv',        name:'DV',            cost:2200000, premium:true, mobileOnly:true },
+    { id:'ls',        name:'LS',            cost:2400000, premium:true, mobileOnly:true },
   ],
   trail: [
     { id:'classic', name:'Classic Trail', cost:0      },
@@ -1530,7 +1534,7 @@ function drawBackground(){
       ctx.fillText(e.ch, px, yy*H);
     }
     ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
-  } else if (TH().bg === 'bman'){   ctx.fillStyle='#070708'; ctx.fillRect(0,0,W,H);  // solid black (yellow accents pop)
+  } else if (TH().bg === 'bman' || TH().bg === 'black'){ ctx.fillStyle='#070708'; ctx.fillRect(0,0,W,H);  // solid black (accent pops): Bman/DV/LS
   } else if (TH().bg === 'sman'){   splitBg('#3a0a14', '#0a1a4d', '238,59,59',   '59,109,255');  // red / blue
   } else if (TH().bg === 'joker'){  splitBg('#0a2a18', '#18092c', '115,255,94',  '150,60,255');  // green / purple
   } else if (TH().bg === 'harley'){
