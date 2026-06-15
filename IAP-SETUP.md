@@ -9,7 +9,7 @@ Two purchase types (both **Non-Consumable**):
 
 | Product ID | Price | What it unlocks |
 | --- | --- | --- |
-| `com.captainnate.onemoreswing.themes.all` | **$2.99** | every premium theme |
+| `com.captainnate.onemoreswing.themes.all` | **$4.99** | every premium theme |
 | `com.captainnate.onemoreswing.theme.space` | $0.99 | Deep Space |
 | `com.captainnate.onemoreswing.theme.solar` | $0.99 | Solarpunk |
 | `com.captainnate.onemoreswing.theme.biopunk` | $0.99 | Biopunk |
@@ -20,10 +20,12 @@ Two purchase types (both **Non-Consumable**):
 | `com.captainnate.onemoreswing.theme.synthwave` | $0.99 | Synthwave |
 | `com.captainnate.onemoreswing.theme.cyber` | $0.99 | Cyberpunk |
 | `com.captainnate.onemoreswing.theme.unicorn` | $0.99 | Unicorn |
-| `com.captainnate.onemoreswing.theme.bman` | $0.99 | Bman (mobile-exclusive) |
-| `com.captainnate.onemoreswing.theme.sman` | $0.99 | Sman (mobile-exclusive) |
-| `com.captainnate.onemoreswing.theme.joker` | $0.99 | J (mobile-exclusive) |
-| `com.captainnate.onemoreswing.theme.harley` | $0.99 | H (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.sman` | $0.99 | Velocity (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.bman` | $0.99 | Midnight Gold (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.joker` | $0.99 | Nightshade (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.harley` | $0.99 | Cotton Candy (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.dv` | $0.99 | Inferno (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.ls` | $0.99 | Glacier (mobile-exclusive) |
 
 > Product IDs are derived in code from the premium themes in `COSMETICS.theme`
 > (`<appId>.theme.<id>`, plus `<appId>.themes.all`). If you add a premium theme,
@@ -40,7 +42,7 @@ at it to buy in the Simulator with fake money:
    **File ▸ Add Files to "App"…**, selecting `../../storekit/OneMoreSwing.storekit`,
    then pick it in the scheme).
 4. Run. Open the **Shop** → you'll see `$0.99` buttons and an **Unlock ALL themes
-   $2.99** row; buying unlocks the theme(s). Manage/refund test purchases via
+   $4.99** row; buying unlocks the theme(s). Manage/refund test purchases via
    **Debug ▸ StoreKit ▸ Manage Transactions** while running.
 
 > The Xcode scheme lives in the (gitignored) `ios/` folder, so this StoreKit

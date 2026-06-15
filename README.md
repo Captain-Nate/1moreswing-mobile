@@ -70,7 +70,7 @@ Google's test IDs). Set `isTesting: false` for production.
 
 ## In-app purchases (premium themes)
 Premium themes are sold via native **StoreKit** (`cordova-plugin-purchase`):
-$0.99 per theme or **$2.99 to unlock all**, with coins kept as a free alternative.
+$0.99 per theme or **$4.99 to unlock all**, with coins kept as a free alternative.
 Integration is `www/iap.js` + the IAP bridge in `www/index.html`. **Setup, the exact
 product IDs to create in App Store Connect, and how to test locally are in
 [IAP-SETUP.md](IAP-SETUP.md).** Until the products exist, the shop just shows coin
