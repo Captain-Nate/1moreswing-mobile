@@ -137,6 +137,8 @@
   #shop .item button.iap.ultra { background:linear-gradient(90deg,#ff5d5d,#ffd23f,#3dffa0,#3b9dff,#b06bff); border:none;
     color:#0d1117; font-weight:800; text-shadow:0 1px 2px rgba(255,255,255,.35); }
   #shop .item button.iap.ultra:disabled { opacity:.85; }
+  #shop .item button.winlock { background:#21262d; border:1px solid #30363d; color:#9aa4b0; font-weight:700; cursor:default; }
+  #shop .exnote { margin:-4px 0 8px 50px; color:#6e7681; font-size:11px; }
   #shop .item button .ci { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
     border-radius:50%; margin-right:5px; vertical-align:middle; position:relative; top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
@@ -405,6 +407,7 @@ const THEMES = {
                get glow(){ return `hsl(${prismHue()},100%,85%)`; },
                get rgb(){ return hsl2rgb(prismHue(),0.9,0.62); },
                bg:'prism' },
+  mono:      { accent:'#f4f4f5', glow:'#ffffff', rgb:'244,244,245', bg:'black' },  // minimalist white-on-black (100-win unlock)
 };
 let themeName = 'blue';
 function TH(){ return THEMES[themeName]; }
@@ -416,6 +419,8 @@ const COSMETICS = {
     { id:'red',     name:'Crimson',      cost:0 },
     // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
     { id:'prism',   name:'Prism',        cost:0, premium:true, mobileOnly:true, ultra:true },
+    // earned, not bought — unlocks at 100 all-time wins on the leaderboard
+    { id:'mono',    name:'Minimalist',   cost:0, mobileOnly:true, winUnlock:100 },
     // premium themes: tiered coin grind on web (drives play); real-money IAP on the mobile build.
     { id:'space',     name:'Deep Space',    cost:250000,  premium:true },
     { id:'solar',     name:'Solarpunk',     cost:400000,  premium:true },
@@ -530,6 +535,7 @@ let dayNumber = 1;
 let finishX = null;        // x of the daily finish line (null = endless / Free Play)
 let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
 let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false;
+let myWins = 0;   // player's all-time wins (from the leaderboard) — drives the Minimalist theme unlock
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
 let usedRevive = false, adShowing = false;
 
@@ -1112,6 +1118,9 @@ function renderShop(){
         btns = p ? `<button class="iap ultra" data-act="iapbuy" data-id="${it.id}">${p}</button>`
                  : `<button class="iap ultra" disabled>$99.99</button>`;
       }
+      else if (it.winUnlock){                                        // earned by wins, not purchasable
+        btns = `<button class="winlock" disabled>🏆 ${Math.min(myWins, it.winUnlock)}/${it.winUnlock} wins</button>`;
+      }
       else {
         btns = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}><span class="ci">C</span>${fmt(it.cost)}</button>`;
         if (cat === 'theme' && it.premium && iapReady){               // real-money alternative to grinding coins
@@ -1121,6 +1130,7 @@ function renderShop(){
       }
       html += `<div class="item"><span class="sw" style="background:${swatchStyle(cat,it.id)}">${it.emoji||''}</span>`
             + `<span class="nm">${it.name}</span><span class="btns">${btns}</span></div>`;
+      if (it.ultra || it.winUnlock) html += `<div class="exnote">Not included in the Unlock All bundle</div>`;
     }
   }
   if (iapReady) html += `<button class="restore" data-act="restore">Restore purchases</button>`;
@@ -1258,7 +1268,19 @@ function renderLB(data){
 }
 let lbTab = 'today';
 async function fetchWins(){ try{ const r = await fetch(`${API_BASE}/api/wins`); if(!r.ok) return null; return await r.json(); } catch(e){ return null; } }
+// read the player's win count from the leaderboard and unlock the Minimalist theme at the threshold
+function checkWinUnlock(data){
+  if (!data || !data.champions) return;
+  const me = data.champions.find(c => c.tag === tagOf(playerId));
+  myWins = me ? (me.wins || 0) : 0;
+  const mono = COSMETICS.theme.find(t => t.id === 'mono');
+  if (mono && myWins >= mono.winUnlock && !owned.theme.includes('mono')){
+    owned.theme.push('mono'); saveGame();
+    if (shopOpen) renderShop();
+  }
+}
 function renderWins(data){
+  checkWinUnlock(data);
   const myTag = tagOf(playerId);
   let html = '';
   if (!data || !data.champions)    html += `<div class="msg">Leaderboard offline.</div>`;
@@ -1876,6 +1898,7 @@ function frame(now){
 loadGame();
 newRun();
 syncUI();
+fetchWins().then(checkWinUnlock).catch(()=>{});   // unlock Minimalist if already at 100 wins, even without opening the leaderboard
 requestAnimationFrame(frame);
 </script>
 </body>
