@@ -173,13 +173,13 @@
       "internalID": "EF930216-D6D0-40C1-B317-1B339C65D025",
       "localizations": [
         {
-          "description": "Unlock the Bman theme.",
-          "displayName": "Bman Theme",
+          "description": "Unlock the Midnight Gold theme.",
+          "displayName": "Midnight Gold Theme",
           "locale": "en_US"
         }
       ],
       "productID": "com.captainnate.onemoreswing.theme.bman",
-      "referenceName": "Bman Theme",
+      "referenceName": "Midnight Gold Theme",
       "type": "NonConsumable"
     },
     {
@@ -188,13 +188,13 @@
       "internalID": "47BE2044-8F00-42A4-B644-DB2DC82A3DEB",
       "localizations": [
         {
-          "description": "Unlock the Sman theme.",
-          "displayName": "Sman Theme",
+          "description": "Unlock the Velocity theme.",
+          "displayName": "Velocity Theme",
           "locale": "en_US"
         }
       ],
       "productID": "com.captainnate.onemoreswing.theme.sman",
-      "referenceName": "Sman Theme",
+      "referenceName": "Velocity Theme",
       "type": "NonConsumable"
     },
     {
@@ -203,13 +203,13 @@
       "internalID": "F0B9C0A2-B0D5-46D7-9FC3-4C63F567BEBB",
       "localizations": [
         {
-          "description": "Unlock the J theme.",
-          "displayName": "J Theme",
+          "description": "Unlock the Nightshade theme.",
+          "displayName": "Nightshade Theme",
           "locale": "en_US"
         }
       ],
       "productID": "com.captainnate.onemoreswing.theme.joker",
-      "referenceName": "J Theme",
+      "referenceName": "Nightshade Theme",
       "type": "NonConsumable"
     },
     {
@@ -218,13 +218,43 @@
       "internalID": "2BBA90D2-2290-43E3-A409-6B972DA43A4B",
       "localizations": [
         {
-          "description": "Unlock the H theme.",
-          "displayName": "H Theme",
+          "description": "Unlock the Cotton Candy theme.",
+          "displayName": "Cotton Candy Theme",
           "locale": "en_US"
         }
       ],
       "productID": "com.captainnate.onemoreswing.theme.harley",
-      "referenceName": "H Theme",
+      "referenceName": "Cotton Candy Theme",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "A1C2E3F4-1111-4A2B-9C3D-5E6F7A8B9C0D",
+      "localizations": [
+        {
+          "description": "Unlock the Inferno theme.",
+          "displayName": "Inferno Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.dv",
+      "referenceName": "Inferno Theme",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "B2D3F4A5-2222-4B3C-8D4E-6F7A8B9C0D1E",
+      "localizations": [
+        {
+          "description": "Unlock the Glacier theme.",
+          "displayName": "Glacier Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.ls",
+      "referenceName": "Glacier Theme",
       "type": "NonConsumable"
     }
   ],
