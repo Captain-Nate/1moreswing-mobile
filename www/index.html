@@ -1711,7 +1711,7 @@ function draw(){
   if (small){
     ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
     ctx.font = '800 10px ui-sans-serif, system-ui'; ctx.letterSpacing = '1px';
-    ctx.fillText(mode==='daily' ? `DAY ${dayNumber} · ${fmtTime(runTime)}` : 'FREE PLAY', 14, 21);
+    ctx.fillText(mode==='daily' ? `Day ${dayNumber} · ${fmtTime(runTime)}` : 'Free Play', 14, 21);
     ctx.letterSpacing = '0px';
     ctx.fillStyle = '#e6edf3'; ctx.font = '800 23px ui-sans-serif, system-ui';
     ctx.fillText(fmt(total), 13, 46);
@@ -1721,11 +1721,11 @@ function draw(){
       ctx.fillText(`+${fmt(pending)} at risk`, 14, yy); yy += 17;
     }
     ctx.fillStyle = '#ffd95e'; ctx.font = '700 11px ui-sans-serif, system-ui';
-    ctx.fillText(`★ HIGH SCORE  ${fmt(best)}`, 14, yy);
+    ctx.fillText(`★ High Score  ${fmt(best)}`, 14, yy);
   } else {
     ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
     ctx.font = '800 12px ui-sans-serif, system-ui'; ctx.letterSpacing = '1px';
-    ctx.fillText(mode==='daily' ? `DAILY · DAY ${dayNumber} · ${fmtTime(runTime)}` : 'FREE PLAY', 21, 28);
+    ctx.fillText(mode==='daily' ? `Daily · Day ${dayNumber} · ${fmtTime(runTime)}` : 'Free Play', 21, 28);
     ctx.letterSpacing = '0px';
     ctx.fillStyle = '#8b949e'; ctx.font = '11px ui-sans-serif, system-ui';
     ctx.fillText('BANKED', 22, 52);
@@ -1738,7 +1738,7 @@ function draw(){
     ctx.fillStyle = '#6e7681'; ctx.font = '12px ui-sans-serif, system-ui';
     ctx.fillText(`${dist} m  ·  run ${runCount}`, 21, 122);
     ctx.fillStyle = '#ffd95e'; ctx.font = '800 15px ui-sans-serif, system-ui';
-    ctx.fillText(`★ HIGH SCORE  ${fmt(best)}`, 21, 144);
+    ctx.fillText(`★ High Score  ${fmt(best)}`, 21, 144);
     ctx.fillStyle = '#c9a227'; ctx.font = '600 13px ui-sans-serif, system-ui';
     ctx.fillText(`${fmt(coins)} coins`, 21, 166);
   }
