@@ -1721,7 +1721,7 @@ function draw(){
       ctx.fillText(`+${fmt(pending)} at risk`, 14, yy); yy += 17;
     }
     ctx.fillStyle = '#ffd95e'; ctx.font = '700 11px ui-sans-serif, system-ui';
-    ctx.fillText(`★ ${fmt(best)}`, 14, yy);
+    ctx.fillText(`★ HIGH SCORE  ${fmt(best)}`, 14, yy);
   } else {
     ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
     ctx.font = '800 12px ui-sans-serif, system-ui'; ctx.letterSpacing = '1px';
@@ -1738,7 +1738,7 @@ function draw(){
     ctx.fillStyle = '#6e7681'; ctx.font = '12px ui-sans-serif, system-ui';
     ctx.fillText(`${dist} m  ·  run ${runCount}`, 21, 122);
     ctx.fillStyle = '#ffd95e'; ctx.font = '800 15px ui-sans-serif, system-ui';
-    ctx.fillText(`★ BEST  ${fmt(best)}`, 21, 144);
+    ctx.fillText(`★ HIGH SCORE  ${fmt(best)}`, 21, 144);
     ctx.fillStyle = '#c9a227'; ctx.font = '600 13px ui-sans-serif, system-ui';
     ctx.fillText(`${fmt(coins)} coins`, 21, 166);
   }
