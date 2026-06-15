@@ -18,6 +18,8 @@ const root = path.resolve(__dirname, '..');
 const podfile = path.join(root, 'ios', 'App', 'Podfile');
 const podlock = path.join(root, 'ios', 'App', 'Podfile.lock');
 const plist = path.join(root, 'ios', 'App', 'App', 'Info.plist');
+const storekitSrc = path.join(root, 'storekit', 'OneMoreSwing.storekit');   // source of truth (committed)
+const storekitDst = path.join(root, 'ios', 'App', 'OneMoreSwing.storekit');  // copy the Xcode scheme references
 
 const UMP_VERSION = '2.3.0';
 // Google's official AdMob *test* App ID for iOS. Replace with your real
@@ -72,5 +74,19 @@ function patchInfoPlist() {
   }
 }
 
+// Keep the StoreKit test config the Xcode scheme references in sync with the
+// committed source (storekit/OneMoreSwing.storekit), so new IAP products show up
+// for local testing without manually re-copying.
+function syncStoreKit() {
+  if (!fs.existsSync(storekitSrc)) return;
+  if (!fs.existsSync(path.dirname(storekitDst))) return;   // ios/ not generated yet
+  const src = fs.readFileSync(storekitSrc, 'utf8');
+  if (!fs.existsSync(storekitDst) || fs.readFileSync(storekitDst, 'utf8') !== src) {
+    fs.writeFileSync(storekitDst, src);
+    console.log('[patch-ios] Synced StoreKit config to ios/App/OneMoreSwing.storekit.');
+  }
+}
+
 patchPodfile();
 patchInfoPlist();
+syncStoreKit();
