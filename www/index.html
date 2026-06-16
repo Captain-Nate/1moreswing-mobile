@@ -1161,7 +1161,7 @@ modeBtn.addEventListener('click', ()=>{ mode = mode === 'daily' ? 'free' : 'dail
 // ---------- share result (spoiler-free) ----------
 function shareText(){
   const tag = mode === 'daily' ? `  ·  Day ${dayNumber}` : '';
-  return `🪝 1 More Swing — banked ${fmt(total)}${tag}`;
+  return `1 More Swing — banked ${fmt(total)}${tag}`;
 }
 async function doShare(){
   const text = shareText();
