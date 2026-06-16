@@ -133,6 +133,7 @@
   #lb .row.me .tag { color:var(--accent,#58a6ff); opacity:.7; }
   #lbBody .youare { color:#8b949e; font-size:12px; margin:-4px 2px 12px; }
   #lbBody .youare b { color:#c9d1d9; }
+  #lbBody .youare .editname { color:#58a6ff; text-decoration:underline; margin-left:4px; cursor:pointer; }
   #lb .lbtabs { display:flex; gap:8px; padding:12px 18px 0; }
   #lb .lbtabs button { flex:1; padding:8px; border-radius:8px; border:1px solid #30363d;
     background:#161b22; color:#8b949e; font-weight:700; font-size:13px; cursor:pointer; }
@@ -547,6 +548,7 @@ const ORB_COLORS = {
 let coins = 0;
 let owned    = { trail:['classic'], orb:['default'], theme:['blue','red'] };
 let equipped = { trail:'classic',   orb:'default'   };
+let identityFromLocal = false;   // did this install already have a saved player id? (if not, adopt the cloud one)
 function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Math.random().toString(36).slice(2) + Date.now().toString(36); } }
 // Never persist a theme the player doesn't own — during a Preview, themeName is a
 // not-yet-owned theme; fall back to their real equipped theme (preTheme) so a stray
@@ -563,7 +565,7 @@ function saveGame(){
 function loadGame(){
   try {
     const s = JSON.parse(localStorage.getItem('oms_save') || '{}');
-    if (typeof s.pid  === 'string') playerId = s.pid;
+    if (typeof s.pid  === 'string' && s.pid){ playerId = s.pid; identityFromLocal = true; }
     if (typeof s.coins === 'number') coins = s.coins;
     if (s.owned) for (const k in owned)              // union: keep defaults + anything previously owned
       if (Array.isArray(s.owned[k])) owned[k] = Array.from(new Set([...owned[k], ...s.owned[k]]));
@@ -587,7 +589,9 @@ async function mergeCloudSave(){
     if (!value) return;
     const c = JSON.parse(value); let changed = false;
     if (typeof c.coins === 'number' && c.coins > coins){ coins = c.coins; changed = true; }
-    if (c.pid && !playerId){ playerId = c.pid; changed = true; }
+    // On a fresh install (no local id) adopt the cloud's player id so the player's
+    // identity + tag (#NNNN) and name carry over from iCloud, tied to their Apple ID.
+    if (c.pid && !identityFromLocal && playerId !== c.pid){ playerId = c.pid; identityFromLocal = true; changed = true; }
     if (c.owned) for (const k in owned) if (Array.isArray(c.owned[k])){
       const m = Array.from(new Set([...owned[k], ...c.owned[k]]));
       if (m.length !== owned[k].length){ owned[k] = m; changed = true; }
@@ -646,7 +650,7 @@ let dayNumber = 1;
 let finishX = null;        // x of the daily finish line (null = endless / Free Play)
 let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
 let runRoute = [], runCoinsEarned = 0;              // per-run stats for the share card (runRoute[i] = grabbed route anchor i+1)
-let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false;
+let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false, editingName = false;
 let myWins = 0;   // player's all-time wins (from the leaderboard) — drives the Minimalist theme unlock
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
 let usedRevive = false, adShowing = false;
@@ -1527,8 +1531,14 @@ async function submitScoreNow(){
   } catch(e){ return null; }
 }
 function renderLB(data){
-  let html = `<input id="lbName" maxlength="16" placeholder="enter a name" value="${escapeHtml(playerName)}" />`;
-  html += `<div class="youare">You appear as <b>${escapeHtml(playerName||'anon')}<span class="tag">#${tagOf(playerId)}</span></b></div>`;
+  const hasName = !!(playerName && playerName.trim());
+  const showInput = !hasName || editingName;          // ask for a name only the first time (or when editing)
+  let html = '';
+  if (showInput)
+    html += `<input id="lbName" maxlength="16" placeholder="enter a name" value="${escapeHtml(playerName)}" />`;
+  html += `<div class="youare">${(hasName && !showInput) ? 'You are' : "You'll appear as"} `
+        + `<b>${escapeHtml(playerName||'anon')}<span class="tag">#${tagOf(playerId)}</span></b>`
+        + `${(hasName && !showInput) ? ' <a href="#" id="lbEdit" class="editname">edit</a>' : ''}</div>`;
   if (mode==='daily' && lastScore>0 && !submittedRun)
     html += `<button class="submit" id="lbSubmit">Submit my ${fmt(lastScore)}</button>`;
   else if (submittedRun && data && data.rank)
@@ -1548,16 +1558,18 @@ function renderLB(data){
   lbBody.innerHTML = html;
 
   const inp = document.getElementById('lbName');
-  if (inp) inp.addEventListener('input', ()=>{ playerName = inp.value.trim().slice(0,16); saveGame(); });
+  if (inp){ inp.focus(); inp.addEventListener('input', ()=>{ playerName = inp.value.trim().slice(0,16); saveGame(); }); }
+  const edit = document.getElementById('lbEdit');
+  if (edit) edit.addEventListener('click', e=>{ e.preventDefault(); editingName = true; renderLB(data); });
   const sub = document.getElementById('lbSubmit');
   if (sub) sub.addEventListener('click', async ()=>{
-    const nm = (inp.value.trim().slice(0,16)) || 'anon';
+    const nm = (inp ? inp.value.trim().slice(0,16) : playerName) || 'anon';   // locked mode submits the saved name
     if (!isClean(nm)){
       sub.textContent = 'Please pick a cleaner name'; sub.style.background = '#f85149'; sub.style.color = '#fff';
       setTimeout(()=>{ sub.textContent = `Submit my ${fmt(lastScore)}`; sub.style.background = ''; sub.style.color = ''; }, 2000);
       return;
     }
-    playerName = nm; saveGame();
+    playerName = nm; editingName = false; saveGame();
     sub.textContent = 'Submitting…'; sub.disabled = true;
     const res = await submitScoreNow();
     submittedRun = !!res;
@@ -1598,7 +1610,7 @@ async function showTab(){
   else                 renderWins(await fetchWins());
 }
 function setTab(t){ lbTab = t; showTab(); }
-async function openLeaderboard(){ lbOpen = true; lbEl.classList.add('open'); lbTab = 'today'; showTab(); }
+async function openLeaderboard(){ lbOpen = true; lbEl.classList.add('open'); lbTab = 'today'; editingName = false; showTab(); }
 function closeLeaderboard(){ lbOpen = false; lbEl.classList.remove('open'); }
 document.getElementById('lbClose').addEventListener('click', closeLeaderboard);
 document.getElementById('lbOpenBtn').addEventListener('click', openLeaderboard);
