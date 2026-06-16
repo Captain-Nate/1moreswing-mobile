@@ -230,6 +230,11 @@
     -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.45);
     transition:transform .08s; }
   #playBtn:active { transform:scale(.95); }
+  #titleLbBtn { margin-top:16px; padding:11px 30px; border-radius:999px; border:1px solid #30363d;
+    background:rgba(33,38,45,.85); color:#e6edf3; font-weight:700; font-size:15px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; transition:transform .08s, border-color .15s; }
+  #titleLbBtn:hover { border-color:#8b949e; }
+  #titleLbBtn:active { transform:scale(.95); }
   #quitBtn { margin-top:14px; padding:9px 26px; border-radius:999px; border:1px solid #30363d;
     background:transparent; color:#8b949e; font-weight:600; font-size:14px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; }
@@ -307,6 +312,7 @@
   <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
   <p class="tagline">Swing &middot; Skip &middot; Bank</p>
   <button id="playBtn">&#9654; Play</button>
+  <button id="titleLbBtn">🏆 Leaderboard</button>
   <button id="quitBtn">Quit</button>
   <div class="titleLinks">
     <a href="#" id="aboutLink">About</a> &middot; <a href="#" id="privacyLink">Privacy</a>
@@ -1596,6 +1602,7 @@ async function openLeaderboard(){ lbOpen = true; lbEl.classList.add('open'); lbT
 function closeLeaderboard(){ lbOpen = false; lbEl.classList.remove('open'); }
 document.getElementById('lbClose').addEventListener('click', closeLeaderboard);
 document.getElementById('lbOpenBtn').addEventListener('click', openLeaderboard);
+document.getElementById('titleLbBtn').addEventListener('click', openLeaderboard);
 document.getElementById('tabToday').addEventListener('click', ()=>setTab('today'));
 document.getElementById('tabWins').addEventListener('click', ()=>setTab('wins'));
 lbEl.addEventListener('click', e => { if (e.target === lbEl) closeLeaderboard(); });
