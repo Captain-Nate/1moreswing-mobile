@@ -91,6 +91,23 @@
     padding:10px 20px; cursor:pointer; margin-top:2px; -webkit-tap-highlight-color:transparent; }
   #gameoverAd.show { display:block; }
 
+  /* ---- purchase celebration (confetti + unlocked toast) ---- */
+  #fx { position:fixed; inset:0; z-index:60; pointer-events:none; overflow:hidden; }
+  #fx .confetti { position:absolute; top:0; left:0; width:10px; height:10px; will-change:transform,opacity; }
+  #fxToast { position:fixed; left:50%; top:40%; z-index:61; pointer-events:none; opacity:0;
+    transform:translate(-50%,-50%) scale(.6); background:rgba(13,17,23,.94);
+    border:1.5px solid var(--accent,#58a6ff); color:#e6edf3; font-weight:800; font-size:17px;
+    padding:14px 22px; border-radius:14px; box-shadow:0 12px 44px rgba(0,0,0,.55); text-align:center;
+    text-shadow:0 1px 6px rgba(0,0,0,.5); }
+  #fxToast.show { animation:fxpop 1.7s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes fxpop {
+    0%   { opacity:0; transform:translate(-50%,-50%) scale(.6); }
+    12%  { opacity:1; transform:translate(-50%,-50%) scale(1.12); }
+    22%  { transform:translate(-50%,-50%) scale(1); }
+    80%  { opacity:1; transform:translate(-50%,-50%) scale(1); }
+    100% { opacity:0; transform:translate(-50%,-62%) scale(1); }
+  }
+
   /* ---- leaderboard overlay ---- */
   #lb { position:fixed; inset:0; z-index:20; display:none;
     background:rgba(8,11,16,.78); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
@@ -264,6 +281,8 @@
     <div><button id="sc-closeBtn">Close</button></div>
   </div>
 </div>
+<div id="fx"></div>
+<div id="fxToast"></div>
 <button id="resumeBtn">&#9654; Resume</button>
 <button id="toTitleBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:5px"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>Home</button>
 <div id="titleScreen" class="show">
@@ -451,10 +470,6 @@ const COSMETICS = {
   theme: [
     { id:'blue',  name:'Classic Blue', cost:0 },
     { id:'red',     name:'Crimson',      cost:0 },
-    // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
-    { id:'prism',   name:'Prism',        cost:0, premium:true, mobileOnly:true, ultra:true },
-    // earned, not bought — unlocks at 100 all-time wins on the leaderboard
-    { id:'mono',    name:'Minimalist',   cost:0, mobileOnly:true, winUnlock:100 },
     // premium themes: tiered coin grind on web (drives play); real-money IAP on the mobile build.
     { id:'space',     name:'Deep Space',    cost:250000,  premium:true },
     { id:'solar',     name:'Solarpunk',     cost:400000,  premium:true },
@@ -473,6 +488,10 @@ const COSMETICS = {
     { id:'harley',    name:'Cotton Candy',  cost:2000000, premium:true, mobileOnly:true },
     { id:'dv',        name:'Inferno',       cost:2200000, premium:true, mobileOnly:true },
     { id:'ls',        name:'Glacier',       cost:2400000, premium:true, mobileOnly:true },
+    // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
+    { id:'prism',   name:'Prism',        cost:0, premium:true, mobileOnly:true, ultra:true },
+    // earned, not bought — unlocks at 100 all-time wins on the leaderboard
+    { id:'mono',    name:'Minimalist',   cost:0, mobileOnly:true, winUnlock:100 },
   ],
   trail: [
     { id:'classic', name:'Classic Trail', cost:0      },
@@ -666,6 +685,7 @@ function sfxRelease(speed){ noiseSweep(0.18, Math.min(0.22, 0.05 + speed/5000), 
 function sfxBank(){ tone(620,0.12,'triangle',0.16); setTimeout(()=>tone(820,0.14,'triangle',0.16),80); setTimeout(()=>tone(1240,0.20,'triangle',0.14),170); }
 function sfxSkip(n){ for (let i=0;i<=n;i++) setTimeout(()=>tone(520+i*150, 0.10, 'square', 0.12), i*50); }
 function sfxDie(){ tone(220, 0.5, 'sawtooth', 0.18, 55); }
+function sfxPurchase(){ [523,659,784,1047,1319].forEach((f,i)=> setTimeout(()=> tone(f, 0.22, 'triangle', 0.16), i*65)); }   // C-E-G-C-E fanfare
 
 // next anchor height: random WALK from the previous one, so neighbours stay
 // close enough in height to always be reachable in a chain.
@@ -1280,17 +1300,49 @@ function renderShop(){
     const { act, cat, id } = b.dataset;
     if (act === 'buy') buyItem(cat, id);
     else if (act === 'equip') equipItem(cat, id);
-    else if (act === 'iapbuy') iap.buyTheme(id);
-    else if (act === 'iapall') iap.buyAll();
+    else if (act === 'iapbuy'){ armPurchaseIntent(); iap.buyTheme(id); }
+    else if (act === 'iapall'){ armPurchaseIntent(); iap.buyAll(); }
     else if (act === 'restore') iap.restore();
   }));
 }
+
+// ---------- purchase celebration (confetti + "Unlocked!" toast) ----------
+let purchaseIntent = false, piTimer = 0;   // set on a deliberate IAP tap so restores/launch don't spray confetti
+function armPurchaseIntent(){ purchaseIntent = true; clearTimeout(piTimer); piTimer = setTimeout(() => { purchaseIntent = false; }, 90000); }   // auto-disarm if the buy is cancelled
+function celebratePurchase(label){
+  sfxPurchase();
+  const toast = document.getElementById('fxToast');
+  if (toast){ toast.textContent = `✓ ${label} unlocked!`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
+  const fx = document.getElementById('fx'); if (!fx) return;
+  const colors = ['#58a6ff','#ffd95e','#3fb950','#f85149','#a371f7','#ff7b72','#39d0d8'];
+  const cx = innerWidth/2, cy = innerHeight*0.42;
+  for (let i = 0; i < 56; i++){
+    const piece = document.createElement('div');
+    piece.className = 'confetti';
+    piece.style.background = colors[i % colors.length];
+    if (i % 3 === 0) piece.style.borderRadius = '50%';
+    fx.appendChild(piece);
+    const ang = Math.random() * Math.PI * 2;
+    const vel = 130 + Math.random() * 280;
+    const dx = Math.cos(ang) * vel;
+    const dy = Math.sin(ang) * vel - (160 + Math.random() * 140);   // bias the initial pop upward
+    const rot = Math.random() * 900 - 450;
+    const dur = 1000 + Math.random() * 800;
+    piece.animate([
+      { transform:`translate(${cx}px,${cy}px) rotate(0deg)`, opacity:1, offset:0 },
+      { transform:`translate(${cx+dx*0.6}px,${cy+dy}px) rotate(${rot*0.5}deg)`, opacity:1, offset:0.35 },
+      { transform:`translate(${cx+dx}px,${cy+dy+innerHeight*0.7}px) rotate(${rot}deg)`, opacity:0, offset:1 }
+    ], { duration:dur, easing:'cubic-bezier(.2,.6,.35,1)' }).onfinish = () => piece.remove();
+  }
+}
+
 function buyItem(cat, id){
   const it = COSMETICS[cat].find(x => x.id === id);
   if (!it || it.ultra || owned[cat].includes(id) || coins < it.cost) return;   // ultra is real-money only
   coins -= it.cost; owned[cat].push(id);
   if (cat === 'theme'){ themeName = id; syncUI(); } else equipped[cat] = id;
   saveGame(); renderShop();
+  celebratePurchase(it.name);
 }
 function equipItem(cat, id){
   if (!owned[cat].includes(id)) return;
@@ -1314,11 +1366,16 @@ window.OMS_IAP_CONFIG = (() => {
 })();
 // iap.js calls this when a product becomes owned (fresh purchase OR restore)
 window.OMS_applyEntitlement = function(productId){
-  const cfg = window.OMS_IAP_CONFIG; let changed = false;
+  const cfg = window.OMS_IAP_CONFIG; let changed = false; let label = null;
   const unlock = id => { if (!owned.theme.includes(id)){ owned.theme.push(id); changed = true; } };
-  if (productId === cfg.allProduct) cfg.allThemeIds.forEach(unlock);
-  else if (cfg.themeProducts[productId]) unlock(cfg.themeProducts[productId]);
-  if (changed) saveGame();
+  if (productId === cfg.allProduct){ cfg.allThemeIds.forEach(unlock); label = 'All themes'; }
+  else if (cfg.themeProducts[productId]){ const tid = cfg.themeProducts[productId]; unlock(tid);
+    const it = COSMETICS.theme.find(t => t.id === tid); label = it ? it.name : null; }
+  if (changed){
+    saveGame();
+    if (purchaseIntent && label) celebratePurchase(label);   // only on a deliberate buy, not restore/launch
+  }
+  purchaseIntent = false;
   if (shopOpen) renderShop();
 };
 // iap.js calls this when store prices load or change
