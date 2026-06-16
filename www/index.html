@@ -1400,7 +1400,7 @@ function equipItem(cat, id){
   if (cat === 'theme'){ themeName = id; syncUI(); } else equipped[cat] = id;
   saveGame(); renderShop();
 }
-function openShop(){ shopOpen = true; shopEl.classList.add('open'); renderShop(); }
+function openShop(){ if (previewing) endPreview(false); shopOpen = true; shopEl.classList.add('open'); renderShop(); }
 function closeShop(){ shopOpen = false; shopEl.classList.remove('open'); }
 document.getElementById('shopBtn').addEventListener('click', openShop);
 document.getElementById('shopClose').addEventListener('click', closeShop);
