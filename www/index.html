@@ -301,7 +301,7 @@
 <div id="overBtns">
   <button id="reviveBtn">▶ Continue · Ad</button>
   <button id="shareBtn">Share result</button>
-  <button id="lbOpenBtn">🏆 Leaderboard</button>
+  <button id="lbOpenBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style="vertical-align:-2px;margin-right:5px"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg>Leaderboard</button>
 </div>
 <div id="gameoverAd"></div>
 <div id="shareCard">
@@ -1163,13 +1163,15 @@ const modeBtn  = document.getElementById('modeBtn');
 const shareBtn = document.getElementById('shareBtn');
 // crisp house icon for the run-over "Home" button (the ⌂ glyph is tiny/unclear)
 const HOME_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>';
+const SOUND_ON  = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>';
+const SOUND_OFF = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
 function syncUI(){
   document.documentElement.style.setProperty('--accent', TH().accent);
   colorBtn.querySelector('.dot').style.color = TH().accent;     // drives the glow + fill
   colorBtn.querySelector('.dot').style.background = TH().accent;
-  muteBtn.innerHTML = muted ? '&#128263;' : '&#128266;';        // 🔇 / 🔊
+  muteBtn.innerHTML = muted ? SOUND_OFF : SOUND_ON;
   muteBtn.title = muted ? 'Unmute' : 'Mute';
-  modeBtn.innerHTML = mode === 'daily' ? '&#128197; Daily' : '&#8734; Free'; // 📅 Daily / ∞ Free
+  modeBtn.innerHTML = mode === 'daily' ? 'Daily' : '&#8734; Free'; // ∞ = endless Free Play
   modeBtn.title = mode === 'daily' ? 'Daily challenge — tap for Free Play' : 'Free Play — tap for Daily';
   // favicon follows the current colour scheme
   const fav = document.getElementById('favicon');
@@ -1353,7 +1355,7 @@ function showShareCard(){
   const hitCount = runRoute.filter(Boolean).length;
   document.getElementById('sc-stats').innerHTML =
     `<b style="color:#e6edf3">${hitCount}/${runRoute.length}</b> anchors used&nbsp;&nbsp;·&nbsp;&nbsp;` +
-    `⏱ <b style="color:#e6edf3">${fmtTime(finishTime)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;` +
+    `<b style="color:#e6edf3">${fmtTime(finishTime)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;` +
     `<span class="ci">C</span><b style="color:#ffd95e">+${runCoinsEarned}</b>`;
 
   card.classList.add('show');
@@ -1384,7 +1386,7 @@ document.getElementById('sc-shareBtn').addEventListener('click', async () => {
     `1 More Swing — Day ${dayNumber}\n` +
     `Score: ${fmt(total)}\n` +
     `${rows.join('\n')}\n` +
-    `${hitCount}/${runRoute.length} anchors used · ⏱ ${fmtTime(finishTime)} · 🪙 +${runCoinsEarned}`;
+    `${hitCount}/${runRoute.length} anchors used · ${fmtTime(finishTime)} · +${runCoinsEarned} coins`;
   try { if (navigator.share){ await navigator.share({ text }); return; } } catch(e){ if (e?.name === 'AbortError') return; }
   try {
     await navigator.clipboard.writeText(text);
@@ -1438,7 +1440,7 @@ function renderShop(){
       const bundle = COSMETICS.theme.filter(t => t.premium && !t.ultra);   // ultra (Prism) is NOT in the bundle
       if (!bundle.every(t => owned.theme.includes(t.id))){
         const price = iap.priceForAll();
-        if (price) html += `<div class="unlockall"><span class="sw" style="background:linear-gradient(135deg,#8957e5,#58a6ff)">✨</span>`
+        if (price) html += `<div class="unlockall"><span class="sw" style="background:linear-gradient(135deg,#8957e5,#58a6ff)"></span>`
               + `<span class="nm">Unlock ALL themes</span><button data-act="iapall">${price}</button></div>`;
       }
     }
@@ -1454,7 +1456,7 @@ function renderShop(){
                  : `<button class="iap ultra" disabled>$99.99</button>`;
       }
       else if (it.winUnlock){                                        // earned by wins, not purchasable
-        btns = `<button class="winlock" disabled>🏆 ${Math.min(myWins, it.winUnlock)}/${it.winUnlock} wins</button>`;
+        btns = `<button class="winlock" disabled>${Math.min(myWins, it.winUnlock)} / ${it.winUnlock} wins</button>`;
       }
       else {
         btns = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}><span class="ci">C</span>${fmt(it.cost)}</button>`;
@@ -1683,12 +1685,12 @@ function renderLB(data){
   if (mode==='daily' && lastScore>0 && !submittedRun)
     html += `<button class="submit" id="lbSubmit">Submit my ${fmt(lastScore)}</button>`;
   else if (submittedRun && data && data.rank)
-    html += `<div class="msg" style="padding:4px 0 12px">You're #${data.rank} today 🎉</div>`;
+    html += `<div class="msg" style="padding:4px 0 12px">You're #${data.rank} today</div>`;
 
   if (!data || !data.scores)
     html += `<div class="msg">Leaderboard offline.<br><span style="font-size:12px">(activates once deployed with the D1 database connected)</span></div>`;
   else if (!data.scores.length)
-    html += `<div class="msg">No scores yet today — be the first! 🏆</div>`;
+    html += `<div class="msg">No scores yet today — be the first!</div>`;
   else {
     const myTag = tagOf(playerId);
     data.scores.forEach((s,i)=>{
@@ -1735,7 +1737,7 @@ function renderWins(data){
   const myTag = tagOf(playerId);
   let html = '';
   if (!data || !data.champions)    html += `<div class="msg">Leaderboard offline.</div>`;
-  else if (!data.champions.length) html += `<div class="msg">No champions yet — win a daily to be the first! 👑</div>`;
+  else if (!data.champions.length) html += `<div class="msg">No champions yet — win a daily to be the first!</div>`;
   else data.champions.forEach((c,i)=>{
     const me = (c.tag === myTag) ? ' me' : '';
     html += `<div class="row${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(c.name)}<span class="tag">#${c.tag}</span></span><span class="sc">${c.wins}<span class="unit">wins</span></span></div>`;
