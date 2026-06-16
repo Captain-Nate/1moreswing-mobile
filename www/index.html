@@ -594,7 +594,7 @@ let mode = 'daily';        // 'daily' | 'free'
 let dayNumber = 1;
 let finishX = null;        // x of the daily finish line (null = endless / Free Play)
 let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
-let runAnchors = [], runCoinsEarned = 0;            // per-run stats for the share card
+let runRoute = [], runCoinsEarned = 0;              // per-run stats for the share card (runRoute[i] = grabbed route anchor i+1)
 let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false;
 let myWins = 0;   // player's all-time wins (from the leaderboard) — drives the Minimalist theme unlock
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
@@ -696,10 +696,10 @@ function ensureWorld(){
       const py = H * K.PLATFORM_Y;
       platforms.push({ x: genX - K.PLATFORM_W/2, y: py, w: K.PLATFORM_W });
       const ay = Math.max(H * K.ANCHOR_Y_MIN, py - K.LAUNCH_ANCHOR_UP);
-      anchors.push({ x: genX, y: ay, got:false, launch:true });
+      anchors.push({ x: genX, y: ay, got:false, launch:true, idx: anchorGenCount });
       lastY = ay;
     } else {
-      anchors.push({ x: genX, y: nextY(), got:false });
+      anchors.push({ x: genX, y: nextY(), got:false, idx: anchorGenCount });
     }
   }
   // Anchors & platforms are kept persistent (they no longer vanish once you pass them).
@@ -719,7 +719,7 @@ function newRun(){
   anchors = []; platforms = []; cleared = 0; trail = []; popups = [];
   lastReleased = null; anchorGenCount = 0; finishX = null; runTime = 0;
   total = 0; pending = 0; mult = 1;
-  runAnchors = []; runCoinsEarned = 0;
+  runRoute = new Array(K.DAILY_LENGTH).fill(false); runCoinsEarned = 0;
   document.getElementById('shareCard').classList.remove('show');
 
   // first anchor sits right where the player starts, so we begin already swinging
@@ -797,7 +797,7 @@ function press(){
       if (a !== t && !a.got && a.x > lastGrabbedX + 1 && a.x < t.x - 1) skipped++;
 
     t.got = true; cleared++;
-    if (mode === 'daily') runAnchors.push('g');
+    if (mode === 'daily' && t.idx >= 1 && t.idx <= runRoute.length) runRoute[t.idx - 1] = true;
     mult += K.MULT_PER_ANCHOR + skipped * K.SKIP_MULT_BONUS;
     const gained = Math.round((K.ANCHOR_POINTS + skipped * K.SKIP_POINTS) * mult);
     pending += gained;
@@ -823,7 +823,6 @@ function bank(){
     const earned = Math.round(pending * K.COIN_RATE);
     coins += earned;   // lifetime spendable wallet (persists across runs)
     runCoinsEarned += earned;
-    if (runAnchors.length > 0) runAnchors[runAnchors.length - 1] = 'b';
     saveGame();
     popup(p.x, p.y - 34, `BANKED +${fmt(pending)}`, '#3fb950', true);
     sfxBank(); burst(p.x, p.y, 26, '#3fb950', 220); addShake(5); hitPause(3);
@@ -1140,21 +1139,25 @@ function showShareCard(){
   document.getElementById('sc-day').textContent = `Day ${dayNumber}`;
   document.getElementById('sc-score').textContent = fmt(total);
 
-  // 40-dot anchor grid (10 cols × 4 rows)
+  // One dot per route anchor (10 cols × 4 rows). Each lights up if you grabbed
+  // that anchor; the final dot is the finish line — gold if you completed the route.
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#58a6ff';
+  const finished = state === 'finished';
   const grid = document.getElementById('sc-grid');
   grid.innerHTML = '';
-  for (let i = 0; i < 40; i++){
+  for (let i = 0; i < runRoute.length; i++){
     const dot = document.createElement('span');
-    dot.style.background = i >= runAnchors.length ? '#21262d'
-      : runAnchors[i] === 'b' ? '#ffd95e' : accent;
+    const isLast = i === runRoute.length - 1;
+    dot.style.background = (isLast && finished) ? '#ffd95e'   // finish line reached
+      : runRoute[i] ? accent                                  // grabbed this anchor
+      : '#21262d';                                            // not reached
     grid.appendChild(dot);
   }
 
   // Stats line
-  const hitCount = runAnchors.length;
+  const hitCount = runRoute.filter(Boolean).length;
   document.getElementById('sc-stats').innerHTML =
-    `⛓ <b style="color:#e6edf3">${hitCount}/40</b> anchors&nbsp;&nbsp;·&nbsp;&nbsp;` +
+    `⛓ <b style="color:#e6edf3">${hitCount}/${runRoute.length}</b> anchors&nbsp;&nbsp;·&nbsp;&nbsp;` +
     `⏱ <b style="color:#e6edf3">${fmtTime(finishTime)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;` +
     `<span class="ci">C</span><b style="color:#ffd95e">+${runCoinsEarned}</b>`;
 
@@ -1170,13 +1173,15 @@ document.getElementById('shareCard').addEventListener('click', e => {
 });
 
 document.getElementById('sc-shareBtn').addEventListener('click', async () => {
-  const DAILY_LENGTH = 40;
+  const finished = state === 'finished';
+  const hitCount = runRoute.filter(Boolean).length;
   const rows = [];
   for (let r = 0; r < 4; r++){
     let row = '';
     for (let c = 0; c < 10; c++){
       const i = r * 10 + c;
-      row += i >= runAnchors.length ? '⬛' : (runAnchors[i] === 'b' ? '🟨' : '🟦');
+      const isLast = i === runRoute.length - 1;
+      row += (isLast && finished) ? '🟡' : (runRoute[i] ? '🔵' : '⚫');
     }
     rows.push(row);
   }
@@ -1184,7 +1189,7 @@ document.getElementById('sc-shareBtn').addEventListener('click', async () => {
     `🪝 1 More Swing — Day ${dayNumber}\n` +
     `Score: ${fmt(total)}\n` +
     `${rows.join('\n')}\n` +
-    `⛓ ${runAnchors.length}/40 anchors · ⏱ ${fmtTime(finishTime)} · 🪙 +${runCoinsEarned}`;
+    `⛓ ${hitCount}/${runRoute.length} anchors · ⏱ ${fmtTime(finishTime)} · 🪙 +${runCoinsEarned}`;
   try { if (navigator.share){ await navigator.share({ text }); return; } } catch(e){ if (e?.name === 'AbortError') return; }
   try {
     await navigator.clipboard.writeText(text);
