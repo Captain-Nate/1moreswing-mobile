@@ -1157,7 +1157,7 @@ function showShareCard(){
   // Stats line
   const hitCount = runRoute.filter(Boolean).length;
   document.getElementById('sc-stats').innerHTML =
-    `⛓ <b style="color:#e6edf3">${hitCount}/${runRoute.length}</b> anchors&nbsp;&nbsp;·&nbsp;&nbsp;` +
+    `<b style="color:#e6edf3">${hitCount}/${runRoute.length}</b> anchors used&nbsp;&nbsp;·&nbsp;&nbsp;` +
     `⏱ <b style="color:#e6edf3">${fmtTime(finishTime)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;` +
     `<span class="ci">C</span><b style="color:#ffd95e">+${runCoinsEarned}</b>`;
 
@@ -1189,7 +1189,7 @@ document.getElementById('sc-shareBtn').addEventListener('click', async () => {
     `🪝 1 More Swing — Day ${dayNumber}\n` +
     `Score: ${fmt(total)}\n` +
     `${rows.join('\n')}\n` +
-    `⛓ ${hitCount}/${runRoute.length} anchors · ⏱ ${fmtTime(finishTime)} · 🪙 +${runCoinsEarned}`;
+    `${hitCount}/${runRoute.length} anchors used · ⏱ ${fmtTime(finishTime)} · 🪙 +${runCoinsEarned}`;
   try { if (navigator.share){ await navigator.share({ text }); return; } } catch(e){ if (e?.name === 'AbortError') return; }
   try {
     await navigator.clipboard.writeText(text);
