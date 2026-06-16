@@ -1740,7 +1740,7 @@ function renderWins(data){
   else if (!data.champions.length) html += `<div class="msg">No champions yet — win a daily to be the first!</div>`;
   else data.champions.forEach((c,i)=>{
     const me = (c.tag === myTag) ? ' me' : '';
-    html += `<div class="row${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(c.name)}<span class="tag">#${c.tag}</span></span><span class="sc">${c.wins}<span class="unit">wins</span></span></div>`;
+    html += `<div class="row${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(c.name)}<span class="tag">#${c.tag}</span></span><span class="sc">${c.wins}<span class="unit">${c.wins === 1 ? 'win' : 'wins'}</span></span></div>`;
   });
   lbBody.innerHTML = html;
 }
