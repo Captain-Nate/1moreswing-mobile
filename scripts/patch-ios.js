@@ -197,6 +197,52 @@ function patchEntitlements() {
   console.log('[patch-ios] pbxproj: added CODE_SIGN_ENTITLEMENTS for App target.');
 }
 
+// Add CloudSavePlugin.swift + MainViewController.swift to the Xcode project's
+// build phase so Xcode actually compiles them (just copying files to the
+// directory isn't enough — they must appear in the pbxproj).
+function addSwiftFilesToPbxproj() {
+  if (!fs.existsSync(pbxproj)) return;
+  let pb = fs.readFileSync(pbxproj, 'utf8');
+  if (pb.includes('CloudSavePlugin.swift')) return; // already done
+
+  // Stable UUIDs for the two new files (24 uppercase hex chars each, Xcode format)
+  const pluginRef   = 'A1B2C3D4E5F60001AABBCCDD';
+  const vcRef       = 'A1B2C3D4E5F60002AABBCCDD';
+  const pluginBuild = 'A1B2C3D4E5F60003AABBCCDD';
+  const vcBuild     = 'A1B2C3D4E5F60004AABBCCDD';
+
+  // PBXBuildFile entries
+  pb = pb.replace(
+    '/* End PBXBuildFile section */',
+    `\t\t${pluginBuild} /* CloudSavePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = ${pluginRef} /* CloudSavePlugin.swift */; };\n` +
+    `\t\t${vcBuild} /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ${vcRef} /* MainViewController.swift */; };\n` +
+    '/* End PBXBuildFile section */'
+  );
+
+  // PBXFileReference entries
+  pb = pb.replace(
+    '/* End PBXFileReference section */',
+    `\t\t${pluginRef} /* CloudSavePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSavePlugin.swift; sourceTree = "<group>"; };\n` +
+    `\t\t${vcRef} /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };\n` +
+    '/* End PBXFileReference section */'
+  );
+
+  // Add to App group (alongside AppDelegate.swift)
+  pb = pb.replace(
+    '504EC3071FED79650016851F /* AppDelegate.swift */,',
+    `504EC3071FED79650016851F /* AppDelegate.swift */,\n\t\t\t\t${pluginRef} /* CloudSavePlugin.swift */,\n\t\t\t\t${vcRef} /* MainViewController.swift */,`
+  );
+
+  // Add to Sources build phase
+  pb = pb.replace(
+    '504EC3081FED79650016851F /* AppDelegate.swift in Sources */,',
+    `504EC3081FED79650016851F /* AppDelegate.swift in Sources */,\n\t\t\t\t${pluginBuild} /* CloudSavePlugin.swift in Sources */,\n\t\t\t\t${vcBuild} /* MainViewController.swift in Sources */,`
+  );
+
+  fs.writeFileSync(pbxproj, pb);
+  console.log('[patch-ios] pbxproj: added CloudSavePlugin.swift + MainViewController.swift to build.');
+}
+
 patchPodfile();
 patchInfoPlist();
 syncStoreKit();
@@ -204,3 +250,4 @@ createCloudSavePlugin();
 createMainViewController();
 patchStoryboard();
 patchEntitlements();
+addSwiftFilesToPbxproj();
