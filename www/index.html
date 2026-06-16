@@ -1645,6 +1645,7 @@ const lbEl   = document.getElementById('lb');
 const lbBody = document.getElementById('lbBody');
 // API base: relative on the real site, absolute everywhere else (app webview, preview) so /api works
 const API_BASE = /(^|\.)1moreswing\.com$/.test(location.hostname) ? '' : 'https://1moreswing.com';
+const PLATFORM = window.Capacitor ? 'mobile' : 'web';   // separate leaderboards: web vs mobile app
 function lbSign(day, score){ const s=`${day}:${score}:oms_v1`; let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h.toString(36); }
 function tagOf(pid){ let h=5381; const s=String(pid); for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return String(h % 10000); }  // matches server
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -1672,13 +1673,13 @@ function isClean(name){
   const n = deleet(name), c = n.replace(/(.)\1+/g,'$1');
   return !BANNED.some(w => n.includes(w) || c.includes(w));
 }
-async function fetchScores(day){ try{ const r=await fetch(`${API_BASE}/api/scores?day=${day}`); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
+async function fetchScores(day){ try{ const r=await fetch(`${API_BASE}/api/scores?day=${day}&platform=${PLATFORM}`); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
 async function submitScoreNow(){
   const day = dayNumber, score = Math.floor(lastScore);
   if (score <= 0) return null;
   try{
     const r = await fetch(`${API_BASE}/api/scores`, { method:'POST', headers:{'content-type':'application/json'},
-      body: JSON.stringify({ name: playerName||'anon', score, day, pid: playerId, sig: lbSign(day, score) }) });
+      body: JSON.stringify({ name: playerName||'anon', score, day, pid: playerId, sig: lbSign(day, score), platform: PLATFORM }) });
     if (!r.ok) return null; return await r.json();
   } catch(e){ return null; }
 }
@@ -1729,7 +1730,7 @@ function renderLB(data){
   });
 }
 let lbTab = 'today';
-async function fetchWins(){ try{ const r = await fetch(`${API_BASE}/api/wins`); if(!r.ok) return null; return await r.json(); } catch(e){ return null; } }
+async function fetchWins(){ try{ const r = await fetch(`${API_BASE}/api/wins?platform=${PLATFORM}`); if(!r.ok) return null; return await r.json(); } catch(e){ return null; } }
 // read the player's win count from the leaderboard and unlock the Minimalist theme at the threshold
 function checkWinUnlock(data){
   if (!data || !data.champions) return;
