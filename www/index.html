@@ -126,6 +126,8 @@
   #lb .row .rk { width:30px; color:#8b949e; font-variant-numeric:tabular-nums; }
   #lb .row .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #lb .row .sc { color:#e6edf3; font-weight:700; font-variant-numeric:tabular-nums; }
+  #lb .row .sc .unit { color:#6e7681; font-weight:600; font-size:11px; margin-left:3px; }
+  #lb .row.me .sc .unit { color:var(--accent,#58a6ff); opacity:.7; }
   #lb .row.me { background:rgba(88,166,255,.14); }
   #lb .row.me .rk, #lb .row.me .sc { color:var(--accent,#58a6ff); }
   #lb .msg { color:#8b949e; text-align:center; padding:18px; font-size:14px; line-height:1.5; }
@@ -1736,7 +1738,7 @@ function renderWins(data){
   else if (!data.champions.length) html += `<div class="msg">No champions yet — win a daily to be the first! 👑</div>`;
   else data.champions.forEach((c,i)=>{
     const me = (c.tag === myTag) ? ' me' : '';
-    html += `<div class="row${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(c.name)}<span class="tag">#${c.tag}</span></span><span class="sc">${c.wins} 🏆</span></div>`;
+    html += `<div class="row${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(c.name)}<span class="tag">#${c.tag}</span></span><span class="sc">${c.wins}<span class="unit">wins</span></span></div>`;
   });
   lbBody.innerHTML = html;
 }
