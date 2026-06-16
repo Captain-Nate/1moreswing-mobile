@@ -1167,8 +1167,16 @@ const SOUND_ON  = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" s
 const SOUND_OFF = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
 function syncUI(){
   document.documentElement.style.setProperty('--accent', TH().accent);
-  colorBtn.querySelector('.dot').style.color = TH().accent;     // drives the glow + fill
-  colorBtn.querySelector('.dot').style.background = TH().accent;
+  const cdot = colorBtn.querySelector('.dot');
+  cdot.style.color = TH().accent;                               // drives the glow (box-shadow currentColor)
+  if (themeName === 'mono'){                                    // minimalist: hollow glowing ring to match the orb
+    cdot.style.background = 'transparent';
+    cdot.style.boxSizing = 'border-box';
+    cdot.style.border = '2px solid ' + TH().accent;
+  } else {
+    cdot.style.background = TH().accent;
+    cdot.style.border = 'none';
+  }
   muteBtn.innerHTML = muted ? SOUND_OFF : SOUND_ON;
   muteBtn.title = muted ? 'Unmute' : 'Mute';
   modeBtn.innerHTML = mode === 'daily' ? 'Daily' : '&#8734; Free Play'; // ∞ = endless Free Play
