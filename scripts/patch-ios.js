@@ -20,6 +20,10 @@ const podlock = path.join(root, 'ios', 'App', 'Podfile.lock');
 const plist = path.join(root, 'ios', 'App', 'App', 'Info.plist');
 const storekitSrc = path.join(root, 'storekit', 'OneMoreSwing.storekit');   // source of truth (committed)
 const storekitDst = path.join(root, 'ios', 'App', 'OneMoreSwing.storekit');  // copy the Xcode scheme references
+const appSwiftDir  = path.join(root, 'ios', 'App', 'App');
+const storyboard   = path.join(root, 'ios', 'App', 'App', 'Base.lproj', 'Main.storyboard');
+const entitlements = path.join(root, 'ios', 'App', 'App', 'App.entitlements');
+const pbxproj      = path.join(root, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
 
 const UMP_VERSION = '2.3.0';
 // Google's official AdMob *test* App ID for iOS. Replace with your real
@@ -87,6 +91,116 @@ function syncStoreKit() {
   }
 }
 
+// ── Cloud save: iCloud Key-Value Store ──────────────────────────────────────
+// Creates a tiny Capacitor plugin (CloudSavePlugin.swift) that wraps
+// NSUbiquitousKeyValueStore, a MainViewController subclass to register it,
+// patches Main.storyboard to use that subclass, and adds the iCloud KV
+// entitlement so signed builds can access iCloud.
+
+function createCloudSavePlugin() {
+  if (!fs.existsSync(appSwiftDir)) return;
+  const dst = path.join(appSwiftDir, 'CloudSavePlugin.swift');
+  if (fs.existsSync(dst)) return;
+  fs.writeFileSync(dst,
+`import Foundation
+import Capacitor
+
+@objc(CloudSavePlugin)
+public class CloudSavePlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "CloudSavePlugin"
+    public let jsName = "CloudSave"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "get", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "set", returnType: CAPPluginReturnPromise),
+    ]
+
+    @objc func get(_ call: CAPPluginCall) {
+        let key = call.getString("key") ?? ""
+        guard !key.isEmpty else { call.reject("key required"); return }
+        let val = NSUbiquitousKeyValueStore.default.string(forKey: key)
+        call.resolve(["value": val as Any])
+    }
+
+    @objc func set(_ call: CAPPluginCall) {
+        let key = call.getString("key") ?? ""
+        guard !key.isEmpty else { call.reject("key required"); return }
+        let val = call.getString("value") ?? ""
+        if val.isEmpty {
+            NSUbiquitousKeyValueStore.default.removeObject(forKey: key)
+        } else {
+            NSUbiquitousKeyValueStore.default.set(val, forKey: key)
+        }
+        NSUbiquitousKeyValueStore.default.synchronize()
+        call.resolve()
+    }
+}
+`);
+  console.log('[patch-ios] Created CloudSavePlugin.swift (iCloud KV Store).');
+}
+
+function createMainViewController() {
+  if (!fs.existsSync(appSwiftDir)) return;
+  const dst = path.join(appSwiftDir, 'MainViewController.swift');
+  if (fs.existsSync(dst)) return;
+  fs.writeFileSync(dst,
+`import Capacitor
+
+// Subclass of CAPBridgeViewController used to register local Capacitor plugins.
+class MainViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(CloudSavePlugin())
+    }
+}
+`);
+  console.log('[patch-ios] Created MainViewController.swift.');
+}
+
+function patchStoryboard() {
+  if (!fs.existsSync(storyboard)) return;
+  let src = fs.readFileSync(storyboard, 'utf8');
+  if (src.includes('MainViewController')) return;
+  src = src.replace(
+    'customClass="CAPBridgeViewController" customModule="Capacitor"',
+    'customClass="MainViewController" customModule="App"'
+  );
+  fs.writeFileSync(storyboard, src);
+  console.log('[patch-ios] Main.storyboard: switched root VC to MainViewController.');
+}
+
+function patchEntitlements() {
+  if (!fs.existsSync(appSwiftDir)) return;
+
+  // Create App.entitlements if missing
+  if (!fs.existsSync(entitlements)) {
+    fs.writeFileSync(entitlements,
+`<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>com.apple.developer.ubiquity-kvstore-identifier</key>
+\t<string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
+</dict>
+</plist>
+`);
+    console.log('[patch-ios] Created App.entitlements with iCloud KV entitlement.');
+  }
+
+  // Wire the entitlements file into the App target's build settings
+  if (!fs.existsSync(pbxproj)) return;
+  let pb = fs.readFileSync(pbxproj, 'utf8');
+  if (pb.includes('CODE_SIGN_ENTITLEMENTS')) return;
+  pb = pb.replace(
+    /PRODUCT_BUNDLE_IDENTIFIER = com\.captainnate\.onemoreswing;/g,
+    'PRODUCT_BUNDLE_IDENTIFIER = com.captainnate.onemoreswing;\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = App/App.entitlements;'
+  );
+  fs.writeFileSync(pbxproj, pb);
+  console.log('[patch-ios] pbxproj: added CODE_SIGN_ENTITLEMENTS for App target.');
+}
+
 patchPodfile();
 patchInfoPlist();
 syncStoreKit();
+createCloudSavePlugin();
+createMainViewController();
+patchStoryboard();
+patchEntitlements();

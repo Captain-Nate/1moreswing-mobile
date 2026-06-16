@@ -254,7 +254,10 @@
   </div>
 </div>
 <script>/* Mobile app build only: load AdMob glue + StoreKit in-app purchases inside Capacitor. No-op on the web. */
-if (window.Capacitor) { ['mobile-ads.js','iap.js'].forEach(function(src){ var s = document.createElement('script'); s.src = src; document.head.appendChild(s); }); }</script>
+if (window.Capacitor) {
+  if (typeof Capacitor.registerPlugin === 'function') window.OMS_CloudSave = Capacitor.registerPlugin('CloudSave');
+  ['mobile-ads.js','iap.js'].forEach(function(src){ var s = document.createElement('script'); s.src = src; document.head.appendChild(s); });
+}</script>
 <div id="lb">
   <div class="panel">
     <div class="shead">
@@ -473,6 +476,7 @@ let equipped = { trail:'classic',   orb:'default'   };
 function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Math.random().toString(36).slice(2) + Date.now().toString(36); } }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify({ coins, owned, equipped, themeName, muted, mode, name: playerName, pid: playerId })); } catch(e){}
+  writeToCloud();
 }
 function loadGame(){
   try {
@@ -488,6 +492,31 @@ function loadGame(){
     if (typeof s.name === 'string') playerName = s.name;
   } catch(e){}
   if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
+}
+
+function writeToCloud(){
+  const p = window.OMS_CloudSave; if (!p) return;
+  p.set({ key:'oms_save', value:JSON.stringify({ coins, owned, equipped, themeName, muted, mode, name:playerName, pid:playerId }) }).catch(()=>{});
+}
+async function mergeCloudSave(){
+  const p = window.OMS_CloudSave; if (!p) return;
+  try {
+    const { value } = await p.get({ key:'oms_save' });
+    if (!value) return;
+    const c = JSON.parse(value); let changed = false;
+    if (typeof c.coins === 'number' && c.coins > coins){ coins = c.coins; changed = true; }
+    if (c.pid && !playerId){ playerId = c.pid; changed = true; }
+    if (c.owned) for (const k in owned) if (Array.isArray(c.owned[k])){
+      const m = Array.from(new Set([...owned[k], ...c.owned[k]]));
+      if (m.length !== owned[k].length){ owned[k] = m; changed = true; }
+    }
+    if (c.equipped){ Object.assign(equipped, c.equipped); changed = true; }
+    if (c.themeName && THEMES[c.themeName]){ themeName = c.themeName; changed = true; }
+    if (c.muted !== undefined){ muted = !!c.muted; changed = true; }
+    if (c.mode === 'daily' || c.mode === 'free'){ mode = c.mode; changed = true; }
+    if (c.name){ playerName = c.name; changed = true; }
+    if (changed){ saveGame(); syncUI(); }
+  } catch(e){}
 }
 
 // trail colour for the equipped style (frac: 0 = oldest .. 1 = newest)
@@ -1896,6 +1925,7 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 loadGame();
+mergeCloudSave();   // async: pulls cloud save from iCloud KV; updates coins/owned/equipped then re-syncs
 newRun();
 syncUI();
 fetchWins().then(checkWinUnlock).catch(()=>{});   // unlock Minimalist if already at 100 wins, even without opening the leaderboard
