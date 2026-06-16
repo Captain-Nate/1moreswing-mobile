@@ -70,6 +70,22 @@
   #reviveBtn:disabled { opacity:.7; cursor:default; }
   #gameoverAd { position:fixed; left:50%; top:calc(50% + 168px); transform:translateX(-50%);
     display:none; z-index:14; width:min(336px,92vw); }
+  /* ── Share card ── */
+  #shareCard { position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0.88);
+    display:none; align-items:center; justify-content:center;
+    padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); }
+  #shareCard.show { display:flex; }
+  #shareCardInner { background:#0d1117; border:1px solid #30363d; border-radius:20px;
+    padding:26px 20px 18px; width:min(340px,100%); text-align:center; }
+  #sc-grid { display:grid; grid-template-columns:repeat(10,1fr); gap:5px; margin:18px 0; }
+  #sc-grid span { display:block; aspect-ratio:1; border-radius:50%; }
+  #sc-stats { font-size:13px; color:#8b949e; margin-bottom:18px; line-height:1.8; }
+  #sc-shareBtn { background:var(--accent,#58a6ff); color:#0d1117; border:none;
+    border-radius:999px; padding:13px 0; font-weight:800; font-size:15px;
+    cursor:pointer; width:100%; -webkit-tap-highlight-color:transparent; }
+  #sc-shareBtn:active { transform:scale(.96); }
+  #sc-closeBtn { background:none; border:none; color:#8b949e; font-size:13px;
+    padding:10px 20px; cursor:pointer; margin-top:2px; -webkit-tap-highlight-color:transparent; }
   #gameoverAd.show { display:block; }
 
   /* ---- leaderboard overlay ---- */
@@ -233,6 +249,18 @@
   <button id="lbOpenBtn">🏆 Leaderboard</button>
 </div>
 <div id="gameoverAd"></div>
+<div id="shareCard">
+  <div id="shareCardInner">
+    <div style="font-size:11px;font-weight:700;letter-spacing:2.5px;color:#8b949e;">1 MORE SWING</div>
+    <div id="sc-day" style="font-size:20px;font-weight:800;color:var(--accent,#58a6ff);margin:10px 0 2px;"></div>
+    <div id="sc-score" style="font-size:54px;font-weight:800;color:#e6edf3;line-height:1;"></div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#8b949e;margin-top:4px;">DAILY SCORE</div>
+    <div id="sc-grid"></div>
+    <div id="sc-stats"></div>
+    <button id="sc-shareBtn">Share result</button>
+    <div><button id="sc-closeBtn">Close</button></div>
+  </div>
+</div>
 <button id="resumeBtn">&#9654; Resume</button>
 <button id="toTitleBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:5px"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>Home</button>
 <div id="titleScreen" class="show">
@@ -563,6 +591,7 @@ let mode = 'daily';        // 'daily' | 'free'
 let dayNumber = 1;
 let finishX = null;        // x of the daily finish line (null = endless / Free Play)
 let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
+let runAnchors = [], runCoinsEarned = 0;            // per-run stats for the share card
 let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false;
 let myWins = 0;   // player's all-time wins (from the leaderboard) — drives the Minimalist theme unlock
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
@@ -687,6 +716,8 @@ function newRun(){
   anchors = []; platforms = []; cleared = 0; trail = []; popups = [];
   lastReleased = null; anchorGenCount = 0; finishX = null; runTime = 0;
   total = 0; pending = 0; mult = 1;
+  runAnchors = []; runCoinsEarned = 0;
+  document.getElementById('shareCard').classList.remove('show');
 
   // first anchor sits right where the player starts, so we begin already swinging
   const first = { x: 320, y: H * 0.26, got:true };
@@ -763,6 +794,7 @@ function press(){
       if (a !== t && !a.got && a.x > lastGrabbedX + 1 && a.x < t.x - 1) skipped++;
 
     t.got = true; cleared++;
+    if (mode === 'daily') runAnchors.push('g');
     mult += K.MULT_PER_ANCHOR + skipped * K.SKIP_MULT_BONUS;
     const gained = Math.round((K.ANCHOR_POINTS + skipped * K.SKIP_POINTS) * mult);
     pending += gained;
@@ -785,7 +817,10 @@ function press(){
 function bank(){
   if (pending > 0){
     total += pending;
-    coins += Math.round(pending * K.COIN_RATE);   // lifetime spendable wallet (persists across runs)
+    const earned = Math.round(pending * K.COIN_RATE);
+    coins += earned;   // lifetime spendable wallet (persists across runs)
+    runCoinsEarned += earned;
+    if (runAnchors.length > 0) runAnchors[runAnchors.length - 1] = 'b';
     saveGame();
     popup(p.x, p.y - 34, `BANKED +${fmt(pending)}`, '#3fb950', true);
     sfxBank(); burst(p.x, p.y, 26, '#3fb950', 220); addShake(5); hitPause(3);
@@ -910,6 +945,7 @@ function finish(){
   sfxBank(); addShake(8); burst(p.x, p.y, 34, '#ffd95e', 240);
   showOverButtons();
   syncUI();   // swap the top-right Pause button to a Home (⌂) button
+  setTimeout(showShareCard, 1400);
 }
 
 // resume a dead run from the nearest anchor, keeping score/multiplier (Free Play only)
@@ -1088,7 +1124,73 @@ async function doShare(){
     setTimeout(()=>{ shareBtn.textContent = old; }, 1600);
   } catch(e){}
 }
-shareBtn.addEventListener('click', doShare);
+shareBtn.addEventListener('click', () => {
+  if (state === 'finished') showShareCard();
+  else doShare();
+});
+
+// ── Share card ────────────────────────────────────────────────────────────────
+function showShareCard(){
+  const card = document.getElementById('shareCard');
+  if (!card) return;
+
+  document.getElementById('sc-day').textContent = `Day ${dayNumber}`;
+  document.getElementById('sc-score').textContent = fmt(total);
+
+  // 40-dot anchor grid (10 cols × 4 rows)
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#58a6ff';
+  const grid = document.getElementById('sc-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 40; i++){
+    const dot = document.createElement('span');
+    dot.style.background = i >= runAnchors.length ? '#21262d'
+      : runAnchors[i] === 'b' ? '#ffd95e' : accent;
+    grid.appendChild(dot);
+  }
+
+  // Stats line
+  const hitCount = runAnchors.length;
+  document.getElementById('sc-stats').innerHTML =
+    `⛓ <b style="color:#e6edf3">${hitCount}/40</b> anchors&nbsp;&nbsp;·&nbsp;&nbsp;` +
+    `⏱ <b style="color:#e6edf3">${fmtTime(finishTime)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;` +
+    `🪙 <b style="color:#ffd95e">+${runCoinsEarned}</b>`;
+
+  card.classList.add('show');
+}
+
+document.getElementById('sc-closeBtn').addEventListener('click', () => {
+  document.getElementById('shareCard').classList.remove('show');
+});
+document.getElementById('shareCard').addEventListener('click', e => {
+  if (e.target === document.getElementById('shareCard'))
+    document.getElementById('shareCard').classList.remove('show');
+});
+
+document.getElementById('sc-shareBtn').addEventListener('click', async () => {
+  const DAILY_LENGTH = 40;
+  const rows = [];
+  for (let r = 0; r < 4; r++){
+    let row = '';
+    for (let c = 0; c < 10; c++){
+      const i = r * 10 + c;
+      row += i >= runAnchors.length ? '⬛' : (runAnchors[i] === 'b' ? '🟡' : '🔵');
+    }
+    rows.push(row);
+  }
+  const text =
+    `🪝 1 More Swing — Day ${dayNumber}\n` +
+    `Score: ${fmt(total)}\n` +
+    `${rows.join('\n')}\n` +
+    `⛓ ${runAnchors.length}/40 anchors · ⏱ ${fmtTime(finishTime)} · 🪙 +${runCoinsEarned}`;
+  const url = 'https://1moreswing.com';
+  try { if (navigator.share){ await navigator.share({ text, url }); return; } } catch(e){ if (e?.name === 'AbortError') return; }
+  try {
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    const btn = document.getElementById('sc-shareBtn');
+    const old = btn.textContent; btn.textContent = 'Copied! ✓';
+    setTimeout(() => { btn.textContent = old; }, 1600);
+  } catch(e){}
+});
 
 // ---------- shop ----------
 const shopEl = document.getElementById('shop');
