@@ -78,7 +78,10 @@
   #shareCardInner { background:#0d1117; border:1px solid #30363d; border-radius:20px;
     padding:26px 20px 18px; width:min(340px,100%); text-align:center; }
   #sc-grid { display:grid; grid-template-columns:repeat(10,1fr); gap:5px; margin:18px 0; }
-  #sc-grid span { display:block; aspect-ratio:1; border-radius:3px; }
+  #sc-grid span { display:block; aspect-ratio:1; border-radius:50%; }
+  #sc-stats .ci { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
+    border-radius:50%; margin-right:3px; vertical-align:middle; position:relative; top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
+    background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
   #sc-stats { font-size:13px; color:#8b949e; margin-bottom:18px; line-height:1.8; }
   #sc-shareBtn { background:var(--accent,#58a6ff); color:#0d1117; border:none;
     border-radius:999px; padding:13px 0; font-weight:800; font-size:15px;
@@ -1153,7 +1156,7 @@ function showShareCard(){
   document.getElementById('sc-stats').innerHTML =
     `⛓ <b style="color:#e6edf3">${hitCount}/40</b> anchors&nbsp;&nbsp;·&nbsp;&nbsp;` +
     `⏱ <b style="color:#e6edf3">${fmtTime(finishTime)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;` +
-    `🪙 <b style="color:#ffd95e">+${runCoinsEarned}</b>`;
+    `<span class="ci">C</span><b style="color:#ffd95e">+${runCoinsEarned}</b>`;
 
   card.classList.add('show');
 }
