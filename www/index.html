@@ -166,9 +166,9 @@
   #shop .kofi { display:block; text-align:center; margin:20px 2px 4px; padding:12px; border-radius:10px;
     background:#ff5e5b; color:#fff; font-weight:800; font-size:14px; text-decoration:none; }
   #shop .kofi:hover { background:#ff726f; }
-  /* real-money (StoreKit) purchase UI */
-  #shop .item .btns { display:flex; flex-direction:column; gap:5px; flex:0 0 auto; align-items:stretch; }
-  #shop .item .btns button { min-width:96px; }
+  /* real-money (StoreKit) purchase UI — fixed-width column so every row's buttons line up */
+  #shop .item .btns { display:flex; flex-direction:column; gap:5px; flex:0 0 138px; width:138px; align-items:stretch; }
+  #shop .item .btns button { min-width:0; width:100%; box-sizing:border-box; text-align:center; }
   #shop .item button.iap { background:#8957e5; border-color:#8957e5; color:#fff; font-weight:700; }
   #shop .item button.iap.ultra { background:linear-gradient(90deg,#ff5d5d,#ffd23f,#3dffa0,#3b9dff,#b06bff); border:none;
     color:#0d1117; font-weight:800; text-shadow:0 1px 2px rgba(255,255,255,.35); }
