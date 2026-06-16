@@ -323,7 +323,7 @@
   <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
   <p class="tagline">Swing &middot; Skip &middot; Bank</p>
   <button id="playBtn">&#9654; Play</button>
-  <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="13" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="5" width="4" height="16" rx="1"/></svg> Leaderboard</button>
+  <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg> Leaderboard</button>
   <button id="quitBtn">Quit</button>
   <div class="titleLinks">
     <a href="#" id="aboutLink">About</a> &middot; <a href="#" id="privacyLink">Privacy</a>
@@ -348,6 +348,10 @@
       <div class="setrow">
         <div class="setlabel"><b>Daily run reminder</b><span>A notification at 6:00 PM to play your daily run</span></div>
         <button id="setReminder" class="settoggle">On</button>
+      </div>
+      <div class="setrow">
+        <div class="setlabel"><b>Preview notification</b><span>Sends a sample in 5s — leave the app to see the banner</span></div>
+        <button id="setTestNotif" class="settoggle">Send</button>
       </div>
     </div>
   </div>
@@ -691,6 +695,23 @@ async function toggleReminders(){
 function updateRemindBtn(){
   const b = document.getElementById('setReminder');
   if (b){ b.textContent = remindersOn ? 'On' : 'Off'; b.classList.toggle('on', remindersOn); }
+}
+// fire a one-off sample notification (id 4042, separate from the daily) so the look can be previewed
+async function sendTestNotification(){
+  const LN = localNotifs(); const btn = document.getElementById('setTestNotif');
+  if (!LN){ if (btn){ btn.textContent = 'N/A'; setTimeout(()=>btn.textContent='Send',1500); } return; }
+  try {
+    let perm = await LN.checkPermissions();
+    if (perm.display !== 'granted') perm = await LN.requestPermissions();
+    if (perm.display !== 'granted'){ if (btn){ btn.textContent = 'Denied'; setTimeout(()=>btn.textContent='Send',1800); } return; }
+    await LN.schedule({ notifications: [{
+      id: REMINDER_ID + 1,
+      title: '1 More Swing',
+      body: "Today's daily run is ready — keep your streak going!",
+      schedule: { at: new Date(Date.now() + 5000) },
+    }]});
+    if (btn){ btn.textContent = 'Sent ✓'; setTimeout(()=>{ btn.textContent='Send'; }, 2500); }
+  } catch(e){}
 }
 
 // trail colour for the equipped style (frac: 0 = oldest .. 1 = newest)
@@ -1272,6 +1293,7 @@ document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('settingsClose').addEventListener('click', closeSettings);
 settingsEl.addEventListener('click', e=>{ if (e.target === settingsEl) closeSettings(); });   // tap backdrop to close
 document.getElementById('setReminder').addEventListener('click', toggleReminders);
+document.getElementById('setTestNotif').addEventListener('click', sendTestNotification);
 colorBtn.addEventListener('click', ()=>{
   const list = owned.theme || ['blue','red'];
   themeName = list[(list.indexOf(themeName) + 1) % list.length];
