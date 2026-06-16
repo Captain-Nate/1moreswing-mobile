@@ -1939,9 +1939,13 @@ function draw(){
   }
   ctx.restore();
 
-  // daily progress bar (thin, top edge) — shows how far through the route you are
-  if (mode === 'daily' && finishX !== null && state !== 'finished'){
-    const prog = Math.max(0, Math.min(1, (p.x - 320) / (finishX - 320)));
+  // daily progress bar (thin, top edge) — shows how far through the route you are.
+  // finishX isn't set until the route fully generates near the end, so until then
+  // estimate it from the route length so the bar is visible from the very start.
+  if (mode === 'daily' && state !== 'finished'){
+    const endX = finishX !== null ? finishX
+      : 320 + K.DAILY_LENGTH * K.ANCHOR_SPACING + K.MAX_ROPE + 70;
+    const prog = Math.max(0, Math.min(1, (p.x - 320) / (endX - 320)));
     ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(0, SAFE_TOP, W, 3);
     ctx.fillStyle = TH().accent; ctx.fillRect(0, SAFE_TOP, W * prog, 3);
   }
