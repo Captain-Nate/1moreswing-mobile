@@ -480,6 +480,8 @@ const THEMES = {
   harley:    { accent:'#ff4f9b', glow:'#ffd0e6', rgb:'255,79,155',  bg:'harley'    },  // red/blue + pink
   dv:        { accent:'#ff2e2e', glow:'#ffd0d0', rgb:'255,46,46',   bg:'black'     },  // black + red (solid black bg)
   ls:        { accent:'#3b9dff', glow:'#cfe6ff', rgb:'59,157,255',  bg:'black'     },  // black + blue (solid black bg)
+  wh40k:     { accent:'#f5c542', glow:'#ffe9a8', rgb:'245,197,66',  bg:'wh40k'     },  // deep blue + gold (Vanguard)
+  code:      { accent:'#39ff7a', glow:'#bdffd0', rgb:'57,255,122',  bg:'code'      },  // black + falling green digits (Datastream)
   // ultra tier — continuously cycles through the whole spectrum
   prism:     { get accent(){ return `hsl(${prismHue()},90%,62%)`; },
                get glow(){ return `hsl(${prismHue()},100%,85%)`; },
@@ -513,6 +515,8 @@ const COSMETICS = {
     { id:'harley',    name:'Cotton Candy',  cost:2000000, premium:true, mobileOnly:true },
     { id:'dv',        name:'Inferno',       cost:2200000, premium:true, mobileOnly:true },
     { id:'ls',        name:'Glacier',       cost:2400000, premium:true, mobileOnly:true },
+    { id:'wh40k',     name:'Vanguard',      cost:2600000, premium:true, mobileOnly:true },
+    { id:'code',      name:'Datastream',    cost:2800000, premium:true, mobileOnly:true },
     // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
     { id:'prism',   name:'Prism',        cost:0, premium:true, mobileOnly:true, ultra:true },
     // earned, not bought — unlocks at 100 all-time wins on the leaderboard
@@ -1270,6 +1274,8 @@ function swatchStyle(cat, id){
     if (id === 'kawaii')    return 'linear-gradient(135deg,#a9c7ff,#ffc2e2)';
     if (id === 'solar')     return 'linear-gradient(135deg,#ffd56b,#7bed9f)';
     if (id === 'twitch')    return 'linear-gradient(135deg,#9146ff,#6441a5)';
+    if (id === 'wh40k')     return 'linear-gradient(135deg,#0a1c44,#1f3f86 55%,#f5c542)';
+    if (id === 'code')      return 'radial-gradient(circle at 35% 30%, #39ff7a, #001a05 80%)';
     return (THEMES[id] && THEMES[id].accent) || '#888';
   }
   if (id === 'rainbow') return 'conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red)';
@@ -1684,6 +1690,14 @@ function makeEmotes(){
     emotes.push({ x:Math.random(), y:Math.random(), ch:EMOTES[(Math.random()*EMOTES.length)|0],
                   size:18+Math.random()*16, spd:0.3+Math.random()*0.6, ph:Math.random()*6.28 });
 }
+// falling-digit "code rain" columns for the Datastream theme. Columns use a width
+// fraction so they adapt to any screen size without rebuilding on resize.
+let codeRain = null;
+function makeCodeRain(){
+  codeRain = [];
+  const cols = 26;
+  for (let i=0;i<cols;i++) codeRain.push({ xf:(i+0.5)/cols, ph:Math.random(), spd:7+Math.random()*11 });
+}
 // solid two-colour split background (top half / bottom half) with a soft same-colour
 // glow in each half and a thin divider — used by the comic-inspired themes.
 // glow args are "r,g,b" strings (or null to skip that half's glow).
@@ -1910,6 +1924,32 @@ function drawBackground(){
     const g=ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#3f6fc8'); g.addColorStop(0.5,'#f6f2e6'); g.addColorStop(1,'#c85f97');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  } else if (TH().bg === 'wh40k'){
+    // deep cobalt blue with a gold light from above (Vanguard)
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#040a1e'); g.addColorStop(0.5,'#0a1c44'); g.addColorStop(1,'#05122e');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    const r = ctx.createRadialGradient(W*0.5,H*0.30,0, W*0.5,H*0.30,H*0.72);
+    r.addColorStop(0,'rgba(245,197,66,0.16)'); r.addColorStop(1,'rgba(245,197,66,0)');
+    ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+  } else if (TH().bg === 'code'){
+    // black with falling, shifting green digits (Datastream)
+    ctx.fillStyle='#000700'; ctx.fillRect(0,0,W,H);
+    if (!codeRain) makeCodeRain();
+    const t = performance.now()/1000, cell = 18, tail = 16, rows = Math.ceil(H/cell)+tail;
+    ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, monospace'; ctx.textAlign='center';
+    for (const col of codeRain){
+      const x = col.xf*W, head = (t*col.spd + col.ph*rows) % rows;
+      for (let k=0;k<tail;k++){
+        const row = Math.floor(head) - k; if (row < 0) continue;
+        const y = row*cell + 14; if (y > H+cell) continue;
+        const a = k===0 ? 1 : Math.max(0, 1 - k/tail);
+        const d = (Math.floor(t*9 + col.xf*53 + row*7)) % 10;   // digit shifts over time
+        ctx.fillStyle = k===0 ? `rgba(215,255,215,${a})` : `rgba(45,255,95,${a*0.8})`;
+        ctx.fillText(d, x, y);
+      }
+    }
+    ctx.textAlign='left';
   } else {
     const g = ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#0d1117'); g.addColorStop(1,'#161b22');

@@ -258,6 +258,36 @@
       "type": "NonConsumable"
     },
     {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "D4E5F6A7-4444-4D5E-AF6A-8B9C0D1E2F3A",
+      "localizations": [
+        {
+          "description": "Unlock the Vanguard theme.",
+          "displayName": "Vanguard Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.wh40k",
+      "referenceName": "Vanguard Theme",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "E5F6A7B8-5555-4E6F-B07B-9C0D1E2F3A4B",
+      "localizations": [
+        {
+          "description": "Unlock the Datastream theme.",
+          "displayName": "Datastream Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.code",
+      "referenceName": "Datastream Theme",
+      "type": "NonConsumable"
+    },
+    {
       "displayPrice": "99.99",
       "familyShareable": false,
       "internalID": "C3E4F5A6-3333-4C5D-9E6F-7A8B9C0D1E2F",
