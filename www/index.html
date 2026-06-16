@@ -2042,6 +2042,7 @@ function drawBackground(){
     if (!emotes) makeEmotes();
     const t = performance.now()/1000;
     ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle = '#ffffff';   // solid fill (not the leftover purple gradient) so iOS WebKit renders the COLOUR emoji, not a tinted silhouette
     for (const e of emotes){
       const yy = ((e.y - t*e.spd*0.05) % 1 + 1) % 1;       // float upward, wrap
       const px = e.x*W + Math.sin(t*0.5 + e.ph)*14;
