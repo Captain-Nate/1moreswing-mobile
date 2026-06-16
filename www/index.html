@@ -560,7 +560,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, mode, name: playerName, pid: playerId };
+  return { coins, owned, equipped, themeName: tn, muted, mode, name: playerName, pid: playerId, lastDailyDone };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -578,6 +578,7 @@ function loadGame(){
     if (typeof s.muted === 'boolean') muted = s.muted;
     if (s.mode === 'daily' || s.mode === 'free') mode = s.mode;
     if (typeof s.name === 'string') playerName = s.name;
+    if (typeof s.lastDailyDone === 'number') lastDailyDone = s.lastDailyDone;
   } catch(e){}
   if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
 }
@@ -605,7 +606,42 @@ async function mergeCloudSave(){
     if (c.muted !== undefined){ muted = !!c.muted; changed = true; }
     if (c.mode === 'daily' || c.mode === 'free'){ mode = c.mode; changed = true; }
     if (c.name){ playerName = c.name; changed = true; }
+    if (typeof c.lastDailyDone === 'number' && c.lastDailyDone > lastDailyDone){ lastDailyDone = c.lastDailyDone; changed = true; }
     if (changed){ saveGame(); syncUI(); }
+  } catch(e){}
+}
+
+// ---------- daily-run reminder (local notification, no server needed) ----------
+const REMINDER_ID = 4041;          // fixed id so re-scheduling replaces, never stacks
+const REMINDER_HOUR = 18;          // 6pm local time
+function localNotifs(){ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }
+// Schedule a repeating daily nudge at REMINDER_HOUR. If they've already done today's
+// daily (or `skipToday`), anchor the first fire to tomorrow so we don't nag the same day.
+async function scheduleDailyReminder(skipToday){
+  const LN = localNotifs(); if (!LN) return;
+  try {
+    let perm = await LN.checkPermissions();
+    if (perm.display !== 'granted') perm = await LN.requestPermissions();
+    if (perm.display !== 'granted') return;
+    const at = new Date(); at.setHours(REMINDER_HOUR, 0, 0, 0);
+    if (skipToday || at <= new Date()) at.setDate(at.getDate() + 1);
+    await LN.cancel({ notifications: [{ id: REMINDER_ID }] });
+    await LN.schedule({ notifications: [{
+      id: REMINDER_ID,
+      title: '1 More Swing',
+      body: "Today's daily run is ready — keep your streak going! 🪝",
+      schedule: { at, repeats: true, every: 'day' },
+    }]});
+  } catch(e){}
+}
+// On launch: only (re)schedule if permission is already granted — never prompt here
+// (the first prompt happens after the player finishes a daily, a natural moment).
+async function ensureDailyReminder(){
+  const LN = localNotifs(); if (!LN) return;
+  try {
+    const perm = await LN.checkPermissions();
+    if (perm.display !== 'granted') return;
+    scheduleDailyReminder(lastDailyDone === dayNumber);   // skip today if already played today's daily
   } catch(e){}
 }
 
@@ -651,6 +687,7 @@ function mulberry32(a){
 let rng = Math.random;     // current run's random source (set per run)
 let mode = 'daily';        // 'daily' | 'free'
 let dayNumber = 1;
+let lastDailyDone = 0;     // day number of the most recent completed daily (drives the reminder skip-today)
 let finishX = null;        // x of the daily finish line (null = endless / Free Play)
 let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
 let runRoute = [], runCoinsEarned = 0;              // per-run stats for the share card (runRoute[i] = grabbed route anchor i+1)
@@ -1004,6 +1041,8 @@ function finish(){
   best = Math.max(best, total);
   state = 'finished';
   lastScore = total; submittedRun = false;
+  if (mode === 'daily'){ lastDailyDone = dayNumber; saveGame();
+    scheduleDailyReminder(true); }   // they just played today → first reminder is tomorrow (prompts for permission the first time)
   sfxBank(); addShake(8); burst(p.x, p.y, 34, '#ffd95e', 240);
   showOverButtons();
   syncUI();   // swap the top-right Pause button to a Home (⌂) button
@@ -2262,6 +2301,7 @@ mergeCloudSave();   // async: pulls cloud save from iCloud KV; updates coins/own
 newRun();
 syncUI();
 fetchWins().then(checkWinUnlock).catch(()=>{});   // unlock Minimalist if already at 100 wins, even without opening the leaderboard
+ensureDailyReminder();   // keep the daily-run reminder scheduled (only if already permitted)
 requestAnimationFrame(frame);
 </script>
 </body>

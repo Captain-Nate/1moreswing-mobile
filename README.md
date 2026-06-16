@@ -58,6 +58,11 @@ npx cap open ios          # build / run in Xcode
 - CocoaPods setup on a fresh Mac: the system Ruby (2.6) is too old, so install via
   Homebrew (`brew install cocoapods`) and point the toolchain at the full Xcode
   app — `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`.
+- **Adding a new Capacitor plugin?** `npx cap sync` may print *"Skipping pod install
+  because CocoaPods is not installed"* (Homebrew's `pod` isn't on its PATH) and the
+  new pod won't be compiled. Install it manually from `ios/App`:
+  `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 /opt/homebrew/bin/pod install`
+  (the `LANG`/`LC_ALL` vars avoid a CocoaPods Unicode-normalization crash on newer Ruby).
 - **App icon / splash:** the source art lives in `assets/` (`icon-only.png`,
   `splash.png`, `splash-dark.png` — a blue orb on the dark game background).
   Generated icons land in the per-machine `ios/`, so after `npx cap add ios` run
