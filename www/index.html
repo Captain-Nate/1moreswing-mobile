@@ -178,10 +178,11 @@
   #shop .exnote { margin:-4px 0 8px 50px; color:#6e7681; font-size:11px; }
   /* ---- theme preview bar ---- */
   #previewBar { position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom)); transform:translateX(-50%);
-    z-index:55; display:none; align-items:center; gap:8px; background:rgba(13,17,23,.94);
-    border:1.5px solid var(--accent,#58a6ff); border-radius:14px; padding:9px 10px 9px 16px;
+    z-index:55; display:none; flex-direction:column; align-items:stretch; gap:6px; background:rgba(13,17,23,.94);
+    border:1.5px solid var(--accent,#58a6ff); border-radius:14px; padding:12px 14px;
     box-shadow:0 12px 40px rgba(0,0,0,.55); max-width:min(460px,94vw); }
   #previewBar.show { display:flex; }
+  #previewBar .prow { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
   #previewBar .pl { color:#e6edf3; font-weight:700; font-size:14px; white-space:nowrap; margin-right:2px; }
   #previewBar .pl b { color:var(--accent,#58a6ff); }
   #previewBar button { border:1px solid #30363d; background:#21262d; color:#e6edf3; border-radius:999px;
@@ -190,7 +191,7 @@
   #previewBar button:disabled { opacity:.5; }
   #previewBar button.pbuy { background:#1f6feb; border-color:#1f6feb; }
   #previewBar button.piap { background:#8957e5; border-color:#8957e5; color:#fff; }
-  #previewBar button.pdone { background:none; border-color:transparent; color:#8b949e; padding:9px 8px; }
+  #previewBar button.pdone { background:none; border:none; color:#8b949e; padding:6px 8px 2px; font-size:13px; }
   #shop .item button .ci, #previewBar button .ci { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
     border-radius:50%; margin-right:5px; vertical-align:middle; position:relative; top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
@@ -1436,7 +1437,7 @@ function renderPreviewBar(id){
     action += `<button class="pbuy" data-pact="buy" data-id="${id}" ${coins<it.cost?'disabled':''}><span class="ci">C</span>${fmt(it.cost)}</button>`;
   }
   const bar = document.getElementById('previewBar');
-  bar.innerHTML = `<span class="pl">Previewing <b>${it.name}</b></span>${action}<button class="pdone" data-pact="done">Done</button>`;
+  bar.innerHTML = `<div class="prow"><span class="pl">Previewing <b>${it.name}</b></span>${action}</div><button class="pdone" data-pact="done">Done</button>`;
   bar.querySelectorAll('button[data-pact]').forEach(b => b.addEventListener('click', () => {
     const { pact } = b.dataset, tid = b.dataset.id;
     if (pact === 'done'){ endPreview(false); openShop(); }
