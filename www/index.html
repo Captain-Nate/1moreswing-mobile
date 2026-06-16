@@ -1194,6 +1194,7 @@ function syncUI(){
   // top-right button: hidden on the title screen; a Home (⌂) button on the run-over screen
   // (nothing to pause there, and it avoids overlapping the "Tap to swing again" text); else Pause/Resume
   pauseBtn.style.display = titleOpen ? 'none' : '';
+  const sb = document.getElementById('settingsBtn'); if (sb) sb.style.display = titleOpen ? '' : 'none';   // settings only on the title screen
   if (over){ pauseBtn.innerHTML = HOME_ICON; pauseBtn.title = 'Menu'; }
   else     { pauseBtn.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;'; pauseBtn.title = paused ? 'Resume' : 'Pause'; }
 }
