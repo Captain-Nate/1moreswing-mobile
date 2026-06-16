@@ -2193,6 +2193,14 @@ function draw(){
   // player (equipped orb skin, with glow)
   if (state!=='dead'){
     const [oc, ic] = orbColors();
+    if (themeName === 'mono'){
+      // minimalist: glowing white ring with a hollow centre
+      ctx.save();
+      ctx.shadowColor = oc; ctx.shadowBlur = 16;
+      ctx.lineWidth = 3; ctx.strokeStyle = oc;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI*2); ctx.stroke(); ctx.stroke();
+      ctx.restore();
+    } else {
     ctx.globalAlpha = 0.45; ctx.beginPath(); ctx.arc(p.x, p.y, 17, 0, Math.PI*2);
     ctx.fillStyle = oc; ctx.fill(); ctx.globalAlpha = 1;
     ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, Math.PI*2); ctx.fillStyle = oc; ctx.fill();
@@ -2210,6 +2218,7 @@ function draw(){
       ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(p.x+ox-1.2, p.y+oy-1.2, 1.0, 0, Math.PI*2); ctx.fill();
     } else {
       ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fillStyle = ic; ctx.fill();
+    }
     }
   }
 
