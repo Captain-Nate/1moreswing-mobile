@@ -1336,6 +1336,20 @@ function celebratePurchase(label){
   }
 }
 
+// For real-money buys, hold the celebration until Apple's success dialog is dismissed.
+// StoreKit's alert makes the app resign-active; pressing OK makes it active again.
+let appActive = true, pendingCelebration = null;
+if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
+  Capacitor.Plugins.App.addListener('appStateChange', ({ isActive }) => {
+    appActive = isActive;
+    if (isActive && pendingCelebration){ const l = pendingCelebration; pendingCelebration = null; setTimeout(() => celebratePurchase(l), 250); }
+  });
+}
+function celebratePurchaseWhenActive(label){
+  if (appActive) celebratePurchase(label);    // dialog already dismissed (or web) — go now
+  else pendingCelebration = label;            // wait for the user to press OK on Apple's dialog
+}
+
 function buyItem(cat, id){
   const it = COSMETICS[cat].find(x => x.id === id);
   if (!it || it.ultra || owned[cat].includes(id) || coins < it.cost) return;   // ultra is real-money only
@@ -1373,7 +1387,7 @@ window.OMS_applyEntitlement = function(productId){
     const it = COSMETICS.theme.find(t => t.id === tid); label = it ? it.name : null; }
   if (changed){
     saveGame();
-    if (purchaseIntent && label) celebratePurchase(label);   // only on a deliberate buy, not restore/launch
+    if (purchaseIntent && label) celebratePurchaseWhenActive(label);   // only on a deliberate buy, not restore/launch; waits for Apple's dialog to close
   }
   purchaseIntent = false;
   if (shopOpen) renderShop();
