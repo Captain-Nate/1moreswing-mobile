@@ -639,7 +639,7 @@ async function mergeCloudSave(){
     if (c.name){ playerName = c.name; changed = true; }
     if (typeof c.lastDailyDone === 'number' && c.lastDailyDone > lastDailyDone){ lastDailyDone = c.lastDailyDone; changed = true; }
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
-    if (changed){ saveGame(); syncUI(); updateRemindBtn(); }
+    if (changed){ saveGame(); syncUI(); updateRemindBtn(); if (lbOpen) showTab(); }   // refresh leaderboard if it's open when the cloud identity lands
   } catch(e){}
 }
 
