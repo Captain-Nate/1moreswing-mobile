@@ -174,8 +174,24 @@
     color:#0d1117; font-weight:800; text-shadow:0 1px 2px rgba(255,255,255,.35); }
   #shop .item button.iap.ultra:disabled { opacity:.85; }
   #shop .item button.winlock { background:#21262d; border:1px solid #30363d; color:#9aa4b0; font-weight:700; cursor:default; }
+  #shop .item button.preview { background:#161b22; border-color:#30363d; color:#c9d1d9; font-weight:600; }
   #shop .exnote { margin:-4px 0 8px 50px; color:#6e7681; font-size:11px; }
-  #shop .item button .ci { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
+  /* ---- theme preview bar ---- */
+  #previewBar { position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    z-index:55; display:none; align-items:center; gap:8px; background:rgba(13,17,23,.94);
+    border:1.5px solid var(--accent,#58a6ff); border-radius:14px; padding:9px 10px 9px 16px;
+    box-shadow:0 12px 40px rgba(0,0,0,.55); max-width:min(460px,94vw); }
+  #previewBar.show { display:flex; }
+  #previewBar .pl { color:#e6edf3; font-weight:700; font-size:14px; white-space:nowrap; margin-right:2px; }
+  #previewBar .pl b { color:var(--accent,#58a6ff); }
+  #previewBar button { border:1px solid #30363d; background:#21262d; color:#e6edf3; border-radius:999px;
+    padding:9px 13px; font-weight:800; font-size:13px; cursor:pointer; white-space:nowrap;
+    -webkit-tap-highlight-color:transparent; }
+  #previewBar button:disabled { opacity:.5; }
+  #previewBar button.pbuy { background:#1f6feb; border-color:#1f6feb; }
+  #previewBar button.piap { background:#8957e5; border-color:#8957e5; color:#fff; }
+  #previewBar button.pdone { background:none; border-color:transparent; color:#8b949e; padding:9px 8px; }
+  #shop .item button .ci, #previewBar button .ci { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
     border-radius:50%; margin-right:5px; vertical-align:middle; position:relative; top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
   #shop .unlockall { display:flex; align-items:center; gap:12px; padding:11px 12px; margin:2px 0 12px;
@@ -283,6 +299,7 @@
 </div>
 <div id="fx"></div>
 <div id="fxToast"></div>
+<div id="previewBar"></div>
 <button id="resumeBtn">&#9654; Resume</button>
 <button id="toTitleBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:5px"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>Home</button>
 <div id="titleScreen" class="show">
@@ -524,8 +541,16 @@ let coins = 0;
 let owned    = { trail:['classic'], orb:['default'], theme:['blue','red'] };
 let equipped = { trail:'classic',   orb:'default'   };
 function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Math.random().toString(36).slice(2) + Date.now().toString(36); } }
+// Never persist a theme the player doesn't own — during a Preview, themeName is a
+// not-yet-owned theme; fall back to their real equipped theme (preTheme) so a stray
+// save can't lock in something unpurchased.
+function saveSnapshot(){
+  let tn = themeName;
+  if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
+  return { coins, owned, equipped, themeName: tn, muted, mode, name: playerName, pid: playerId };
+}
 function saveGame(){
-  try { localStorage.setItem('oms_save', JSON.stringify({ coins, owned, equipped, themeName, muted, mode, name: playerName, pid: playerId })); } catch(e){}
+  try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
   writeToCloud();
 }
 function loadGame(){
@@ -546,7 +571,7 @@ function loadGame(){
 
 function writeToCloud(){
   const p = window.OMS_CloudSave; if (!p) return;
-  p.set({ key:'oms_save', value:JSON.stringify({ coins, owned, equipped, themeName, muted, mode, name:playerName, pid:playerId }) }).catch(()=>{});
+  p.set({ key:'oms_save', value:JSON.stringify(saveSnapshot()) }).catch(()=>{});
 }
 async function mergeCloudSave(){
   const p = window.OMS_CloudSave; if (!p) return;
@@ -800,7 +825,7 @@ function pickTarget(){
 
 function press(){
   const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
-  if (paused || shopOpen || lbOpen || titleOpen || infoOpen) return;
+  if (paused || shopOpen || lbOpen || titleOpen || infoOpen || previewing) return;
   const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
   if (state === 'dead' || state === 'finished'){ newRun(); consumeRelease = true; return; }
   if (state !== 'flying' && state !== 'landed') return;
@@ -851,7 +876,7 @@ function bank(){
 }
 
 function release(){
-  if (titleOpen) return;
+  if (titleOpen || previewing) return;
   if (consumeRelease){ consumeRelease = false; return; }   // ignore the same tap that restarted the run
   if (state !== 'swinging') return;
   // Verlet velocity carries automatically; nudge it for a snappy launch
@@ -1000,7 +1025,7 @@ window.addEventListener('keydown', e=>{
   else if (e.key === 'r' || e.key === 'R') newRun();
   else if (e.key === 'p' || e.key === 'P') togglePause();
   else if (e.key === 'l' || e.key === 'L'){ lbOpen ? closeLeaderboard() : openLeaderboard(); }
-  else if (e.key === 'Escape'){ if (infoOpen) closeInfo(); else if (shopOpen) closeShop(); else if (lbOpen) closeLeaderboard(); }
+  else if (e.key === 'Escape'){ if (infoOpen) closeInfo(); else if (previewing){ endPreview(false); openShop(); } else if (shopOpen) closeShop(); else if (lbOpen) closeLeaderboard(); }
 });
 window.addEventListener('keyup', e=>{ if (e.code==='Space'){ spaceDown=false; release(); } });
 
@@ -1286,6 +1311,8 @@ function renderShop(){
           if (p) btns += `<button class="iap" data-act="iapbuy" data-id="${it.id}">${p}</button>`;
         }
       }
+      // let players preview any theme they don't currently have equipped
+      if (cat === 'theme' && !isEq) btns += `<button class="preview" data-act="preview" data-id="${it.id}">Preview</button>`;
       html += `<div class="item"><span class="sw" style="background:${swatchStyle(cat,it.id)}">${it.emoji||''}</span>`
             + `<span class="nm">${it.name}</span><span class="btns">${btns}</span></div>`;
       if (it.ultra || it.winUnlock) html += `<div class="exnote">Not included in the Unlock All bundle</div>`;
@@ -1300,6 +1327,7 @@ function renderShop(){
     const { act, cat, id } = b.dataset;
     if (act === 'buy') buyItem(cat, id);
     else if (act === 'equip') equipItem(cat, id);
+    else if (act === 'preview') startPreview(id);
     else if (act === 'iapbuy'){ armPurchaseIntent(); iap.buyTheme(id); }
     else if (act === 'iapall'){ armPurchaseIntent(); iap.buyAll(); }
     else if (act === 'restore') iap.restore();
@@ -1377,6 +1405,48 @@ document.getElementById('shopBtn').addEventListener('click', openShop);
 document.getElementById('shopClose').addEventListener('click', closeShop);
 shopEl.addEventListener('click', e => { if (e.target === shopEl) closeShop(); }); // click backdrop to close
 
+// ---------- theme preview ----------
+// Closes the shop, applies a theme live (without saving) and freezes the scene so the
+// player can see it on the real play/title background, then offers buy/equip/done.
+let previewing = null, preTheme = null;
+function startPreview(id){
+  if (!THEMES[id]) return;
+  if (previewing === null) preTheme = themeName;   // remember the real equipped theme
+  previewing = id; themeName = id; syncUI();
+  closeShop();
+  renderPreviewBar(id);
+}
+function endPreview(keep){
+  if (previewing === null) return;
+  if (!keep){ themeName = preTheme; syncUI(); }     // revert to the equipped theme
+  previewing = null; preTheme = null;
+  document.getElementById('previewBar').classList.remove('show');
+}
+function renderPreviewBar(id){
+  const it = COSMETICS.theme.find(t => t.id === id); if (!it) return;
+  const iap = window.OMS_IAP, iapReady = !!(iap && iap.ready);
+  const isOwned = owned.theme.includes(id);
+  let action = '';
+  if (isOwned)            action = `<button class="pbuy" data-pact="equip" data-id="${id}">Equip</button>`;
+  else if (it.ultra){     const p = iapReady && iap.priceForTheme(id);
+                          action = p ? `<button class="piap" data-pact="iapbuy" data-id="${id}">${p}</button>` : ''; }
+  else if (it.winUnlock)  action = '';                            // earned, not purchasable
+  else {
+    if (iapReady && it.premium){ const p = iap.priceForTheme(id); if (p) action += `<button class="piap" data-pact="iapbuy" data-id="${id}">${p}</button>`; }
+    action += `<button class="pbuy" data-pact="buy" data-id="${id}" ${coins<it.cost?'disabled':''}><span class="ci">C</span>${fmt(it.cost)}</button>`;
+  }
+  const bar = document.getElementById('previewBar');
+  bar.innerHTML = `<span class="pl">Previewing <b>${it.name}</b></span>${action}<button class="pdone" data-pact="done">Done</button>`;
+  bar.querySelectorAll('button[data-pact]').forEach(b => b.addEventListener('click', () => {
+    const { pact } = b.dataset, tid = b.dataset.id;
+    if (pact === 'done'){ endPreview(false); openShop(); }
+    else if (pact === 'equip'){ endPreview(true); equipItem('theme', tid); openShop(); }
+    else if (pact === 'buy'){ const had = owned.theme.includes(tid); buyItem('theme', tid); if (owned.theme.includes(tid) && !had) endPreview(true); }
+    else if (pact === 'iapbuy'){ armPurchaseIntent(); window.OMS_IAP && window.OMS_IAP.buyTheme(tid); }  // stays in preview; finalized on entitlement
+  }));
+  bar.classList.add('show');
+}
+
 // ---------- in-app purchases bridge (native StoreKit via cordova-plugin-purchase; see iap.js) ----------
 const IAP_APP_ID = 'com.captainnate.onemoreswing';
 window.OMS_IAP_CONFIG = (() => {
@@ -1394,6 +1464,8 @@ window.OMS_applyEntitlement = function(productId){
   else if (cfg.themeProducts[productId]){ const tid = cfg.themeProducts[productId]; unlock(tid);
     const it = COSMETICS.theme.find(t => t.id === tid); label = it ? it.name : null; }
   if (changed){
+    // if the player was previewing a theme they just bought via IAP, keep it equipped
+    if (previewing && owned.theme.includes(previewing)) endPreview(true);
     saveGame();
     // only celebrate on a deliberate buy (not restore/launch). Clear the flag ONLY here —
     // iap.js calls this for every owned product on refresh, so clearing it unconditionally
@@ -2103,7 +2175,7 @@ function draw(){
 let last = performance.now(), acc = 0;
 function frame(now){
   let ft = (now-last)/1000; last = now;
-  if (!paused && !shopOpen && !lbOpen && !titleOpen && !infoOpen){
+  if (!paused && !shopOpen && !lbOpen && !titleOpen && !infoOpen && !previewing){
     let timeScale = 1;
     if      (freezeFrames > 0){ freezeFrames--; timeScale = 0;   }  // hit-pause: full freeze
     else if (slowmoFrames > 0){ slowmoFrames--; timeScale = 0.4; }  // clutch slow-mo
