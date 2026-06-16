@@ -231,16 +231,12 @@
     -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.45);
     transition:transform .08s; }
   #playBtn:active { transform:scale(.95); }
-  #titleLbBtn { margin-top:16px; padding:11px 30px; border-radius:999px; border:1px solid #30363d;
-    background:rgba(33,38,45,.85); color:#e6edf3; font-weight:700; font-size:15px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent; transition:transform .08s, border-color .15s; }
-  #titleLbBtn:hover { border-color:#8b949e; }
+  #titleLbBtn { margin-top:14px; padding:12px 32px; border:none; border-radius:999px;
+    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:16px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; -webkit-tap-highlight-color:transparent;
+    box-shadow:0 8px 26px rgba(0,0,0,.45); transition:transform .08s; }
+  #titleLbBtn svg { display:block; }
   #titleLbBtn:active { transform:scale(.95); }
-  #titleScreen .titleToggle { margin-top:12px; padding:9px 22px; border-radius:999px; border:1px solid #30363d;
-    background:transparent; color:#9aa4b0; font-weight:600; font-size:13.5px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent; transition:transform .08s, border-color .15s, color .15s; }
-  #titleScreen .titleToggle:hover { border-color:#8b949e; color:#e6edf3; }
-  #titleScreen .titleToggle:active { transform:scale(.95); }
   #quitBtn { margin-top:14px; padding:9px 26px; border-radius:999px; border:1px solid #30363d;
     background:transparent; color:#8b949e; font-weight:600; font-size:14px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; }
@@ -260,16 +256,16 @@
     -webkit-tap-highlight-color:transparent; }
   #toTitleBtn.show { display:block; }
 
-  /* ---- in-app About / Privacy pages ---- */
-  #info { position:fixed; inset:0; z-index:22; display:none; box-sizing:border-box;
+  /* ---- in-app About / Privacy / Settings pages ---- */
+  #info, #settings { position:fixed; inset:0; z-index:22; display:none; box-sizing:border-box;
     padding:calc(14px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));
     background:rgba(8,11,16,.82); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
-  #info.open { display:flex; }
-  #info .panel { width:min(460px,92vw); max-height:100%; overflow:hidden; display:flex; flex-direction:column;
+  #info.open, #settings.open { display:flex; }
+  #info .panel, #settings .panel { width:min(460px,92vw); max-height:100%; overflow:hidden; display:flex; flex-direction:column;
     background:#0f141b; border:1px solid #30363d; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
-  #info .shead { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #21262d; }
-  #info .shead h2 { margin:0; font-size:15px; letter-spacing:1px; color:#e6edf3; }
-  #infoClose { width:32px; height:32px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#e6edf3; cursor:pointer; font-size:16px; }
+  #info .shead, #settings .shead { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #21262d; }
+  #info .shead h2, #settings .shead h2 { margin:0; font-size:15px; letter-spacing:1px; color:#e6edf3; }
+  #infoClose, #settingsClose { width:32px; height:32px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#e6edf3; cursor:pointer; font-size:16px; }
   #infoBody { flex:1 1 auto; min-height:0; padding:4px 20px 22px; overflow-y:auto;
     -webkit-overflow-scrolling:touch; color:#c9d1d9; font-size:14px; line-height:1.55; }
   #infoBody h3 { color:#e6edf3; font-size:19px; margin:18px 0 6px; }
@@ -277,6 +273,14 @@
   #infoBody p { margin:6px 0; }
   #infoBody ul { margin:6px 0; padding-left:20px; }
   #infoBody li { margin:3px 0; }
+  #settingsBody { padding:8px 20px 20px; }
+  #settingsBody .setrow { display:flex; align-items:center; gap:14px; padding:12px 0; }
+  #settingsBody .setlabel { flex:1; color:#e6edf3; font-size:15px; }
+  #settingsBody .setlabel b { display:block; font-weight:700; }
+  #settingsBody .setlabel span { display:block; color:#8b949e; font-size:12px; margin-top:2px; line-height:1.4; }
+  #settingsBody .settoggle { flex:0 0 auto; min-width:62px; padding:9px 16px; border-radius:999px; border:1px solid #30363d;
+    background:#21262d; color:#8b949e; font-weight:800; font-size:14px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  #settingsBody .settoggle.on { background:var(--accent,#58a6ff); border-color:var(--accent,#58a6ff); color:#0d1117; }
   #infoBody a { color:var(--accent,#58a6ff); }
   #infoBody .muted { color:#8b949e; font-size:12.5px; }
 </style>
@@ -289,6 +293,7 @@
   <button id="shopBtn" title="Shop">&#128722;</button>
   <button id="muteBtn" title="Mute">&#128266;</button>
   <button id="colorBtn" title="Toggle colour"><span class="dot"></span></button>
+  <button id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   <button id="pauseBtn" title="Pause">&#10074;&#10074;</button>
 </div>
 <div id="overBtns">
@@ -318,8 +323,7 @@
   <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
   <p class="tagline">Swing &middot; Skip &middot; Bank</p>
   <button id="playBtn">&#9654; Play</button>
-  <button id="titleLbBtn">🏆 Leaderboard</button>
-  <button id="remindBtn" class="titleToggle">🔔 Daily reminder: On</button>
+  <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="13" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="5" width="4" height="16" rx="1"/></svg> Leaderboard</button>
   <button id="quitBtn">Quit</button>
   <div class="titleLinks">
     <a href="#" id="aboutLink">About</a> &middot; <a href="#" id="privacyLink">Privacy</a>
@@ -332,6 +336,20 @@
       <button id="infoClose">&#10005;</button>
     </div>
     <div id="infoBody"></div>
+  </div>
+</div>
+<div id="settings">
+  <div class="panel">
+    <div class="shead">
+      <h2>SETTINGS</h2>
+      <button id="settingsClose">&#10005;</button>
+    </div>
+    <div id="settingsBody">
+      <div class="setrow">
+        <div class="setlabel"><b>Daily run reminder</b><span>A notification at 6:00 PM to play your daily run</span></div>
+        <button id="setReminder" class="settoggle">On</button>
+      </div>
+    </div>
   </div>
 </div>
 <script>/* Mobile app build only: load AdMob glue + StoreKit in-app purchases inside Capacitor. No-op on the web. */
@@ -671,8 +689,8 @@ async function toggleReminders(){
   scheduleDailyReminder(lastDailyDone === dayNumber);
 }
 function updateRemindBtn(){
-  const b = document.getElementById('remindBtn');
-  if (b) b.textContent = `🔔 Daily reminder: ${remindersOn ? 'On' : 'Off'}`;
+  const b = document.getElementById('setReminder');
+  if (b){ b.textContent = remindersOn ? 'On' : 'Off'; b.classList.toggle('on', remindersOn); }
 }
 
 // trail colour for the equipped style (frac: 0 = oldest .. 1 = newest)
@@ -908,7 +926,7 @@ function pickTarget(){
 
 function press(){
   const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
-  if (paused || shopOpen || lbOpen || titleOpen || infoOpen || previewing) return;
+  if (paused || shopOpen || lbOpen || titleOpen || infoOpen || settingsOpen || previewing) return;
   const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
   if (state === 'dead' || state === 'finished'){ newRun(); consumeRelease = true; return; }
   if (state !== 'flying' && state !== 'landed') return;
@@ -1110,7 +1128,7 @@ window.addEventListener('keydown', e=>{
   else if (e.key === 'r' || e.key === 'R') newRun();
   else if (e.key === 'p' || e.key === 'P') togglePause();
   else if (e.key === 'l' || e.key === 'L'){ lbOpen ? closeLeaderboard() : openLeaderboard(); }
-  else if (e.key === 'Escape'){ if (infoOpen) closeInfo(); else if (previewing){ endPreview(false); openShop(); } else if (shopOpen) closeShop(); else if (lbOpen) closeLeaderboard(); }
+  else if (e.key === 'Escape'){ if (infoOpen) closeInfo(); else if (settingsOpen) closeSettings(); else if (previewing){ endPreview(false); openShop(); } else if (shopOpen) closeShop(); else if (lbOpen) closeLeaderboard(); }
 });
 window.addEventListener('keyup', e=>{ if (e.code==='Space'){ spaceDown=false; release(); } });
 
@@ -1244,6 +1262,16 @@ document.getElementById('aboutLink').addEventListener('click',   e=>{ e.preventD
 document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventDefault(); openInfo('privacy'); });
 document.getElementById('infoClose').addEventListener('click', closeInfo);
 infoEl.addEventListener('click', e=>{ if (e.target === infoEl) closeInfo(); });   // tap backdrop to close
+
+// ---------- settings ----------
+const settingsEl = document.getElementById('settings');
+let settingsOpen = false;
+function openSettings(){ settingsOpen = true; settingsEl.classList.add('open'); updateRemindBtn(); }
+function closeSettings(){ settingsOpen = false; settingsEl.classList.remove('open'); }
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsClose').addEventListener('click', closeSettings);
+settingsEl.addEventListener('click', e=>{ if (e.target === settingsEl) closeSettings(); });   // tap backdrop to close
+document.getElementById('setReminder').addEventListener('click', toggleReminders);
 colorBtn.addEventListener('click', ()=>{
   const list = owned.theme || ['blue','red'];
   themeName = list[(list.indexOf(themeName) + 1) % list.length];
@@ -1704,7 +1732,6 @@ function closeLeaderboard(){ lbOpen = false; lbEl.classList.remove('open'); }
 document.getElementById('lbClose').addEventListener('click', closeLeaderboard);
 document.getElementById('lbOpenBtn').addEventListener('click', openLeaderboard);
 document.getElementById('titleLbBtn').addEventListener('click', openLeaderboard);
-document.getElementById('remindBtn').addEventListener('click', toggleReminders);
 document.getElementById('tabToday').addEventListener('click', ()=>setTab('today'));
 document.getElementById('tabWins').addEventListener('click', ()=>setTab('wins'));
 lbEl.addEventListener('click', e => { if (e.target === lbEl) closeLeaderboard(); });
@@ -2313,7 +2340,7 @@ function draw(){
 let last = performance.now(), acc = 0;
 function frame(now){
   let ft = (now-last)/1000; last = now;
-  if (!paused && !shopOpen && !lbOpen && !titleOpen && !infoOpen && !previewing){
+  if (!paused && !shopOpen && !lbOpen && !titleOpen && !infoOpen && !settingsOpen && !previewing){
     let timeScale = 1;
     if      (freezeFrames > 0){ freezeFrames--; timeScale = 0;   }  // hit-pause: full freeze
     else if (slowmoFrames > 0){ slowmoFrames--; timeScale = 0.4; }  // clutch slow-mo
