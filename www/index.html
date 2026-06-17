@@ -1674,12 +1674,14 @@ function isClean(name){
   return !BANNED.some(w => n.includes(w) || c.includes(w));
 }
 async function fetchScores(day){ try{ const r=await fetch(`${API_BASE}/api/scores?day=${day}&platform=${PLATFORM}`); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
+async function fetchToken(){ try{ const r=await fetch(`${API_BASE}/api/token`); if(!r.ok) return ''; return (await r.json()).token||''; }catch(e){ return ''; } }
 async function submitScoreNow(){
   const day = dayNumber, score = Math.floor(lastScore);
   if (score <= 0) return null;
   try{
+    const token = await fetchToken();   // short-lived server-issued submit token
     const r = await fetch(`${API_BASE}/api/scores`, { method:'POST', headers:{'content-type':'application/json'},
-      body: JSON.stringify({ name: playerName||'anon', score, day, pid: playerId, sig: lbSign(day, score), platform: PLATFORM }) });
+      body: JSON.stringify({ name: playerName||'anon', score, day, pid: playerId, sig: lbSign(day, score), platform: PLATFORM, token }) });
     if (!r.ok) return null; return await r.json();
   } catch(e){ return null; }
 }
