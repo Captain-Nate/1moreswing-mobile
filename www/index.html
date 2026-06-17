@@ -1865,6 +1865,16 @@ function splitBg(topFill, botFill, topGlow, botGlow){
     r.addColorStop(0,`rgba(${botGlow},0.20)`); r.addColorStop(1,`rgba(${botGlow},0)`); ctx.fillStyle=r; ctx.fillRect(0,mid,W,H-mid); }
   ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(0, mid-1, W, 2);   // thin divider
 }
+// draw the shop's gold coin disc (with a "C") on the canvas, centred at (cx,cy)
+function drawCoinIcon(cx, cy, r){
+  const g = ctx.createRadialGradient(cx - r*0.3, cy - r*0.4, r*0.1, cx, cy, r);
+  g.addColorStop(0, '#ffe9a8'); g.addColorStop(0.68, '#f1c40f'); g.addColorStop(1, '#c9a227');
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fillStyle = g; ctx.fill();
+  ctx.fillStyle = '#7a5c00'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `800 ${Math.round(r*1.3)}px ui-sans-serif, system-ui`;
+  ctx.fillText('C', cx, cy + r*0.08);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';   // restore HUD defaults
+}
 function drawBackground(){
   if (TH().bg === 'space'){
     ctx.fillStyle = '#05070d'; ctx.fillRect(0,0,W,H);
@@ -2289,9 +2299,10 @@ function draw(){
     ctx.fillStyle = '#ffd95e'; ctx.font = '700 11px ui-sans-serif, system-ui';
     ctx.fillText(`★ High Score  ${fmt(best)}`, 14, yy);
     if (mode === 'free'){                                  // live coins-earned tally for this Free Play run
-      yy += 16;
-      ctx.fillStyle = '#f0c34a'; ctx.font = '700 11px ui-sans-serif, system-ui';
-      ctx.fillText(`Coins Earned  ${fmt(runCoinsEarned)}`, 14, yy);
+      yy += 17;
+      drawCoinIcon(14 + 6, yy - 4, 6);
+      ctx.fillStyle = '#f0c34a'; ctx.font = '700 11px ui-sans-serif, system-ui'; ctx.textAlign = 'left';
+      ctx.fillText(`Coins Earned  ${fmt(runCoinsEarned)}`, 30, yy);
     }
   } else {
     ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
@@ -2313,8 +2324,9 @@ function draw(){
     ctx.fillStyle = '#c9a227'; ctx.font = '600 13px ui-sans-serif, system-ui';
     ctx.fillText(`${fmt(coins)} coins`, 21, 166);
     if (mode === 'free'){                                  // live coins-earned tally for this Free Play run
-      ctx.fillStyle = '#f0c34a'; ctx.font = '700 13px ui-sans-serif, system-ui';
-      ctx.fillText(`Coins Earned  ${fmt(runCoinsEarned)}`, 21, 188);
+      drawCoinIcon(21 + 7, 188 - 5, 7);
+      ctx.fillStyle = '#f0c34a'; ctx.font = '700 13px ui-sans-serif, system-ui'; ctx.textAlign = 'left';
+      ctx.fillText(`Coins Earned  ${fmt(runCoinsEarned)}`, 38, 188);
     }
   }
   ctx.restore();
