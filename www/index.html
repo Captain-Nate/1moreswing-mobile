@@ -2288,6 +2288,11 @@ function draw(){
     }
     ctx.fillStyle = '#ffd95e'; ctx.font = '700 11px ui-sans-serif, system-ui';
     ctx.fillText(`★ High Score  ${fmt(best)}`, 14, yy);
+    if (mode === 'free'){                                  // live coins-earned tally for this Free Play run
+      yy += 16;
+      ctx.fillStyle = '#f0c34a'; ctx.font = '700 11px ui-sans-serif, system-ui';
+      ctx.fillText(`Coins Earned  ${fmt(runCoinsEarned)}`, 14, yy);
+    }
   } else {
     ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
     ctx.font = '800 12px ui-sans-serif, system-ui'; ctx.letterSpacing = '1px';
@@ -2307,6 +2312,10 @@ function draw(){
     ctx.fillText(`★ High Score  ${fmt(best)}`, 21, 144);
     ctx.fillStyle = '#c9a227'; ctx.font = '600 13px ui-sans-serif, system-ui';
     ctx.fillText(`${fmt(coins)} coins`, 21, 166);
+    if (mode === 'free'){                                  // live coins-earned tally for this Free Play run
+      ctx.fillStyle = '#f0c34a'; ctx.font = '700 13px ui-sans-serif, system-ui';
+      ctx.fillText(`Coins Earned  ${fmt(runCoinsEarned)}`, 21, 188);
+    }
   }
   ctx.restore();
 
