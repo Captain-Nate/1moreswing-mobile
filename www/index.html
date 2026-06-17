@@ -1870,10 +1870,14 @@ function drawCoinIcon(cx, cy, r){
   const g = ctx.createRadialGradient(cx - r*0.3, cy - r*0.4, r*0.1, cx, cy, r);
   g.addColorStop(0, '#ffe9a8'); g.addColorStop(0.68, '#f1c40f'); g.addColorStop(1, '#c9a227');
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fillStyle = g; ctx.fill();
-  ctx.fillStyle = '#7a5c00'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `800 ${Math.round(r*1.3)}px ui-sans-serif, system-ui`;
-  ctx.fillText('C', cx, cy + r*0.08);
-  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';   // restore HUD defaults
+  ctx.fillStyle = '#7a5c00';
+  ctx.font = `800 ${Math.round(r*1.25)}px ui-sans-serif, system-ui`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  // centre the cap glyph's actual height on cy (textBaseline 'middle' sits caps too low)
+  const m = ctx.measureText('C');
+  const asc = (m.actualBoundingBoxAscent != null) ? m.actualBoundingBoxAscent : r*0.72;
+  ctx.fillText('C', cx, cy + asc/2);
+  ctx.textAlign = 'left';   // restore HUD default
 }
 function drawBackground(){
   if (TH().bg === 'space'){
