@@ -288,6 +288,21 @@
       "type": "NonConsumable"
     },
     {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "F6A7B8C9-6666-4F70-C18C-AD1E2F3A4B5C",
+      "localizations": [
+        {
+          "description": "Unlock the Bloom theme.",
+          "displayName": "Bloom Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.bloom",
+      "referenceName": "Bloom Theme",
+      "type": "NonConsumable"
+    },
+    {
       "displayPrice": "99.99",
       "familyShareable": false,
       "internalID": "C3E4F5A6-3333-4C5D-9E6F-7A8B9C0D1E2F",

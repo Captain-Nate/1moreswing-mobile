@@ -501,6 +501,7 @@ const THEMES = {
   synthwave: { accent:'#ff3caf', glow:'#ffc6ec', rgb:'255,60,175',  bg:'synthwave' },
   biopunk:   { accent:'#3dffa0', glow:'#c4ffe4', rgb:'61,255,160',  bg:'biopunk'   },
   kawaii:    { accent:'#a9c7ff', glow:'#e3edff', rgb:'169,199,255', bg:'kawaii'    },
+  bloom:     { accent:'#ff6fae', glow:'#ffd6ea', rgb:'255,111,174', bg:'bloom'     },  // meadow + drifting flowers
   solar:     { accent:'#a8e063', glow:'#e8ffc4', rgb:'168,224,99',  bg:'solar'     },
   twitch:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'twitch'    },  // stream purple + chat spam
   // mobile-exclusive, comic-inspired palettes
@@ -532,6 +533,7 @@ const COSMETICS = {
     { id:'solar',     name:'Solarpunk',     cost:400000,  premium:true },
     { id:'biopunk',   name:'Biopunk',       cost:600000,  premium:true },
     { id:'kawaii',    name:'Kawaii Pastel', cost:800000,  premium:true },
+    { id:'bloom',     name:'Bloom',         cost:900000,  premium:true },
     { id:'vapor',     name:'Vaporwave',     cost:1000000, premium:true },
     { id:'twitch',    name:'Streamer',      cost:1000000, premium:true },
     { id:'y2k',       name:'Y2K Glitch',    cost:1250000, premium:true },
@@ -1423,6 +1425,7 @@ function swatchStyle(cat, id){
     if (id === 'synthwave') return 'linear-gradient(180deg,#2a0a4a,#ff2d95 70%,#ffcf3a)';
     if (id === 'biopunk')   return 'radial-gradient(circle at 35% 35%, #3dffa0, #06120e 80%)';
     if (id === 'kawaii')    return 'linear-gradient(135deg,#a9c7ff,#ffc2e2)';
+    if (id === 'bloom')     return 'linear-gradient(135deg,#9bd4ff,#7cc15a 60%,#ff6fae)';
     if (id === 'solar')     return 'linear-gradient(135deg,#ffd56b,#7bed9f)';
     if (id === 'twitch')    return 'linear-gradient(135deg,#9146ff,#6441a5)';
     if (id === 'wh40k')     return 'linear-gradient(135deg,#0a1c44,#1f3f86 55%,#f5c542)';
@@ -1852,6 +1855,19 @@ function makeCodeRain(){
   const cols = 26;
   for (let i=0;i<cols;i++) codeRain.push({ xf:(i+0.5)/cols, ph:Math.random(), spd:7+Math.random()*11 });
 }
+// drifting flowers for the Bloom (nature) theme
+let flowers = null;
+function makeFlowers(){
+  const cols = ['#ff7eb6','#ffffff','#ffd54a','#c9a7ff','#ff9e7a'];
+  flowers = [];
+  for (let i=0;i<18;i++) flowers.push({ x:Math.random(), y:Math.random(), size:5+Math.random()*6,
+    spd:0.25+Math.random()*0.5, ph:Math.random()*6.28, petal:cols[(Math.random()*cols.length)|0] });
+}
+function drawFlower(cx, cy, s, petal, rot){
+  for (let i=0;i<5;i++){ const a=(i/5)*Math.PI*2+rot;
+    ctx.beginPath(); ctx.arc(cx+Math.cos(a)*s, cy+Math.sin(a)*s, s*0.72, 0, Math.PI*2); ctx.fillStyle=petal; ctx.fill(); }
+  ctx.beginPath(); ctx.arc(cx, cy, s*0.62, 0, Math.PI*2); ctx.fillStyle='#ffc23d'; ctx.fill();
+}
 // solid two-colour split background (top half / bottom half) with a soft same-colour
 // glow in each half and a thin divider — used by the comic-inspired themes.
 // glow args are "r,g,b" strings (or null to skip that half's glow).
@@ -2113,6 +2129,20 @@ function drawBackground(){
       }
     }
     ctx.textAlign='left';
+  } else if (TH().bg === 'bloom'){
+    // sky → meadow with drifting flowers (Bloom)
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#9bd4ff'); g.addColorStop(0.55,'#dff3d0'); g.addColorStop(1,'#7cc15a');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    if (!flowers) makeFlowers();
+    const t = performance.now()/1000;
+    for (const f of flowers){
+      const yy = ((f.y - t*f.spd*0.03) % 1 + 1) % 1;
+      const x = f.x*W + Math.sin(t*0.4 + f.ph)*16;
+      ctx.globalAlpha = yy < 0.12 ? 0.85*(yy/0.12) : 0.85;     // fade in near the top
+      drawFlower(x, yy*H, f.size, f.petal, t*0.3 + f.ph);
+    }
+    ctx.globalAlpha = 1;
   } else {
     const g = ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#0d1117'); g.addColorStop(1,'#161b22');
