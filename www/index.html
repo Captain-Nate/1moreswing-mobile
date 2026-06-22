@@ -1420,7 +1420,7 @@ function swatchStyle(cat, id){
     if (id === 'space')     return 'radial-gradient(circle at 32% 30%, #34d399, #05070d 78%)';
     if (id === 'vapor')     return 'linear-gradient(160deg,#241050,#ffc24a 52%,#ff3df0)';
     if (id === 'unicorn')   return 'conic-gradient(#ff8fd6,#c9a7ff,#a0e9ff,#ffd6a0,#ff8fd6)';
-    if (id === 'cyber')     return 'linear-gradient(135deg,#fcee21,#ff2e97,#00e0ff)';
+    if (id === 'cyber')     return 'linear-gradient(160deg,#0d1838,#ff5a3c 55%,#46d4ff)';
     if (id === 'y2k')       return 'linear-gradient(135deg,#00e0ff,#aab,#ff00a0)';
     if (id === 'synthwave') return 'linear-gradient(180deg,#2a0a4a,#ff2d95 70%,#ffcf3a)';
     if (id === 'biopunk')   return 'radial-gradient(circle at 35% 35%, #3dffa0, #06120e 80%)';
@@ -1896,25 +1896,31 @@ function drawRidge(heights, horizonY, peakH, cTop, cBot, rim){
     ctx.restore();
   }
 }
-// one parallax skyline layer for the Cyberpunk theme — deterministic per world-tile (no flicker),
-// with a glowing roofline, occasional antennas, and mixed-colour lit windows.
-function cyberSkyline(baseY, tile, hMin, hRange, par, fill, edge, lit){
+// one parallax skyline layer for the Cyberpunk theme — slim towers with the signature
+// vertical streaks of glowing red/cyan lights. Deterministic per world-tile (no flicker).
+// `dim` layers (distant) draw only a body + faint edge streak; near layers get lit columns.
+function cyberSkyline(baseY, tile, hMin, hRange, par, fill, dim){
   const off = ((cameraX*par)%tile+tile)%tile, n0 = Math.floor((cameraX*par)/tile);
   for (let i=-1; i<W/tile+2; i++){
-    const seed = n0+i, bh = hMin + ((seed*97)%hRange|0), bx = i*tile-off, bw = tile-14;
-    ctx.fillStyle = fill; ctx.fillRect(bx, baseY-bh, bw, bh+(H-baseY));
-    if (edge){
-      ctx.fillStyle = edge; ctx.fillRect(bx, baseY-bh, bw, 2);                  // glowing roofline
-      if ((seed*13)%3===0) ctx.fillRect(bx+bw*0.5-1, baseY-bh-9, 2, 9);         // antenna on some
+    const s = ((n0+i)*2654435761) >>> 0;
+    const rnd = k => (((s ^ ((k+1)*0x9e3779b1)) >>> 0) % 1000) / 1000;
+    const bh = hMin + rnd(1)*hRange, bw = tile - 5 - rnd(2)*8, bx = i*tile-off, topY = baseY-bh;
+    ctx.fillStyle = fill; ctx.fillRect(bx, topY, bw, bh+(H-baseY));
+    const a = dim ? 0.38 : 0.85;
+    // bright vertical edge streak (the signature look) on one side
+    ctx.fillStyle = rnd(3) < 0.5 ? `rgba(255,95,60,${a})` : `rgba(70,212,255,${a})`;
+    ctx.fillRect(rnd(4) < 0.5 ? bx+1.5 : bx+bw-3, topY+2, 1.5, bh-4);
+    if (!dim){
+      const cols = 1 + (rnd(5)*3|0);
+      for (let c=0;c<cols;c++){
+        const cxp = bx + 5 + rnd(10+c)*(bw-10);
+        ctx.fillStyle = rnd(20+c) < 0.45 ? 'rgba(255,150,70,0.9)' : 'rgba(95,225,255,0.9)';
+        for (let y=topY+5; y<baseY-4; y+=7) if ((((s>>(((y>>1)+c*5)&15))&3)) < 2) ctx.fillRect(cxp, y, 1.6, 3);
+      }
     }
-    if (lit){
-      let col=0;
-      for (let wx=bx+6; wx<bx+bw-6; wx+=13, col++){ let row=0;
-        for (let wy=baseY-bh+10; wy<baseY-10; wy+=15, row++){
-          const k=(seed*31+col*7+row*13)%7;
-          if (k<3){ ctx.fillStyle = k===0?'rgba(255,206,84,0.85)' : k===1?lit : 'rgba(255,46,151,0.7)'; ctx.fillRect(wx,wy,3,5); }
-        } }
-    }
+    // roof beacon
+    ctx.fillStyle = rnd(6) < 0.5 ? `rgba(255,120,80,${a+0.1})` : `rgba(120,235,255,${a+0.1})`;
+    ctx.fillRect(bx+bw*0.5-1, topY-3, 2, 5);
   }
 }
 // solid two-colour split background (top half / bottom half) with a soft same-colour
@@ -2036,22 +2042,19 @@ function drawBackground(){
     }
     ctx.globalAlpha = 1;
   } else if (TH().bg === 'cyber'){
-    // neon-noir cityscape — layered glowing skyline under a hazy moon
+    // futuristic city — deep-blue night, hazy depth, dense towers streaked with red/cyan light
     const g = ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#0a0a18'); g.addColorStop(0.5,'#1a0e2e'); g.addColorStop(1,'#06060f');
+    g.addColorStop(0,'#070b1e'); g.addColorStop(0.5,'#0d1838'); g.addColorStop(1,'#04060f');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    // moon + its glow
-    let mg=ctx.createRadialGradient(W*0.74,H*0.24,0,W*0.74,H*0.24,H*0.17);
-    mg.addColorStop(0,'rgba(255,110,180,0.32)'); mg.addColorStop(1,'rgba(255,110,180,0)'); ctx.fillStyle=mg; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(255,120,190,0.9)'; ctx.beginPath(); ctx.arc(W*0.74, H*0.24, H*0.07, 0, Math.PI*2); ctx.fill();
-    // ambient neon glows
-    let r=ctx.createRadialGradient(W*0.22,H*0.55,0,W*0.22,H*0.55,H*0.6);
-    r.addColorStop(0,'rgba(255,46,151,0.16)'); r.addColorStop(1,'rgba(255,46,151,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    r=ctx.createRadialGradient(W*0.82,H*0.6,0,W*0.82,H*0.6,H*0.55);
-    r.addColorStop(0,'rgba(0,224,255,0.14)'); r.addColorStop(1,'rgba(0,224,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    // skyline: far dim silhouette (cyan tops) then near tall buildings (pink rooflines + lit windows)
-    cyberSkyline(H*0.6,  90, 30,  60,  0.15, '#140b28', 'rgba(0,224,255,0.22)', null);
-    cyberSkyline(H*0.74, 130, 80, 110,  0.30, '#0b0b1c', 'rgba(255,46,151,0.6)', 'rgba(0,224,255,0.85)');
+    // atmospheric haze (cool up high, warm down low — like city light bouncing off smog)
+    let r=ctx.createRadialGradient(W*0.5,H*0.68,0,W*0.5,H*0.68,H*0.72);
+    r.addColorStop(0,'rgba(60,150,230,0.15)'); r.addColorStop(1,'rgba(60,150,230,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    r=ctx.createRadialGradient(W*0.5,H*0.9,0,W*0.5,H*0.9,H*0.5);
+    r.addColorStop(0,'rgba(255,80,50,0.13)'); r.addColorStop(1,'rgba(255,80,50,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    // three depth layers: distant haze of streaks → mid → detailed near towers
+    cyberSkyline(H*0.5,  50,  60, 120, 0.08, '#0a0f24', true);
+    cyberSkyline(H*0.62, 72,  80, 130, 0.16, '#0a1230', true);
+    cyberSkyline(H*0.8,  108, 110, 150, 0.32, '#0c1736', false);
   } else if (TH().bg === 'y2k'){
     // digital glitch / chrome
     ctx.fillStyle='#0b0f1a'; ctx.fillRect(0,0,W,H);
