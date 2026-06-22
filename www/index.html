@@ -1418,7 +1418,7 @@ let shopOpen = false;
 function swatchStyle(cat, id){
   if (cat === 'theme'){
     if (id === 'space')     return 'radial-gradient(circle at 32% 30%, #34d399, #05070d 78%)';
-    if (id === 'vapor')     return 'linear-gradient(160deg,#1b0b3e,#b83a86 65%,#ff5e9f)';
+    if (id === 'vapor')     return 'linear-gradient(160deg,#241050,#ffc24a 52%,#ff3df0)';
     if (id === 'unicorn')   return 'conic-gradient(#ff8fd6,#c9a7ff,#a0e9ff,#ffd6a0,#ff8fd6)';
     if (id === 'cyber')     return 'linear-gradient(135deg,#fcee21,#ff2e97,#00e0ff)';
     if (id === 'y2k')       return 'linear-gradient(135deg,#00e0ff,#aab,#ff00a0)';
@@ -1885,9 +1885,11 @@ function drawRidge(heights, horizonY, peakH, cTop, cBot, rim){
   gr.addColorStop(0, cTop); gr.addColorStop(1, cBot);
   ctx.fillStyle = gr; ctx.fill();
   if (rim){
+    ctx.save(); ctx.shadowColor = rim; ctx.shadowBlur = 8;
     ctx.beginPath(); ctx.moveTo(0, horizonY - heights[0]*peakH);
     for (let i=1;i<=n;i++) ctx.lineTo((i/n)*W, horizonY - heights[i]*peakH);
-    ctx.strokeStyle = rim; ctx.lineWidth = 1.3; ctx.stroke();
+    ctx.strokeStyle = rim; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
   }
 }
 // solid two-colour split background (top half / bottom half) with a soft same-colour
@@ -1936,46 +1938,51 @@ function drawBackground(){
     }
     ctx.globalAlpha = 1;
   } else if (TH().bg === 'vapor'){
-    // outrun sunset: purple sky + stars, banded sun, mountain range, glowing horizon, neon grid
+    // synthwave sunset: purple sky + stars, glowing scanline sun, cyan mountains, neon magenta grid
     const cx = W*0.5, horizon = H*0.6;
     const g = ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#1b0b3e'); g.addColorStop(0.38,'#3a1566'); g.addColorStop(0.56,'#b83a86');
-    g.addColorStop(horizon/H,'#2a1248'); g.addColorStop(1,'#160a2c');
+    g.addColorStop(0,'#241050'); g.addColorStop(0.42,'#5a1f92'); g.addColorStop(0.56,'#7d2ea6');
+    g.addColorStop(horizon/H,'#3a1566'); g.addColorStop(1,'#1a0a36');
     ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-    // stars in the upper sky (drawn before the sun, which covers any behind it)
+    // stars (drawn before the sun, which covers any behind it)
     if (!stars) makeStars();
     const vt = performance.now()/1000;
-    ctx.fillStyle = '#e8d8ff';
-    for (const s of stars){ if (s.y > 0.45) continue;
+    ctx.fillStyle = '#f0e6ff';
+    for (const s of stars){ if (s.y > 0.42) continue;
       ctx.globalAlpha = 0.25 + 0.5*Math.max(0, Math.sin(vt*2 + s.ph));
-      ctx.beginPath(); ctx.arc(s.x*W, s.y*horizon, s.r*0.9, 0, Math.PI*2); ctx.fill(); }
+      ctx.beginPath(); ctx.arc(s.x*W, s.y*horizon, s.r*0.85, 0, Math.PI*2); ctx.fill(); }
     ctx.globalAlpha = 1;
-    // sun — pink/magenta disc with a soft halo and translucent slits
-    const sunR = H*0.17, sunY = horizon - sunR*0.92;
-    const halo = ctx.createRadialGradient(cx, sunY, sunR*0.5, cx, sunY, sunR*2.2);
-    halo.addColorStop(0,'rgba(255,90,160,0.32)'); halo.addColorStop(1,'rgba(255,90,160,0)');
+    // sun — cream→gold→pink disc with a strong glow, CRT scanlines, and lower slit bands
+    const sunR = H*0.18, sunY = horizon - sunR*0.85;
+    const halo = ctx.createRadialGradient(cx, sunY, sunR*0.4, cx, sunY, sunR*2.4);
+    halo.addColorStop(0,'rgba(255,210,120,0.45)'); halo.addColorStop(0.5,'rgba(255,120,170,0.18)'); halo.addColorStop(1,'rgba(255,120,170,0)');
     ctx.fillStyle = halo; ctx.fillRect(0,0,W,H);
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, sunY, sunR, 0, Math.PI*2); ctx.clip();
     const sg = ctx.createLinearGradient(0, sunY-sunR, 0, sunY+sunR);
-    sg.addColorStop(0,'#ffc8e0'); sg.addColorStop(0.45,'#ff478f'); sg.addColorStop(1,'#7e2363');
+    sg.addColorStop(0,'#fff3b0'); sg.addColorStop(0.4,'#ffc24a'); sg.addColorStop(0.7,'#ff6aa0'); sg.addColorStop(1,'#d62f73');
     ctx.fillStyle = sg; ctx.fillRect(cx-sunR, sunY-sunR, sunR*2, sunR*2);
-    ctx.fillStyle = 'rgba(26,11,46,0.55)';
-    for (let i=0;i<6;i++){ const by = sunY + 4 + i*7, th = 1.5 + i*1.1; ctx.fillRect(cx-sunR, by, sunR*2, th); }
+    ctx.fillStyle = 'rgba(30,8,40,0.16)';                                   // fine CRT scanlines over the whole disc
+    for (let y=sunY-sunR; y<sunY+sunR; y+=3) ctx.fillRect(cx-sunR, y, sunR*2, 1);
+    ctx.fillStyle = 'rgba(40,14,70,0.6)';                                   // thicker slit bands in the lower third
+    for (let i=0;i<5;i++){ const by = sunY + sunR*0.35 + i*9, th = 3 + i*1.2; ctx.fillRect(cx-sunR, by, sunR*2, th); }
     ctx.restore();
-    // mountain ranges along the horizon (back then front, jagged with a bright rim)
+    // glowing cyan mountain ranges
     if (!vaporHills) makeVaporHills();
-    drawRidge(vaporHills.back,  horizon, H*0.15, '#7a2a73', '#3a1556', null);
-    drawRidge(vaporHills.front, horizon, H*0.17, '#b13a7e', '#2c1048', '#ff6aa8');
-    // glowing horizon line
+    drawRidge(vaporHills.back,  horizon, H*0.12, '#1c6f9e', '#10264e', null);
+    drawRidge(vaporHills.front, horizon, H*0.16, '#2bb6d6', '#0e1f44', '#bdf6ff');
+    // glowing white-cyan horizon line
     ctx.save();
-    ctx.shadowColor = '#ff5e9f'; ctx.shadowBlur = 12;
-    ctx.fillStyle = '#ffd0e6'; ctx.fillRect(0, horizon-1.5, W, 3);
+    ctx.shadowColor = '#9bf0ff'; ctx.shadowBlur = 14;
+    ctx.fillStyle = '#eafcff'; ctx.fillRect(0, horizon-1.5, W, 3);
     ctx.restore();
-    // neon perspective grid (pink) on the ground below the horizon
-    ctx.strokeStyle = 'rgba(255,70,150,0.55)'; ctx.lineWidth = 1;
+    // ground glow + neon magenta perspective grid
+    const gg = ctx.createLinearGradient(0, horizon, 0, H);
+    gg.addColorStop(0,'rgba(255,60,200,0.22)'); gg.addColorStop(1,'rgba(120,20,120,0)');
+    ctx.fillStyle = gg; ctx.fillRect(0, horizon, W, H-horizon);
+    ctx.strokeStyle = 'rgba(255,80,215,0.7)'; ctx.lineWidth = 1.2;
     for (let i=1;i<=12;i++){ const t=i/12, y=horizon+(H-horizon)*t*t;
-      ctx.globalAlpha = 0.55*(1-t)+0.12; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+      ctx.globalAlpha = 0.6*(1-t)+0.14; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
     ctx.globalAlpha = 1;
     const vp = cx, off = (cameraX*0.25) % 70;
     for (let i=-14;i<=14;i++){ const x = vp + i*70 - off;
