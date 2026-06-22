@@ -2318,6 +2318,7 @@ function draw(){
   const small = W < 600;
   ctx.save(); ctx.translate(SAFE_LEFT, SAFE_TOP);  // keep clear of notch / Dynamic Island
   ctx.textAlign = 'left';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1;  // keep HUD crisp on light themes
   if (small){
     ctx.fillStyle = mode==='daily' ? TH().accent : '#8b949e';
     ctx.font = '800 10px ui-sans-serif, system-ui'; ctx.letterSpacing = '1px';
