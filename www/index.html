@@ -1921,15 +1921,19 @@ function drawBackground(){
     g.addColorStop(0,'#241046'); g.addColorStop(0.42,'#5b1a8a');
     g.addColorStop(0.6,'#ff6ad5'); g.addColorStop(0.74,'#ff8c6b'); g.addColorStop(1,'#190a2e');
     ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-    // banded retro sun
-    const sunY = H*0.58, sunR = H*0.17;
+    // retro sun — warm gradient disc with a soft glow and translucent horizontal slits
+    const sunY = H*0.56, sunR = H*0.17, cx = W*0.5;
+    const halo = ctx.createRadialGradient(cx, sunY, sunR*0.5, cx, sunY, sunR*2);
+    halo.addColorStop(0,'rgba(255,170,110,0.30)'); halo.addColorStop(1,'rgba(255,170,110,0)');
+    ctx.fillStyle = halo; ctx.fillRect(0,0,W,H);
     ctx.save();
-    ctx.beginPath(); ctx.arc(W*0.5, sunY, sunR, 0, Math.PI*2); ctx.clip();
+    ctx.beginPath(); ctx.arc(cx, sunY, sunR, 0, Math.PI*2); ctx.clip();
     const sg = ctx.createLinearGradient(0, sunY-sunR, 0, sunY+sunR);
-    sg.addColorStop(0,'#fff07a'); sg.addColorStop(1,'#ff5dae');
-    ctx.fillStyle = sg; ctx.fillRect(W*0.5-sunR, sunY-sunR, sunR*2, sunR*2);
-    ctx.fillStyle = '#190a2e';
-    for (let i=0;i<7;i++){ const by = sunY + 2 + i*7; ctx.fillRect(W*0.5-sunR, by, sunR*2, 2+i); }
+    sg.addColorStop(0,'#fff3a8'); sg.addColorStop(0.5,'#ffac5e'); sg.addColorStop(1,'#ff5dae');
+    ctx.fillStyle = sg; ctx.fillRect(cx-sunR, sunY-sunR, sunR*2, sunR*2);
+    // translucent slits in the lower half — the sun glows through (softer than solid bars)
+    ctx.fillStyle = 'rgba(40,16,74,0.5)';
+    for (let i=0;i<6;i++){ const by = sunY + 5 + i*8, th = 1.5 + i*1.2; ctx.fillRect(cx-sunR, by, sunR*2, th); }
     ctx.restore();
     // neon perspective grid floor
     const horizon = H*0.66;
