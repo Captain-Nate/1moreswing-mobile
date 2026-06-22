@@ -1554,7 +1554,11 @@ function celebratePurchaseWhenActive(label){
   // so we hold the confetti until it becomes active again (the OK press). If the app never
   // went inactive (already active, or simulator StoreKit test), fire after a short beat.
   pendingCelebration = label;
-  if (appActive) setTimeout(flushCelebration, 600);
+  // Fallback for when the app never resigns-active (already active, or the simulator's
+  // StoreKit Testing, which doesn't drive the app lifecycle) — wait long enough that the
+  // purchase sheet has dismissed. On a real device the appStateChange→active path fires
+  // first, so this longer delay never actually applies there.
+  if (appActive) setTimeout(flushCelebration, 1300);
 }
 
 function buyItem(cat, id){
