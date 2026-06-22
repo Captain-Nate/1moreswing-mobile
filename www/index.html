@@ -1418,7 +1418,7 @@ let shopOpen = false;
 function swatchStyle(cat, id){
   if (cat === 'theme'){
     if (id === 'space')     return 'radial-gradient(circle at 32% 30%, #34d399, #05070d 78%)';
-    if (id === 'vapor')     return 'linear-gradient(135deg,#2de2e6,#ff71ce 70%)';
+    if (id === 'vapor')     return 'linear-gradient(160deg,#1b0b3e,#b83a86 65%,#ff5e9f)';
     if (id === 'unicorn')   return 'conic-gradient(#ff8fd6,#c9a7ff,#a0e9ff,#ffd6a0,#ff8fd6)';
     if (id === 'cyber')     return 'linear-gradient(135deg,#fcee21,#ff2e97,#00e0ff)';
     if (id === 'y2k')       return 'linear-gradient(135deg,#00e0ff,#aab,#ff00a0)';
@@ -1870,6 +1870,26 @@ function drawFlower(cx, cy, s, petal, rot){
 }
 // the theme accent dimmed toward black (scale 0..1) — used to tint the anchors per theme
 function tintRGB(scale){ const c = TH().rgb.split(',').map(n => Math.round(n*scale)); return `rgb(${c[0]},${c[1]},${c[2]})`; }
+// jagged mountain ridges for the Vaporwave scene (fractional heights, generated once)
+let vaporHills = null;
+function makeVaporHills(){
+  const gen = (n, lo, hi) => { const a=[]; for (let i=0;i<=n;i++) a.push(lo + Math.random()*(hi-lo)); return a; };
+  vaporHills = { back: gen(9, 0.30, 0.72), front: gen(13, 0.45, 1) };
+}
+function drawRidge(heights, horizonY, peakH, cTop, cBot, rim){
+  const n = heights.length - 1;
+  ctx.beginPath(); ctx.moveTo(0, horizonY);
+  for (let i=0;i<=n;i++) ctx.lineTo((i/n)*W, horizonY - heights[i]*peakH);
+  ctx.lineTo(W, horizonY); ctx.closePath();
+  const gr = ctx.createLinearGradient(0, horizonY-peakH, 0, horizonY);
+  gr.addColorStop(0, cTop); gr.addColorStop(1, cBot);
+  ctx.fillStyle = gr; ctx.fill();
+  if (rim){
+    ctx.beginPath(); ctx.moveTo(0, horizonY - heights[0]*peakH);
+    for (let i=1;i<=n;i++) ctx.lineTo((i/n)*W, horizonY - heights[i]*peakH);
+    ctx.strokeStyle = rim; ctx.lineWidth = 1.3; ctx.stroke();
+  }
+}
 // solid two-colour split background (top half / bottom half) with a soft same-colour
 // glow in each half and a thin divider — used by the comic-inspired themes.
 // glow args are "r,g,b" strings (or null to skip that half's glow).
@@ -1916,32 +1936,48 @@ function drawBackground(){
     }
     ctx.globalAlpha = 1;
   } else if (TH().bg === 'vapor'){
-    // vaporwave sunset (dark up top where the HUD sits, neon pink toward the horizon)
+    // outrun sunset: purple sky + stars, banded sun, mountain range, glowing horizon, neon grid
+    const cx = W*0.5, horizon = H*0.6;
     const g = ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#241046'); g.addColorStop(0.42,'#5b1a8a');
-    g.addColorStop(0.6,'#ff6ad5'); g.addColorStop(0.74,'#ff8c6b'); g.addColorStop(1,'#190a2e');
+    g.addColorStop(0,'#1b0b3e'); g.addColorStop(0.38,'#3a1566'); g.addColorStop(0.56,'#b83a86');
+    g.addColorStop(horizon/H,'#2a1248'); g.addColorStop(1,'#160a2c');
     ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-    // retro sun — warm gradient disc with a soft glow and translucent horizontal slits
-    const sunY = H*0.56, sunR = H*0.17, cx = W*0.5;
-    const halo = ctx.createRadialGradient(cx, sunY, sunR*0.5, cx, sunY, sunR*2);
-    halo.addColorStop(0,'rgba(255,170,110,0.30)'); halo.addColorStop(1,'rgba(255,170,110,0)');
+    // stars in the upper sky (drawn before the sun, which covers any behind it)
+    if (!stars) makeStars();
+    const vt = performance.now()/1000;
+    ctx.fillStyle = '#e8d8ff';
+    for (const s of stars){ if (s.y > 0.45) continue;
+      ctx.globalAlpha = 0.25 + 0.5*Math.max(0, Math.sin(vt*2 + s.ph));
+      ctx.beginPath(); ctx.arc(s.x*W, s.y*horizon, s.r*0.9, 0, Math.PI*2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    // sun — pink/magenta disc with a soft halo and translucent slits
+    const sunR = H*0.17, sunY = horizon - sunR*0.92;
+    const halo = ctx.createRadialGradient(cx, sunY, sunR*0.5, cx, sunY, sunR*2.2);
+    halo.addColorStop(0,'rgba(255,90,160,0.32)'); halo.addColorStop(1,'rgba(255,90,160,0)');
     ctx.fillStyle = halo; ctx.fillRect(0,0,W,H);
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, sunY, sunR, 0, Math.PI*2); ctx.clip();
     const sg = ctx.createLinearGradient(0, sunY-sunR, 0, sunY+sunR);
-    sg.addColorStop(0,'#fff3a8'); sg.addColorStop(0.5,'#ffac5e'); sg.addColorStop(1,'#ff5dae');
+    sg.addColorStop(0,'#ffc8e0'); sg.addColorStop(0.45,'#ff478f'); sg.addColorStop(1,'#7e2363');
     ctx.fillStyle = sg; ctx.fillRect(cx-sunR, sunY-sunR, sunR*2, sunR*2);
-    // translucent slits in the lower half — the sun glows through (softer than solid bars)
-    ctx.fillStyle = 'rgba(40,16,74,0.5)';
-    for (let i=0;i<6;i++){ const by = sunY + 5 + i*8, th = 1.5 + i*1.2; ctx.fillRect(cx-sunR, by, sunR*2, th); }
+    ctx.fillStyle = 'rgba(26,11,46,0.55)';
+    for (let i=0;i<6;i++){ const by = sunY + 4 + i*7, th = 1.5 + i*1.1; ctx.fillRect(cx-sunR, by, sunR*2, th); }
     ctx.restore();
-    // neon perspective grid floor
-    const horizon = H*0.66;
-    ctx.strokeStyle = 'rgba(45,226,230,0.35)'; ctx.lineWidth = 1;
-    for (let i=1;i<=10;i++){ const t=i/10, y=horizon+(H-horizon)*t*t;
-      ctx.globalAlpha = 0.45*(1-t)+0.1; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    // mountain ranges along the horizon (back then front, jagged with a bright rim)
+    if (!vaporHills) makeVaporHills();
+    drawRidge(vaporHills.back,  horizon, H*0.15, '#7a2a73', '#3a1556', null);
+    drawRidge(vaporHills.front, horizon, H*0.17, '#b13a7e', '#2c1048', '#ff6aa8');
+    // glowing horizon line
+    ctx.save();
+    ctx.shadowColor = '#ff5e9f'; ctx.shadowBlur = 12;
+    ctx.fillStyle = '#ffd0e6'; ctx.fillRect(0, horizon-1.5, W, 3);
+    ctx.restore();
+    // neon perspective grid (pink) on the ground below the horizon
+    ctx.strokeStyle = 'rgba(255,70,150,0.55)'; ctx.lineWidth = 1;
+    for (let i=1;i<=12;i++){ const t=i/12, y=horizon+(H-horizon)*t*t;
+      ctx.globalAlpha = 0.55*(1-t)+0.12; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
     ctx.globalAlpha = 1;
-    const vp = W*0.5, off = (cameraX*0.25) % 70;
+    const vp = cx, off = (cameraX*0.25) % 70;
     for (let i=-14;i<=14;i++){ const x = vp + i*70 - off;
       ctx.beginPath(); ctx.moveTo(vp, horizon); ctx.lineTo(vp + (x-vp)*4, H); ctx.stroke(); }
   } else if (TH().bg === 'unicorn'){
