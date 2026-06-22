@@ -1868,6 +1868,8 @@ function drawFlower(cx, cy, s, petal, rot){
     ctx.beginPath(); ctx.arc(cx+Math.cos(a)*s, cy+Math.sin(a)*s, s*0.72, 0, Math.PI*2); ctx.fillStyle=petal; ctx.fill(); }
   ctx.beginPath(); ctx.arc(cx, cy, s*0.62, 0, Math.PI*2); ctx.fillStyle='#ffc23d'; ctx.fill();
 }
+// the theme accent dimmed toward black (scale 0..1) — used to tint the anchors per theme
+function tintRGB(scale){ const c = TH().rgb.split(',').map(n => Math.round(n*scale)); return `rgb(${c[0]},${c[1]},${c[2]})`; }
 // solid two-colour split background (top half / bottom half) with a soft same-colour
 // glow in each half and a thin divider — used by the comic-inspired themes.
 // glow args are "r,g,b" strings (or null to skip that half's glow).
@@ -2209,9 +2211,9 @@ function draw(){
     const isTarget = a === target;
     ctx.beginPath(); ctx.arc(a.x, a.y, isTarget?9:6, 0, Math.PI*2);
     ctx.fillStyle = a===anchor ? TH().accent
-                  : a.got      ? '#3b4655'
-                  : a.launch   ? '#3fb950'   // relaunch peg above a platform
-                  : '#7d8590';
+                  : a.got      ? tintRGB(0.42)   // already-used anchor (dim theme tint)
+                  : a.launch   ? '#3fb950'       // relaunch peg above a platform (keep green signal)
+                  : tintRGB(0.72);               // field anchors, muted theme tint
     ctx.fill();
     if (isTarget){
       ctx.beginPath(); ctx.arc(a.x, a.y, 15, 0, Math.PI*2);
