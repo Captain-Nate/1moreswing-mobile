@@ -1896,6 +1896,27 @@ function drawRidge(heights, horizonY, peakH, cTop, cBot, rim){
     ctx.restore();
   }
 }
+// one parallax skyline layer for the Cyberpunk theme — deterministic per world-tile (no flicker),
+// with a glowing roofline, occasional antennas, and mixed-colour lit windows.
+function cyberSkyline(baseY, tile, hMin, hRange, par, fill, edge, lit){
+  const off = ((cameraX*par)%tile+tile)%tile, n0 = Math.floor((cameraX*par)/tile);
+  for (let i=-1; i<W/tile+2; i++){
+    const seed = n0+i, bh = hMin + ((seed*97)%hRange|0), bx = i*tile-off, bw = tile-14;
+    ctx.fillStyle = fill; ctx.fillRect(bx, baseY-bh, bw, bh+(H-baseY));
+    if (edge){
+      ctx.fillStyle = edge; ctx.fillRect(bx, baseY-bh, bw, 2);                  // glowing roofline
+      if ((seed*13)%3===0) ctx.fillRect(bx+bw*0.5-1, baseY-bh-9, 2, 9);         // antenna on some
+    }
+    if (lit){
+      let col=0;
+      for (let wx=bx+6; wx<bx+bw-6; wx+=13, col++){ let row=0;
+        for (let wy=baseY-bh+10; wy<baseY-10; wy+=15, row++){
+          const k=(seed*31+col*7+row*13)%7;
+          if (k<3){ ctx.fillStyle = k===0?'rgba(255,206,84,0.85)' : k===1?lit : 'rgba(255,46,151,0.7)'; ctx.fillRect(wx,wy,3,5); }
+        } }
+    }
+  }
+}
 // solid two-colour split background (top half / bottom half) with a soft same-colour
 // glow in each half and a thin divider — used by the comic-inspired themes.
 // glow args are "r,g,b" strings (or null to skip that half's glow).
@@ -2015,23 +2036,22 @@ function drawBackground(){
     }
     ctx.globalAlpha = 1;
   } else if (TH().bg === 'cyber'){
-    // neon-noir cityscape
+    // neon-noir cityscape — layered glowing skyline under a hazy moon
     const g = ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#0a0a18'); g.addColorStop(0.55,'#1a0e2e'); g.addColorStop(1,'#06060f');
+    g.addColorStop(0,'#0a0a18'); g.addColorStop(0.5,'#1a0e2e'); g.addColorStop(1,'#06060f');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    let r=ctx.createRadialGradient(W*0.25,H*0.32,0,W*0.25,H*0.32,H*0.6);
+    // moon + its glow
+    let mg=ctx.createRadialGradient(W*0.74,H*0.24,0,W*0.74,H*0.24,H*0.17);
+    mg.addColorStop(0,'rgba(255,110,180,0.32)'); mg.addColorStop(1,'rgba(255,110,180,0)'); ctx.fillStyle=mg; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,120,190,0.9)'; ctx.beginPath(); ctx.arc(W*0.74, H*0.24, H*0.07, 0, Math.PI*2); ctx.fill();
+    // ambient neon glows
+    let r=ctx.createRadialGradient(W*0.22,H*0.55,0,W*0.22,H*0.55,H*0.6);
     r.addColorStop(0,'rgba(255,46,151,0.16)'); r.addColorStop(1,'rgba(255,46,151,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    r=ctx.createRadialGradient(W*0.8,H*0.5,0,W*0.8,H*0.5,H*0.55);
-    r.addColorStop(0,'rgba(0,224,255,0.12)'); r.addColorStop(1,'rgba(0,224,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    const baseY=H*0.74, tile=120, off=((cameraX*0.3)%tile+tile)%tile, n0=Math.floor((cameraX*0.3)/tile);
-    for(let i=-1;i<W/tile+2;i++){
-      const seed=n0+i, bh=70+((seed*97)%140), bx=i*tile-off;
-      ctx.fillStyle='#0c0c1e'; ctx.fillRect(bx, baseY-bh, tile-16, bh+(H-baseY));
-      ctx.fillStyle='rgba(0,224,255,0.45)';
-      let col=0;
-      for(let wx=bx+6; wx<bx+tile-24; wx+=14, col++){ let row=0;
-        for(let wy=baseY-bh+10; wy<baseY-8; wy+=15, row++){ if(((seed*31+col*7+row*13)%5)<2) ctx.fillRect(wx,wy,4,6); } }
-    }
+    r=ctx.createRadialGradient(W*0.82,H*0.6,0,W*0.82,H*0.6,H*0.55);
+    r.addColorStop(0,'rgba(0,224,255,0.14)'); r.addColorStop(1,'rgba(0,224,255,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    // skyline: far dim silhouette (cyan tops) then near tall buildings (pink rooflines + lit windows)
+    cyberSkyline(H*0.6,  90, 30,  60,  0.15, '#140b28', 'rgba(0,224,255,0.22)', null);
+    cyberSkyline(H*0.74, 130, 80, 110,  0.30, '#0b0b1c', 'rgba(255,46,151,0.6)', 'rgba(0,224,255,0.85)');
   } else if (TH().bg === 'y2k'){
     // digital glitch / chrome
     ctx.fillStyle='#0b0f1a'; ctx.fillRect(0,0,W,H);
