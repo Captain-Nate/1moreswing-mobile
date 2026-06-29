@@ -504,6 +504,7 @@ const THEMES = {
   bloom:     { accent:'#ff6fae', glow:'#ffd6ea', rgb:'255,111,174', bg:'bloom'     },  // meadow + drifting flowers
   solar:     { accent:'#a8e063', glow:'#e8ffc4', rgb:'168,224,99',  bg:'solar'     },
   twitch:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'twitch'    },  // stream purple + chat spam
+  juicer:    { accent:'#ff3d9a', glow:'#ffc4e4', rgb:'255,61,154',  bg:'juicer'    },  // hot-pink ball on a green jungle
   // mobile-exclusive, comic-inspired palettes
   bman:      { accent:'#ffd23f', glow:'#fff0b8', rgb:'255,210,63',  bg:'bman'      },  // black + signal yellow
   sman:      { accent:'#ff3b3b', glow:'#ffd2d2', rgb:'255,59,59',   bg:'sman'      },  // red orb on red/blue
@@ -528,14 +529,15 @@ const COSMETICS = {
   theme: [
     { id:'blue',  name:'Classic Blue', cost:0 },
     { id:'red',     name:'Crimson',      cost:0 },
-    // premium themes — coin grind, priced +100k per step in shop order (matches web ladder).
+    // premium themes — listed in ascending coin cost; streamer/creator themes priced cheap.
     { id:'space',     name:'Deep Space',    cost:100000,  premium:true },
     { id:'solar',     name:'Solarpunk',     cost:200000,  premium:true },
     { id:'biopunk',   name:'Biopunk',       cost:300000,  premium:true },
+    { id:'twitch',    name:'Streamer',      cost:300000,  premium:true },
+    { id:'juicer',    name:'Juicer',        cost:300000,  premium:true },
     { id:'kawaii',    name:'Kawaii Pastel', cost:400000,  premium:true },
     { id:'bloom',     name:'Bloom',         cost:500000,  premium:true },
     { id:'vapor',     name:'Vaporwave',     cost:600000,  premium:true },
-    { id:'twitch',    name:'Streamer',      cost:700000,  premium:true },
     { id:'y2k',       name:'Y2K Glitch',    cost:800000,  premium:true },
     { id:'synthwave', name:'Synthwave',     cost:900000,  premium:true },
     { id:'cyber',     name:'Cyberpunk',     cost:1000000, premium:true },
@@ -2104,6 +2106,36 @@ function drawBackground(){
       ctx.beginPath(); ctx.arc(px,py,s.r*3,0,Math.PI*2); ctx.fill();
       ctx.globalAlpha=0.4+0.4*Math.max(0,Math.sin(t+s.ph));
       ctx.beginPath(); ctx.arc(px,py,s.r*1.2,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  } else if (TH().bg === 'juicer'){
+    // jungle theme — bright green, big corner leaves framing the screen, hot-pink energy splash
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#11823f'); g.addColorStop(0.5,'#0c5a2b'); g.addColorStop(1,'#06330f');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    const t=performance.now()/1000, pulse=0.5+0.5*Math.sin(t*1.5);
+    let r=ctx.createRadialGradient(W*0.5,H*0.12,0,W*0.5,H*0.12,H*0.55);          // green canopy light
+    r.addColorStop(0,`rgba(123,255,158,${0.18+0.06*pulse})`); r.addColorStop(1,'rgba(123,255,158,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    // hot-pink energy splash behind the play area (the GFuel hero)
+    r=ctx.createRadialGradient(W*0.5,H*0.42,0,W*0.5,H*0.42,H*0.42);
+    r.addColorStop(0,`rgba(255,45,158,${0.34+0.12*pulse})`); r.addColorStop(0.55,'rgba(255,45,158,0.12)'); r.addColorStop(1,'rgba(255,45,158,0)');
+    ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
+    // big tropical leaf + a 3-depth fan clustered in each screen corner (fixed poster frame)
+    const leaf=(x,y,h,ang,col)=>{ ctx.save(); ctx.translate(x,y); ctx.rotate(ang); ctx.fillStyle=col;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(h*0.3,-h*0.22,h*0.3,-h*0.7,0,-h); ctx.bezierCurveTo(-h*0.3,-h*0.7,-h*0.3,-h*0.22,0,0); ctx.closePath(); ctx.fill(); ctx.restore(); };
+    const cornerLeaves=(cx,cy,ang,size)=>{ for(const L of [[1.5,'#0c4a22',0.5],[1.15,'#1c8a3e',0.42],[0.85,'#43d869',0.34]])
+      for(let k=-1;k<=1;k++) leaf(cx,cy,size*L[0]*(1-Math.abs(k)*0.12),ang+k*L[2],L[1]); };
+    const ls=H*0.185;
+    cornerLeaves(0,0,2.36,ls); cornerLeaves(W,0,3.93,ls); cornerLeaves(0,H,0.79,ls*1.06); cornerLeaves(W,H,5.50,ls*1.06);
+    // drifting juice droplets — pink + light green
+    if(!stars) makeStars();
+    for(const s of stars){
+      const rise=((s.y*H - t*16*(0.4+s.par)) % H + H) % H;
+      const px=((s.x*W - cameraX*s.par)%W+W)%W + Math.sin(t*0.8+s.ph)*12, py=H - rise;
+      ctx.fillStyle = (((s.ph*7|0)&1)===0) ? '#ff6ec0' : '#9dff5c';
+      ctx.globalAlpha=0.22+0.26*Math.max(0,Math.sin(t*1.5+s.ph));
+      ctx.save(); ctx.translate(px,py); ctx.rotate(t*0.5+s.ph);
+      ctx.beginPath(); ctx.ellipse(0,0,s.r*1.3,s.r*2.4,0,0,Math.PI*2); ctx.fill(); ctx.restore();
     }
     ctx.globalAlpha=1;
   } else if (TH().bg === 'kawaii'){

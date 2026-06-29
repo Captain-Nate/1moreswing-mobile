@@ -27,6 +27,7 @@ Two purchase types (both **Non-Consumable**):
 | `com.captainnate.onemoreswing.theme.harley` | $0.99 | Cotton Candy (mobile-exclusive) |
 | `com.captainnate.onemoreswing.theme.dv` | $0.99 | Inferno (mobile-exclusive) |
 | `com.captainnate.onemoreswing.theme.ls` | $0.99 | Glacier (mobile-exclusive) |
+| `com.captainnate.onemoreswing.theme.juicer` | $0.99 | Juicer (streamer/creator theme) |
 
 > Product IDs are derived in code from the premium themes in `COSMETICS.theme`
 > (`<appId>.theme.<id>`, plus `<appId>.themes.all`). If you add a premium theme,
