@@ -269,6 +269,11 @@
     top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
   #fxToast .ci { width:18px; height:18px; font-size:11px; margin-right:6px; top:-1px; }
+  /* shop header: the coin icon stands in for the "c" in "coins" so players learn the symbol */
+  #shop .coins .ci { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px;
+    border-radius:50%; vertical-align:middle; position:relative; top:-1px; margin-right:1px;
+    color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
+    background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
   /* streak rewards ladder (inside the reused #info modal) */
   #infoBody .streakRow { display:flex; align-items:center; gap:10px; padding:9px 0;
     border-bottom:1px solid #21262d; font-size:14px; }
@@ -436,7 +441,7 @@ if (window.Capacitor) {
   <div class="panel">
     <div class="shead">
       <h2>SHOP</h2>
-      <span class="coins"><span id="shopCoins">0</span> coins</span>
+      <span class="coins"><span id="shopCoins">0</span> <span class="ci">C</span>oins</span>
       <button id="shopClose">&#10005;</button>
     </div>
     <div id="shopBody"></div>

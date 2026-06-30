@@ -65,6 +65,15 @@ at it to buy in the Simulator with fake money:
 > The Xcode scheme lives in the (gitignored) `ios/` folder, so this StoreKit
 > setting is per-machine — redo it after a fresh `npx cap add ios`.
 
+> **Stale prices after adding/renaming a product?** The Simulator's StoreKit test
+> environment caches the product list, so a theme can register but show no `$0.99`
+> button (its `priceForTheme` comes back empty while others still have prices). This
+> happens especially when `OneMoreSwing.storekit` is edited *outside* Xcode (e.g. by
+> the regen script). Fix: open `OneMoreSwing.storekit` in Xcode to force a re-read,
+> **Product ▸ Clean Build Folder**, **delete the app** from the Simulator, then run
+> again. Product IDs are registered dynamically from the theme catalog, so no code
+> change is needed — only the cached config needs refreshing.
+
 ## Go live (App Store Connect)
 1. **Apple Developer Program** membership, and sign the **Paid Applications
    Agreement** (App Store Connect ▸ Business) — IAPs won't load until this is active.
