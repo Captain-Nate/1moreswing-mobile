@@ -26,9 +26,9 @@ const entitlements = path.join(root, 'ios', 'App', 'App', 'App.entitlements');
 const pbxproj      = path.join(root, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
 
 const UMP_VERSION = '2.3.0';
-// Google's official AdMob *test* App ID for iOS. Replace with your real
-// ca-app-pub-XXXX~YYYY (and set isTesting:false in www/mobile-ads.js) for release.
-const ADMOB_TEST_APP_ID = 'ca-app-pub-3940256099942544~1458002511';
+// Real AdMob App ID for iOS (1 More Swing). Ad serving is still gated by the
+// TESTING_ADS flag in www/mobile-ads.js until the App Store release build.
+const ADMOB_APP_ID = 'ca-app-pub-4322452976770818~6029978450';
 
 function patchPodfile() {
   if (!fs.existsSync(podfile)) return; // ios/ not generated yet
@@ -58,9 +58,9 @@ function patchInfoPlist() {
   // 1. AdMob App ID (+ ATT key) — once
   if (!src.includes('GADApplicationIdentifier')) {
     const keys =
-      "\t<!-- Google AdMob App ID — TEST id; replace with your real ca-app-pub-XXXX~YYYY before release. (auto-applied by scripts/patch-ios.js) -->\n" +
+      "\t<!-- Google AdMob App ID (real, 1 More Swing). (auto-applied by scripts/patch-ios.js) -->\n" +
       "\t<key>GADApplicationIdentifier</key>\n" +
-      `\t<string>${ADMOB_TEST_APP_ID}</string>\n` +
+      `\t<string>${ADMOB_APP_ID}</string>\n` +
       "\t<key>NSUserTrackingUsageDescription</key>\n" +
       "\t<string>This identifier will be used to deliver personalized ads to you.</string>\n";
     src = src.replace(/(<dict>\n)/, `$1${keys}`); // insert after the opening <dict>

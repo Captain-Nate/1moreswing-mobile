@@ -8,14 +8,17 @@
   const { AdMob } = window.Capacitor.Plugins;
   const platform = window.Capacitor.getPlatform();
 
-  // TODO: replace with your real AdMob Rewarded ad unit IDs (these are Google TEST ids):
+  // Flip to false ONLY for the App Store release build. Kept true during development
+  // so your own device sees TEST ads — never click live ads on your own AdMob account.
+  const TESTING_ADS = true;
+
   const REWARDED = {
-    ios:     'ca-app-pub-3940256099942544/1712485313',
-    android: 'ca-app-pub-3940256099942544/5224354917',
+    ios:     'ca-app-pub-4322452976770818/4305833249',   // real iOS rewarded unit
+    android: 'ca-app-pub-3940256099942544/5224354917',   // TODO: real Android unit when Android ships (Google TEST id for now)
   };
   const adId = REWARDED[platform] || REWARDED.android;
 
-  try { await AdMob.initialize({ initializeForTesting: true }); } catch (e) {}
+  try { await AdMob.initialize({ initializeForTesting: TESTING_ADS }); } catch (e) {}
 
   window.OMS_showRewarded = function () {
     return new Promise(async (resolve) => {
@@ -28,7 +31,7 @@
           if (closeSub  && closeSub.remove)  await closeSub.remove();
           finish(rewarded);
         });
-        await AdMob.prepareRewardVideoAd({ adId, isTesting: true });  // isTesting:false in production
+        await AdMob.prepareRewardVideoAd({ adId, isTesting: TESTING_ADS });
         await AdMob.showRewardVideoAd();
       } catch (e) { finish(false); }
     });
