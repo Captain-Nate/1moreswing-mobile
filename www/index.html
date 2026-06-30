@@ -613,16 +613,16 @@ const THEMES = {
   kawaii:    { accent:'#a9c7ff', glow:'#e3edff', rgb:'169,199,255', bg:'kawaii'    },
   bloom:     { accent:'#ff6fae', glow:'#ffd6ea', rgb:'255,111,174', bg:'bloom'     },  // meadow + drifting flowers
   solar:     { accent:'#a8e063', glow:'#e8ffc4', rgb:'168,224,99',  bg:'solar'     },
-  twitch:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'twitch'    },  // purple + drifting emoji
-  juicer:    { accent:'#ff3d9a', glow:'#ffc4e4', rgb:'255,61,154',  bg:'juicer'    },  // hot-pink ball on a green jungle
+  streamer:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'streamer'    },  // purple + drifting emoji
+  jungle:    { accent:'#ff3d9a', glow:'#ffc4e4', rgb:'255,61,154',  bg:'jungle'    },  // hot-pink ball on a green jungle
   // mobile-exclusive bold palettes
-  bman:      { accent:'#ffd23f', glow:'#fff0b8', rgb:'255,210,63',  bg:'bman'      },  // black + signal yellow
-  sman:      { accent:'#ff3b3b', glow:'#ffd2d2', rgb:'255,59,59',   bg:'sman'      },  // red orb on red/blue
-  joker:     { accent:'#73ff5e', glow:'#caffc0', rgb:'115,255,94',  bg:'joker'     },  // purple + green
-  harley:    { accent:'#ff4f9b', glow:'#ffd0e6', rgb:'255,79,155',  bg:'harley'    },  // red/blue + pink
-  dv:        { accent:'#ff2e2e', glow:'#ffd0d0', rgb:'255,46,46',   bg:'black'     },  // black + red (solid black bg)
-  ls:        { accent:'#3b9dff', glow:'#cfe6ff', rgb:'59,157,255',  bg:'black'     },  // black + blue (solid black bg)
-  wh40k:     { accent:'#f5c542', glow:'#ffe9a8', rgb:'245,197,66',  bg:'wh40k'     },  // deep blue + gold
+  midnight:      { accent:'#ffd23f', glow:'#fff0b8', rgb:'255,210,63',  bg:'midnight'      },  // black + signal yellow
+  velocity:      { accent:'#ff3b3b', glow:'#ffd2d2', rgb:'255,59,59',   bg:'velocity'      },  // red orb on red/blue
+  nightshade:     { accent:'#73ff5e', glow:'#caffc0', rgb:'115,255,94',  bg:'nightshade'     },  // purple + green
+  cottoncandy:    { accent:'#ff4f9b', glow:'#ffd0e6', rgb:'255,79,155',  bg:'cottoncandy'    },  // red/blue + pink
+  inferno:        { accent:'#ff2e2e', glow:'#ffd0d0', rgb:'255,46,46',   bg:'black'     },  // black + red (solid black bg)
+  glacier:        { accent:'#3b9dff', glow:'#cfe6ff', rgb:'59,157,255',  bg:'black'     },  // black + blue (solid black bg)
+  vanguard:     { accent:'#f5c542', glow:'#ffe9a8', rgb:'245,197,66',  bg:'vanguard'     },  // deep blue + gold
   code:      { accent:'#39ff7a', glow:'#bdffd0', rgb:'57,255,122',  bg:'code'      },  // black + falling green digits (Datastream)
   // ultra tier — continuously cycles through the whole spectrum
   prism:     { get accent(){ return `hsl(${prismHue()},90%,62%)`; },
@@ -694,8 +694,8 @@ const COSMETICS = {
     { id:'space',     name:'Deep Space',    cost:100000,  premium:true },
     { id:'solar',     name:'Solarpunk',     cost:200000,  premium:true },
     { id:'biopunk',   name:'Biopunk',       cost:300000,  premium:true },
-    { id:'twitch',    name:'Streamer',      cost:300000,  premium:true },
-    { id:'juicer',    name:'Juicer',        cost:300000,  premium:true },
+    { id:'streamer',    name:'Streamer',      cost:300000,  premium:true },
+    { id:'jungle',    name:'Juicer',        cost:300000,  premium:true },
     { id:'kawaii',    name:'Kawaii Pastel', cost:400000,  premium:true },
     { id:'bloom',     name:'Bloom',         cost:500000,  premium:true },
     { id:'vapor',     name:'Vaporwave',     cost:600000,  premium:true },
@@ -703,14 +703,14 @@ const COSMETICS = {
     { id:'synthwave', name:'Synthwave',     cost:900000,  premium:true },
     { id:'cyber',     name:'Cyberpunk',     cost:1000000, premium:true },
     { id:'unicorn',   name:'Unicorn',       cost:1100000, premium:true },
-    { id:'wh40k',     name:'Vanguard',      cost:1200000, premium:true, mobileOnly:true },   // blue/gold, sits between Unicorn and Velocity
+    { id:'vanguard',     name:'Vanguard',      cost:1200000, premium:true, mobileOnly:true },   // blue/gold, sits between Unicorn and Velocity
     // mobile-app-exclusive bold palettes — coins or real-money IAP
-    { id:'sman',      name:'Velocity',      cost:1300000, premium:true, mobileOnly:true },
-    { id:'bman',      name:'Midnight Gold', cost:1400000, premium:true, mobileOnly:true },
-    { id:'joker',     name:'Nightshade',    cost:1500000, premium:true, mobileOnly:true },
-    { id:'harley',    name:'Cotton Candy',  cost:1600000, premium:true, mobileOnly:true },
-    { id:'dv',        name:'Inferno',       cost:1700000, premium:true, mobileOnly:true },
-    { id:'ls',        name:'Glacier',       cost:1800000, premium:true, mobileOnly:true },
+    { id:'velocity',      name:'Velocity',      cost:1300000, premium:true, mobileOnly:true },
+    { id:'midnight',      name:'Midnight Gold', cost:1400000, premium:true, mobileOnly:true },
+    { id:'nightshade',     name:'Nightshade',    cost:1500000, premium:true, mobileOnly:true },
+    { id:'cottoncandy',    name:'Cotton Candy',  cost:1600000, premium:true, mobileOnly:true },
+    { id:'inferno',        name:'Inferno',       cost:1700000, premium:true, mobileOnly:true },
+    { id:'glacier',        name:'Glacier',       cost:1800000, premium:true, mobileOnly:true },
     { id:'code',      name:'Datastream',    cost:1900000, premium:true, mobileOnly:true },
     // seasonal + atmospheric themes (animated backgrounds)
     { id:'abyss',     name:'Abyss',          cost:250000, premium:true },
@@ -1745,8 +1745,8 @@ function swatchStyle(cat, id){
     if (id === 'kawaii')    return 'linear-gradient(135deg,#a9c7ff,#ffc2e2)';
     if (id === 'bloom')     return 'linear-gradient(135deg,#9bd4ff,#7cc15a 60%,#ff6fae)';
     if (id === 'solar')     return 'linear-gradient(135deg,#ffd56b,#7bed9f)';
-    if (id === 'twitch')    return 'linear-gradient(135deg,#9146ff,#6441a5)';
-    if (id === 'wh40k')     return 'linear-gradient(135deg,#0a1c44,#1f3f86 55%,#f5c542)';
+    if (id === 'streamer')    return 'linear-gradient(135deg,#9146ff,#6441a5)';
+    if (id === 'vanguard')     return 'linear-gradient(135deg,#0a1c44,#1f3f86 55%,#f5c542)';
     if (id === 'code')      return 'radial-gradient(circle at 35% 30%, #39ff7a, #001a05 80%)';
     if (id === 'halloween') return 'linear-gradient(160deg,#2a1240,#3d1a14)';
     if (id === 'winter')    return 'linear-gradient(160deg,#1b3a5c,#8fd6ff)';
@@ -2521,7 +2521,7 @@ function drawBackground(){
       ctx.beginPath(); ctx.arc(px,py,s.r*1.2,0,Math.PI*2); ctx.fill();
     }
     ctx.globalAlpha=1;
-  } else if (TH().bg === 'juicer'){
+  } else if (TH().bg === 'jungle'){
     // jungle theme — bright green, big corner leaves framing the screen, hot-pink energy splash
     const g=ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#11823f'); g.addColorStop(0.5,'#0c5a2b'); g.addColorStop(1,'#06330f');
@@ -2588,7 +2588,7 @@ function drawBackground(){
     ctx.fillStyle='rgba(8,28,17,0.9)';
     const base=H*0.93, lt=90, loff=((cameraX*0.25)%lt+lt)%lt;
     for(let i=-1;i<W/lt+2;i++){ const lx=i*lt-loff; ctx.beginPath(); ctx.moveTo(lx,H); ctx.quadraticCurveTo(lx+lt*0.3, base-26, lx+lt*0.5, base); ctx.quadraticCurveTo(lx+lt*0.7, base-26, lx+lt, H); ctx.fill(); }
-  } else if (TH().bg === 'twitch'){
+  } else if (TH().bg === 'streamer'){
     // purple with drifting emoji
     const g = ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#160d28'); g.addColorStop(1,'#0e0a18');
@@ -2611,7 +2611,7 @@ function drawBackground(){
       ctx.fillText(e.ch, px, yy*H);
     }
     ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
-  } else if (TH().bg === 'bman' || TH().bg === 'black'){ ctx.fillStyle='#070708'; ctx.fillRect(0,0,W,H);  // solid black (accent pops)
+  } else if (TH().bg === 'midnight' || TH().bg === 'black'){ ctx.fillStyle='#070708'; ctx.fillRect(0,0,W,H);  // solid black (accent pops)
   } else if (TH().bg === 'prism'){
     const h = prismHue();                                   // ever-shifting full-spectrum backdrop
     const g = ctx.createLinearGradient(0,0,0,H);
@@ -2622,15 +2622,15 @@ function drawBackground(){
     const r = ctx.createRadialGradient(W*0.5,H*0.42,0, W*0.5,H*0.42,H*0.7);
     r.addColorStop(0, `hsla(${h},95%,60%,0.18)`); r.addColorStop(1, `hsla(${h},95%,60%,0)`);
     ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-  } else if (TH().bg === 'sman'){   splitBg('#3a0a14', '#0a1a4d', '238,59,59',   '59,109,255');  // red / blue
-  } else if (TH().bg === 'joker'){  splitBg('#0a2a18', '#18092c', '115,255,94',  '150,60,255');  // green / purple
-  } else if (TH().bg === 'harley'){
+  } else if (TH().bg === 'velocity'){   splitBg('#3a0a14', '#0a1a4d', '238,59,59',   '59,109,255');  // red / blue
+  } else if (TH().bg === 'nightshade'){  splitBg('#0a2a18', '#18092c', '115,255,94',  '150,60,255');  // green / purple
+  } else if (TH().bg === 'cottoncandy'){
     // light blue (top) → whitish-blonde/cream (middle) → light pink (bottom) — the cream
     // break also stops the blue↔pink blend from going purple
     const g=ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#3f6fc8'); g.addColorStop(0.5,'#f6f2e6'); g.addColorStop(1,'#c85f97');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  } else if (TH().bg === 'wh40k'){
+  } else if (TH().bg === 'vanguard'){
     ctx.fillStyle = '#0e2147'; ctx.fillRect(0,0,W,H);   // solid deep navy
   } else if (TH().bg === 'code'){
     // black with falling, shifting green digits (Datastream)
