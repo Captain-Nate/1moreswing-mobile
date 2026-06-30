@@ -12,7 +12,7 @@ Two purchase types (both **Non-Consumable**):
 | `com.captainnate.onemoreswing.themes.all` | **$7.99** | every premium theme **except Prism and the limited-time seasonal themes** (sakura/summer/halloween/winter) |
 | `com.captainnate.onemoreswing.theme.prism` | **$99.99** | Prism — ultra tier, real-money only, NOT in the bundle |
 | `com.captainnate.onemoreswing.theme.space` | $0.99 | Deep Space |
-| `com.captainnate.onemoreswing.theme.solar` | $0.99 | Solarpunk |
+| `com.captainnate.onemoreswing.theme.rocket` | $0.99 | Liftoff |
 | `com.captainnate.onemoreswing.theme.biopunk` | $0.99 | Biopunk |
 | `com.captainnate.onemoreswing.theme.streamer` | $0.99 | Streamer |
 | `com.captainnate.onemoreswing.theme.jungle` | $0.99 | Juicer (streamer/creator theme) |

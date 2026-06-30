@@ -35,16 +35,16 @@
     {
       "displayPrice": "0.99",
       "familyShareable": false,
-      "internalID": "84EFDB10-9C7F-4B1E-95D5-8450663026D5",
+      "internalID": "6A927075-0CBE-4ECB-9532-9E43EA0677A5",
       "localizations": [
         {
-          "description": "Unlock the Solarpunk theme.",
-          "displayName": "Solarpunk Theme",
+          "description": "Unlock the Liftoff theme.",
+          "displayName": "Liftoff Theme",
           "locale": "en_US"
         }
       ],
-      "productID": "com.captainnate.onemoreswing.theme.solar",
-      "referenceName": "Solarpunk Theme",
+      "productID": "com.captainnate.onemoreswing.theme.rocket",
+      "referenceName": "Liftoff Theme",
       "type": "NonConsumable"
     },
     {

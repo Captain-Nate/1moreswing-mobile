@@ -616,7 +616,7 @@ const THEMES = {
   biopunk:   { accent:'#3dffa0', glow:'#c4ffe4', rgb:'61,255,160',  bg:'biopunk'   },
   kawaii:    { accent:'#a9c7ff', glow:'#e3edff', rgb:'169,199,255', bg:'kawaii'    },
   bloom:     { accent:'#ff6fae', glow:'#ffd6ea', rgb:'255,111,174', bg:'bloom'     },  // meadow + drifting flowers
-  solar:     { accent:'#a8e063', glow:'#e8ffc4', rgb:'168,224,99',  bg:'solar'     },
+  rocket:    { accent:'#ff8a3d', glow:'#ffd9a8', rgb:'255,138,61',  bg:'rocket'    },
   streamer:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'streamer'    },  // purple + drifting emoji
   jungle:    { accent:'#ff3d9a', glow:'#ffc4e4', rgb:'255,61,154',  bg:'jungle'    },  // hot-pink ball on a green jungle
   // mobile-exclusive bold palettes
@@ -696,7 +696,7 @@ const COSMETICS = {
     { id:'uzbekistan',  name:'Uzbekistan',    cost:20000, nations:true },
     // premium themes — listed in ascending coin cost; streamer/creator themes priced cheap.
     { id:'space',     name:'Deep Space',    cost:100000,  premium:true },
-    { id:'solar',     name:'Solarpunk',     cost:200000,  premium:true },
+    { id:'rocket',    name:'Liftoff',       cost:200000,  premium:true },
     { id:'biopunk',   name:'Biopunk',       cost:300000,  premium:true },
     { id:'streamer',    name:'Streamer',      cost:300000,  premium:true },
     { id:'jungle',    name:'Juicer',        cost:300000,  premium:true },
@@ -794,6 +794,7 @@ function saveGame(){
 // players don't lose unlocks or their equipped theme. Harmless to keep forever (no-op
 // once a save carries no old ids). Add an entry here for any future theme-id rename.
 const OWNED_THEME_ID_MIGRATION = {
+  solar:'rocket',   // Solarpunk replaced by the Liftoff (space/rocket) theme
   twitch:'streamer', juicer:'jungle', wh40k:'vanguard', sman:'velocity',
   bman:'midnight', joker:'nightshade', harley:'cottoncandy', dv:'inferno', ls:'glacier'
 };
@@ -1066,6 +1067,7 @@ function updateCamera(){
 // ---- synthesized SFX (no audio files) ----
 let actx = null, muted = false;
 let hapticsMode = 'full';   // 'full' = taps every swing, 'key' = banks/milestones only, 'off' = none (mobile only)
+let rocketLaunchT = -1e9;   // Liftoff theme: timestamp of the current single rocket flight (armed on run start / preview)
 function audioCtx(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
 function tone(freq, dur, type, vol, slideTo){
   if (muted) return; const a = audioCtx(); if(!a) return;
@@ -1146,6 +1148,7 @@ function ensureWorld(){
 
 function newRun(){
   runCount++;
+  if (themeName === 'rocket') rocketLaunchT = performance.now();   // one rocket flight per run
   // seed the course: daily = same for everyone today, free = fresh each run
   const ti = todayInfo(); dayNumber = ti.day;
   rng = mode === 'daily' ? mulberry32(ti.seed) : mulberry32((Math.random()*1e9)|0);
@@ -1790,7 +1793,7 @@ function swatchStyle(cat, id){
     if (id === 'biopunk')   return 'radial-gradient(circle at 35% 35%, #3dffa0, #06120e 80%)';
     if (id === 'kawaii')    return 'linear-gradient(135deg,#a9c7ff,#ffc2e2)';
     if (id === 'bloom')     return 'linear-gradient(135deg,#9bd4ff,#7cc15a 60%,#ff6fae)';
-    if (id === 'solar')     return 'linear-gradient(135deg,#ffd56b,#7bed9f)';
+    if (id === 'rocket')    return 'radial-gradient(circle at 50% 82%, #ff8a3d, #0a1430 72%)';
     if (id === 'streamer')    return 'linear-gradient(135deg,#9146ff,#6441a5)';
     if (id === 'vanguard')     return 'linear-gradient(135deg,#0a1c44,#1f3f86 55%,#f5c542)';
     if (id === 'code')      return 'radial-gradient(circle at 35% 30%, #39ff7a, #001a05 80%)';
@@ -1999,7 +2002,7 @@ let previewing = null, preTheme = null;
 function startPreview(id){
   if (!THEMES[id]) return;
   if (previewing === null) preTheme = themeName;   // remember the real equipped theme
-  previewing = id; themeName = id; syncUI();
+  previewing = id; themeName = id; if (id === 'rocket') rocketLaunchT = performance.now(); syncUI();
   closeShop();
   renderPreviewBar(id);
 }
@@ -2618,23 +2621,48 @@ function drawBackground(){
       ctx.globalAlpha=0.3+0.4*Math.max(0,Math.sin(t*1.5+s.ph)); ctx.fillStyle=s.ph>3?'#ffc2e2':'#bcd3ff';
       ctx.beginPath(); ctx.arc(px,s.y*H,s.r,0,Math.PI*2); ctx.fill(); }
     ctx.globalAlpha=1;
-  } else if (TH().bg === 'solar'){
-    // hopeful eco-future
+  } else if (TH().bg === 'rocket'){
+    // night launch: starfield, curved earth horizon, a rocket climbing on a flame
     const g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#16321f'); g.addColorStop(0.6,'#1d3a22'); g.addColorStop(1,'#0e2417');
+    g.addColorStop(0,'#05060f'); g.addColorStop(0.55,'#0a1130'); g.addColorStop(1,'#13245a');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    let r=ctx.createRadialGradient(W*0.6,H*0.2,0,W*0.6,H*0.2,H*0.85);
-    r.addColorStop(0,'rgba(255,213,107,0.16)'); r.addColorStop(1,'rgba(255,213,107,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    r=ctx.createRadialGradient(W*0.2,H*0.7,0,W*0.2,H*0.7,H*0.6);
-    r.addColorStop(0,'rgba(120,230,140,0.10)'); r.addColorStop(1,'rgba(120,230,140,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
     if(!stars) makeStars();
-    const t=performance.now()/1000; ctx.fillStyle='#ffe9a8';
-    for(const s of stars){ const px=((s.x*W - cameraX*s.par - t*5*s.par)%W+W)%W, py=s.y*H+Math.sin(t*0.4+s.ph)*10;
-      ctx.globalAlpha=0.22+0.4*Math.max(0,Math.sin(t+s.ph)); ctx.beginPath(); ctx.arc(px,py,s.r,0,Math.PI*2); ctx.fill(); }
+    const t=performance.now()/1000;
+    ctx.fillStyle='#dfe8ff';
+    for(const s of stars){ const px=((s.x*W - cameraX*s.par)%W+W)%W;
+      ctx.globalAlpha=0.3+0.5*Math.max(0,Math.sin(t*1.5+s.ph)); ctx.beginPath(); ctx.arc(px,s.y*H*0.78,s.r,0,Math.PI*2); ctx.fill(); }
     ctx.globalAlpha=1;
-    ctx.fillStyle='rgba(8,28,17,0.9)';
-    const base=H*0.93, lt=90, loff=((cameraX*0.25)%lt+lt)%lt;
-    for(let i=-1;i<W/lt+2;i++){ const lx=i*lt-loff; ctx.beginPath(); ctx.moveTo(lx,H); ctx.quadraticCurveTo(lx+lt*0.3, base-26, lx+lt*0.5, base); ctx.quadraticCurveTo(lx+lt*0.7, base-26, lx+lt, H); ctx.fill(); }
+    // curved earth with an atmosphere glow along the bottom
+    const er=W*1.5, ecx=W*0.5, ecy=H+er-H*0.16;
+    let atm=ctx.createRadialGradient(ecx,ecy,er-10,ecx,ecy,er+70);
+    atm.addColorStop(0,'rgba(90,160,255,0)'); atm.addColorStop(0.6,'rgba(90,160,255,0.30)'); atm.addColorStop(1,'rgba(90,160,255,0)');
+    ctx.fillStyle=atm; ctx.beginPath(); ctx.arc(ecx,ecy,er+70,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#0a1f3d'; ctx.beginPath(); ctx.arc(ecx,ecy,er,0,Math.PI*2); ctx.fill();
+    // single rocket flight: one diagonal pass from lower-left to upper-right, armed per run/preview
+    const prog=(performance.now()-rocketLaunchT)/3400;   // 0..1 over ~3.4s, then gone
+    if (prog>=0 && prog<=1){
+      const rx=W*-0.12 + prog*W*1.24;
+      const ry=H*1.08 + prog*-(H*1.24);
+      const ang=Math.atan2(W,H);                  // tilt so the nose points along the travel direction
+      const rs=Math.max(W,H)*0.05;                // rocket scale
+      ctx.save(); ctx.translate(rx,ry); ctx.rotate(ang);
+      for(let i=0;i<6;i++){ ctx.fillStyle='rgba(200,220,255,'+(0.16*(1-i/6))+')';   // exhaust puffs
+        ctx.beginPath(); ctx.arc(Math.sin(t*3+i)*rs*0.2, rs*(1.4+i*0.5), rs*(0.35+i*0.12),0,Math.PI*2); ctx.fill(); }
+      const fl=rs*(1.05+0.25*Math.abs(Math.sin(t*22)));                            // flickering flame
+      let fg=ctx.createLinearGradient(0,rs*0.9,0,rs*0.9+fl);
+      fg.addColorStop(0,'#fff1b0'); fg.addColorStop(0.5,'#ff8a3d'); fg.addColorStop(1,'rgba(255,80,30,0)');
+      ctx.fillStyle=fg; ctx.beginPath(); ctx.moveTo(-rs*0.28,rs*0.9); ctx.quadraticCurveTo(0,rs*0.9+fl*1.2,rs*0.28,rs*0.9); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#e9eef7'; ctx.beginPath();                                    // body
+      ctx.moveTo(0,-rs*1.25); ctx.quadraticCurveTo(rs*0.42,-rs*0.5,rs*0.34,rs*0.9);
+      ctx.lineTo(-rs*0.34,rs*0.9); ctx.quadraticCurveTo(-rs*0.42,-rs*0.5,0,-rs*1.25); ctx.fill();
+      ctx.fillStyle='#ff8a3d'; ctx.beginPath();                                    // nose cone
+      ctx.moveTo(0,-rs*1.25); ctx.quadraticCurveTo(rs*0.42,-rs*0.5,0,-rs*0.4); ctx.quadraticCurveTo(-rs*0.42,-rs*0.5,0,-rs*1.25); ctx.fill();
+      ctx.fillStyle='#46d4ff'; ctx.beginPath(); ctx.arc(0,-rs*0.05,rs*0.16,0,Math.PI*2); ctx.fill();   // window
+      ctx.fillStyle='#ff8a3d';                                                     // fins
+      ctx.beginPath(); ctx.moveTo(rs*0.34,rs*0.35); ctx.lineTo(rs*0.62,rs*0.95); ctx.lineTo(rs*0.34,rs*0.9); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-rs*0.34,rs*0.35); ctx.lineTo(-rs*0.62,rs*0.95); ctx.lineTo(-rs*0.34,rs*0.9); ctx.fill();
+      ctx.restore();
+    }
   } else if (TH().bg === 'streamer'){
     // purple with drifting emoji
     const g = ctx.createLinearGradient(0,0,0,H);
