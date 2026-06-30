@@ -43,6 +43,14 @@
     background:rgba(13,17,23,.55); padding:6px 12px; border-radius:999px; max-width:min(680px,92vw);
     transition:opacity .45s ease; }
   #hint.hide { opacity:0; }
+  /* one-time multiplier coach-mark — a teaching banner near the top, fires the first time you build a chain */
+  #coach { position:fixed; left:50%; top:calc(64px + env(safe-area-inset-top)); transform:translateX(-50%) translateY(-8px);
+    z-index:17; pointer-events:none; opacity:0; max-width:min(440px,90vw); text-align:center;
+    color:#e6edf3; font-size:13.5px; line-height:1.5; background:rgba(13,17,23,.92);
+    border:1px solid rgba(255,140,40,.55); border-radius:14px; padding:11px 16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.5); transition:opacity .35s ease, transform .35s ease; }
+  #coach.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #coach b { color:#ffb572; }
   #footer { position:fixed; left:calc(12px + env(safe-area-inset-left)); bottom:calc(10px + env(safe-area-inset-bottom)); z-index:9; font-size:12.5px;
     background:rgba(13,17,23,.6); padding:5px 12px; border-radius:999px; }
   #footer a { color:#9aa4b0; text-decoration:underline; }
@@ -68,6 +76,8 @@
   #lbOpenBtn { background:#21262d; color:#e6edf3; border:1px solid #30363d; }
   #reviveBtn { background:linear-gradient(135deg,#f5c451,#e0a020); color:#1a1206; }
   #reviveBtn:disabled { opacity:.7; cursor:default; }
+  #doubleBtn { background:linear-gradient(135deg,#ffd95e,#f0b429); color:#3a2a00; }
+  #doubleBtn:disabled { opacity:.7; cursor:default; }
   #gameoverAd { position:fixed; left:50%; top:calc(50% + 168px); transform:translateX(-50%);
     display:none; z-index:14; width:min(336px,92vw); }
   /* ── Share card ── */
@@ -87,6 +97,12 @@
     border-radius:999px; padding:13px 0; font-weight:800; font-size:15px;
     cursor:pointer; width:100%; -webkit-tap-highlight-color:transparent; }
   #sc-shareBtn:active { transform:scale(.96); }
+  #sc-doubleBtn { display:none; width:100%; margin-bottom:9px; border:none; border-radius:999px;
+    padding:13px 0; font-weight:800; font-size:15px; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    background:linear-gradient(135deg,#ffd95e,#f0b429); color:#3a2a00; }
+  #sc-doubleBtn.show { display:block; }
+  #sc-doubleBtn:active { transform:scale(.96); }
+  #sc-doubleBtn:disabled { opacity:.7; cursor:default; }
   #sc-closeBtn { background:none; border:none; color:#8b949e; font-size:13px;
     padding:10px 20px; cursor:pointer; margin-top:2px; -webkit-tap-highlight-color:transparent; }
   #gameoverAd.show { display:block; }
@@ -236,10 +252,11 @@
   #streakChip:active { transform:scale(.96); }
   #streakChip b { color:#ffd9b0; }
   /* shared gold coin badge (matches the shop) in the streak chip + rewards modal */
-  #streakChip .ci, #infoBody .ci { display:inline-flex; align-items:center; justify-content:center;
+  #streakChip .ci, #infoBody .ci, #fxToast .ci { display:inline-flex; align-items:center; justify-content:center;
     width:14px; height:14px; border-radius:50%; margin-right:3px; vertical-align:middle; position:relative;
     top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
+  #fxToast .ci { width:18px; height:18px; font-size:11px; margin-right:6px; top:-1px; }
   /* streak rewards ladder (inside the reused #info modal) */
   #infoBody .streakRow { display:flex; align-items:center; gap:10px; padding:9px 0;
     border-bottom:1px solid #21262d; font-size:14px; }
@@ -319,6 +336,7 @@
 </div>
 <div id="overBtns">
   <button id="reviveBtn">▶ Continue · Ad</button>
+  <button id="doubleBtn">▶ Double coins · Ad</button>
   <button id="shareBtn">Share result</button>
   <button id="lbOpenBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style="vertical-align:-2px;margin-right:5px"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg>Leaderboard</button>
 </div>
@@ -331,12 +349,14 @@
     <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#8b949e;margin-top:4px;">DAILY SCORE</div>
     <div id="sc-grid"></div>
     <div id="sc-stats"></div>
+    <button id="sc-doubleBtn">▶ Double coins · Ad</button>
     <button id="sc-shareBtn">Share result</button>
     <div><button id="sc-closeBtn">Close</button></div>
   </div>
 </div>
 <div id="fx"></div>
 <div id="fxToast"></div>
+<div id="coach"></div>
 <div id="previewBar"></div>
 <button id="resumeBtn">&#9654; Resume</button>
 <button id="toTitleBtn"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;margin-right:5px"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>Home</button>
@@ -617,7 +637,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, mode, name: playerName, pid: playerId, lastDailyDone, streak, bestStreak, remindersOn };
+  return { coins, owned, equipped, themeName: tn, muted, mode, name: playerName, pid: playerId, lastDailyDone, streak, bestStreak, coachSeen, remindersOn };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -638,6 +658,7 @@ function loadGame(){
     if (typeof s.lastDailyDone === 'number') lastDailyDone = s.lastDailyDone;
     if (typeof s.streak === 'number') streak = s.streak;
     if (typeof s.bestStreak === 'number') bestStreak = s.bestStreak;
+    if (typeof s.coachSeen === 'boolean') coachSeen = s.coachSeen;
     if (typeof s.remindersOn === 'boolean') remindersOn = s.remindersOn;
   } catch(e){}
   if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
@@ -672,6 +693,7 @@ async function mergeCloudSave(){
       changed = true;
     }
     if (typeof c.bestStreak === 'number' && c.bestStreak > bestStreak){ bestStreak = c.bestStreak; changed = true; }
+    if (c.coachSeen && !coachSeen){ coachSeen = true; changed = true; }
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
     if (changed){ saveGame(); syncUI(); updateRemindBtn(); if (lbOpen) showTab(); }   // refresh leaderboard if it's open when the cloud identity lands
   } catch(e){}
@@ -803,7 +825,8 @@ let runRoute = [], runCoinsEarned = 0;              // per-run stats for the sha
 let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false, editingName = false;
 let myWins = 0;   // player's all-time wins (from the leaderboard) — drives the Minimalist theme unlock
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
-let usedRevive = false, adShowing = false;
+let usedRevive = false, adShowing = false, doubledRun = false;
+let coachSeen = false;   // has the one-time multiplier coach-mark been shown?
 
 // Streak = consecutive days you complete the daily. It stays "alive" if your last
 // completion was today or yesterday; miss a whole day and it reads 0 until you finish
@@ -935,7 +958,7 @@ function newRun(){
   rng = mode === 'daily' ? mulberry32(ti.seed) : mulberry32((Math.random()*1e9)|0);
   const ob = document.getElementById('overBtns'); if (ob) ob.classList.remove('show');
   hideGameOverAd();
-  lastScore = 0; submittedRun = false; usedRevive = false;
+  lastScore = 0; submittedRun = false; usedRevive = false; doubledRun = false;
 
   anchors = []; platforms = []; cleared = 0; trail = []; popups = [];
   lastReleased = null; anchorGenCount = 0; finishX = null; runTime = 0;
@@ -999,6 +1022,14 @@ function pickTarget(){
   return bestA;
 }
 
+// one-time teaching banner; auto-fades. (ms default ~6s so a new player can read it)
+let coachTimer = 0;
+function showCoach(html, ms){
+  const c = document.getElementById('coach'); if (!c) return;
+  c.innerHTML = html; c.classList.add('show');
+  clearTimeout(coachTimer); coachTimer = setTimeout(() => c.classList.remove('show'), ms || 6000);
+}
+
 function press(){
   const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
   if (paused || shopOpen || lbOpen || titleOpen || infoOpen || settingsOpen || previewing) return;
@@ -1025,6 +1056,11 @@ function press(){
     mult += K.MULT_PER_ANCHOR + skipped * K.SKIP_MULT_BONUS;
     const gained = Math.round((K.ANCHOR_POINTS + skipped * K.SKIP_POINTS) * mult);
     pending += gained;
+    // first time a player builds a real chain: teach the multiplier→coins→bank loop
+    if (!coachSeen && mult >= 3){
+      coachSeen = true; saveGame();
+      showCoach(`🔥 <b>×${mult.toFixed(1)} multiplier!</b><br>Chain swings &amp; skip dots to grow it — a bigger × means more coins. Drop on a <b>BANK</b> pad to keep them… but fall and you lose what isn't banked!`);
+    }
 
     if (skipped > 0) popup(t.x, t.y - 26, `SKIP ×${skipped}!  +${fmt(gained)}`, TH().accent, true);
     else             popup(t.x, t.y - 22, `+${fmt(gained)}`, '#8b949e');
@@ -1146,6 +1182,11 @@ function showOverButtons(){
     // revive: Free Play only, on death, once per run, and only when a rewarded provider is available
     rv.style.display = (rewardedAvailable() && mode === 'free' && !usedRevive && state === 'dead') ? '' : 'none';
     rv.textContent = '▶ Continue · Ad'; rv.disabled = false;
+  }
+  const db = document.getElementById('doubleBtn');
+  if (db){
+    db.style.display = canDoubleCoins() ? '' : 'none';
+    db.textContent = '▶ Double coins · Ad'; db.disabled = false;
   }
   showGameOverAd();
 }
@@ -1489,6 +1530,12 @@ function showShareCard(){
     }
   }
   document.getElementById('sc-stats').innerHTML = statsHtml;
+
+  const scd = document.getElementById('sc-doubleBtn');   // "double coins" on the daily card
+  if (scd){
+    scd.classList.toggle('show', canDoubleCoins());
+    scd.textContent = '▶ Double coins · Ad'; scd.disabled = false;
+  }
 
   card.classList.add('show');
 }
@@ -1913,13 +1960,14 @@ const reviveBtn = document.getElementById('reviveBtn');
 // A rewarded provider is "available" if the gate flag is on OR the host app has
 // injected window.OMS_showRewarded (e.g. the AdMob/Capacitor wrapper — see MOBILE.md).
 function rewardedAvailable(){ return REWARDED_ENABLED || typeof window.OMS_showRewarded === 'function'; }
-function showRewardedAd(onReward){
+function showRewardedAd(onReward, btn){
   if (adShowing) return;
   adShowing = true;
-  reviveBtn.textContent = 'Loading ad…'; reviveBtn.disabled = true;
+  if (btn){ btn.dataset.label = btn.textContent; btn.textContent = 'Loading ad…'; btn.disabled = true; }
   const done = (rewarded) => {
-    adShowing = false; reviveBtn.disabled = false; reviveBtn.textContent = '▶ Continue · Ad';
-    if (rewarded) onReward();           // only revive if the ad actually completed
+    adShowing = false;
+    if (btn){ btn.disabled = false; btn.textContent = btn.dataset.label; }
+    if (rewarded) onReward();           // only grant the reward if the ad actually completed
   };
   // Preferred path: a real rewarded provider injected by the host app.
   // It should return a Promise<boolean> (true = watched to completion).
@@ -1930,7 +1978,29 @@ function showRewardedAd(onReward){
   // Dev-only placeholder (reachable only when REWARDED_ENABLED=true with no provider wired).
   setTimeout(() => done(true), 800);
 }
-reviveBtn.addEventListener('click', () => showRewardedAd(revive));
+reviveBtn.addEventListener('click', () => showRewardedAd(revive, reviveBtn));
+
+// ---------- rewarded "double your coins" (both modes, once per run) ----------
+// Grants a bonus equal to the coins banked this run (doubling the run's take). Only
+// offered when a rewarded provider exists, the run actually earned coins, and not yet claimed.
+function canDoubleCoins(){
+  return rewardedAvailable() && runCoinsEarned > 0 && !doubledRun && (state === 'dead' || state === 'finished');
+}
+function doubleCoins(){
+  if (!canDoubleCoins()) return;
+  const bonus = runCoinsEarned;
+  coins += bonus; runCoinsEarned += bonus; doubledRun = true;
+  saveGame();
+  const toast = document.getElementById('fxToast');
+  if (toast){ toast.innerHTML = `<span class="ci">C</span> Coins doubled! +${fmt(bonus)}`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
+  sfxPurchase();
+  showOverButtons();                                                  // refresh the Free-Play over buttons
+  if (document.getElementById('shareCard').classList.contains('show')) showShareCard();   // refresh the daily card's coin line
+}
+const doubleBtn   = document.getElementById('doubleBtn');
+const scDoubleBtn = document.getElementById('sc-doubleBtn');
+if (doubleBtn)   doubleBtn.addEventListener('click',   () => showRewardedAd(doubleCoins, doubleBtn));
+if (scDoubleBtn) scDoubleBtn.addEventListener('click', () => showRewardedAd(doubleCoins, scDoubleBtn));
 
 // ---------- AdSense game-over display ad (passive; both modes) ----------
 // Inert until ADS_ENABLED + IDs are set in the MONETIZATION CONFIG above.
@@ -2644,9 +2714,17 @@ function draw(){
     ctx.letterSpacing = '0px';
     ctx.fillStyle='#e6edf3'; ctx.font='800 52px ui-sans-serif, system-ui';
     ctx.fillText(fmt(total), W/2, H/2 + 8);
+    if (runCoinsEarned > 0){                                  // coins banked this run, with the shop coin icon
+      ctx.font='700 15px ui-sans-serif, system-ui';
+      const txt = `+${fmt(runCoinsEarned)} coins earned`;
+      const tw = ctx.measureText(txt).width, r = 6, gap = 6, sx = W/2 - (r*2 + gap + tw)/2, y = H/2 + 42;
+      drawCoinIcon(sx + r, y - 5, r);
+      ctx.font='700 15px ui-sans-serif, system-ui'; ctx.fillStyle='#f0c34a'; ctx.textAlign='left';
+      ctx.fillText(txt, sx + r*2 + gap, y); ctx.textAlign='center';
+    }
     if (pending > 0){
-      ctx.fillStyle='#f85149'; ctx.font='600 17px ui-sans-serif, system-ui';
-      ctx.fillText(`${fmt(pending)} unbanked — should've banked!`, W/2, H/2 + 48);
+      ctx.fillStyle='#f85149'; ctx.font='600 14px ui-sans-serif, system-ui';
+      ctx.fillText(`${fmt(pending)} unbanked — should've banked!`, W/2, H/2 + 68);
     }
     ctx.fillStyle=TH().accent; ctx.font='600 16px ui-sans-serif, system-ui';
     ctx.fillText('Tap to swing again', W/2, H/2 + 94);
