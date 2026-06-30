@@ -546,6 +546,14 @@ const THEMES = {
   blue:    { accent:'#58a6ff', glow:'#cfe6ff', rgb:'88,166,255'  },
   red:     { accent:'#ff5d5d', glow:'#ffd2d2', rgb:'255,93,93'   },
   green:   { accent:'#3fb950', glow:'#c4ffd4', rgb:'63,185,80'   },
+  halloween: { accent:'#ff7a18', glow:'#ffd9b0', rgb:'255,122,24',  bg:'halloween' },
+  winter:    { accent:'#8fd6ff', glow:'#e8faff', rgb:'143,214,255', bg:'winter'    },
+  sakura:    { accent:'#ff8fc4', glow:'#ffe1f0', rgb:'255,143,196', bg:'sakura'    },
+  summer:    { accent:'#ffcf3a', glow:'#fff3b8', rgb:'255,207,58',  bg:'summer'    },
+  abyss:     { accent:'#2de2e6', glow:'#bff8ff', rgb:'45,226,230',  bg:'abyss'     },
+  sunset:    { accent:'#ff8c42', glow:'#ffe0c0', rgb:'255,140,66',  bg:'sunset'    },
+  autumn:    { accent:'#e0652b', glow:'#ffd8b0', rgb:'224,101,43',  bg:'autumn'    },
+  storm:     { accent:'#9fb3d9', glow:'#d8e2f5', rgb:'159,179,217', bg:'storm'     },
   // "Nations" — cheap recolor themes (timed to the World Cup); flag-accent colours, no custom bg
   brazil:      { accent:'#f7d417', glow:'#fff4b0', rgb:'247,212,23',  bg:'flag' },
   netherlands: { accent:'#ff7a18', glow:'#ffd9b0', rgb:'255,122,24',  bg:'flag' },
@@ -605,16 +613,16 @@ const THEMES = {
   kawaii:    { accent:'#a9c7ff', glow:'#e3edff', rgb:'169,199,255', bg:'kawaii'    },
   bloom:     { accent:'#ff6fae', glow:'#ffd6ea', rgb:'255,111,174', bg:'bloom'     },  // meadow + drifting flowers
   solar:     { accent:'#a8e063', glow:'#e8ffc4', rgb:'168,224,99',  bg:'solar'     },
-  twitch:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'twitch'    },  // stream purple + chat spam
+  twitch:    { accent:'#9146ff', glow:'#dcc6ff', rgb:'145,70,255',  bg:'twitch'    },  // purple + drifting emoji
   juicer:    { accent:'#ff3d9a', glow:'#ffc4e4', rgb:'255,61,154',  bg:'juicer'    },  // hot-pink ball on a green jungle
-  // mobile-exclusive, comic-inspired palettes
+  // mobile-exclusive bold palettes
   bman:      { accent:'#ffd23f', glow:'#fff0b8', rgb:'255,210,63',  bg:'bman'      },  // black + signal yellow
   sman:      { accent:'#ff3b3b', glow:'#ffd2d2', rgb:'255,59,59',   bg:'sman'      },  // red orb on red/blue
   joker:     { accent:'#73ff5e', glow:'#caffc0', rgb:'115,255,94',  bg:'joker'     },  // purple + green
   harley:    { accent:'#ff4f9b', glow:'#ffd0e6', rgb:'255,79,155',  bg:'harley'    },  // red/blue + pink
   dv:        { accent:'#ff2e2e', glow:'#ffd0d0', rgb:'255,46,46',   bg:'black'     },  // black + red (solid black bg)
   ls:        { accent:'#3b9dff', glow:'#cfe6ff', rgb:'59,157,255',  bg:'black'     },  // black + blue (solid black bg)
-  wh40k:     { accent:'#f5c542', glow:'#ffe9a8', rgb:'245,197,66',  bg:'wh40k'     },  // deep blue + gold (Vanguard)
+  wh40k:     { accent:'#f5c542', glow:'#ffe9a8', rgb:'245,197,66',  bg:'wh40k'     },  // deep blue + gold
   code:      { accent:'#39ff7a', glow:'#bdffd0', rgb:'57,255,122',  bg:'code'      },  // black + falling green digits (Datastream)
   // ultra tier — continuously cycles through the whole spectrum
   prism:     { get accent(){ return `hsl(${prismHue()},90%,62%)`; },
@@ -696,7 +704,7 @@ const COSMETICS = {
     { id:'cyber',     name:'Cyberpunk',     cost:1000000, premium:true },
     { id:'unicorn',   name:'Unicorn',       cost:1100000, premium:true },
     { id:'wh40k',     name:'Vanguard',      cost:1200000, premium:true, mobileOnly:true },   // blue/gold, sits between Unicorn and Velocity
-    // mobile-app-exclusive themes (comic-inspired) — coins or real-money IAP
+    // mobile-app-exclusive bold palettes — coins or real-money IAP
     { id:'sman',      name:'Velocity',      cost:1300000, premium:true, mobileOnly:true },
     { id:'bman',      name:'Midnight Gold', cost:1400000, premium:true, mobileOnly:true },
     { id:'joker',     name:'Nightshade',    cost:1500000, premium:true, mobileOnly:true },
@@ -704,6 +712,15 @@ const COSMETICS = {
     { id:'dv',        name:'Inferno',       cost:1700000, premium:true, mobileOnly:true },
     { id:'ls',        name:'Glacier',       cost:1800000, premium:true, mobileOnly:true },
     { id:'code',      name:'Datastream',    cost:1900000, premium:true, mobileOnly:true },
+    // seasonal + atmospheric themes (animated backgrounds)
+    { id:'abyss',     name:'Abyss',          cost:250000, premium:true },
+    { id:'sunset',    name:'Golden Hour',    cost:280000, premium:true },
+    { id:'autumn',    name:'Autumn',         cost:300000, premium:true },
+    { id:'sakura',    name:'Cherry Blossom', cost:320000, premium:true, seasonal:true },
+    { id:'summer',    name:'Summer Beach',   cost:350000, premium:true, seasonal:true },
+    { id:'storm',     name:'Thunderstorm',   cost:380000, premium:true },
+    { id:'halloween', name:'Spooky Night',   cost:420000, premium:true, seasonal:true },
+    { id:'winter',    name:'Winter Frost',   cost:450000, premium:true, seasonal:true },
     // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
     { id:'prism',   name:'Prism',        cost:0, premium:true, mobileOnly:true, ultra:true },
     // earned, not bought — unlocks at 100 all-time wins on the leaderboard
@@ -1731,6 +1748,14 @@ function swatchStyle(cat, id){
     if (id === 'twitch')    return 'linear-gradient(135deg,#9146ff,#6441a5)';
     if (id === 'wh40k')     return 'linear-gradient(135deg,#0a1c44,#1f3f86 55%,#f5c542)';
     if (id === 'code')      return 'radial-gradient(circle at 35% 30%, #39ff7a, #001a05 80%)';
+    if (id === 'halloween') return 'linear-gradient(160deg,#2a1240,#3d1a14)';
+    if (id === 'winter')    return 'linear-gradient(160deg,#1b3a5c,#8fd6ff)';
+    if (id === 'sakura')    return 'linear-gradient(160deg,#ffd9e8,#cfe0ff)';
+    if (id === 'summer')    return 'linear-gradient(160deg,#39c0ff,#ffe9a8)';
+    if (id === 'abyss')     return 'linear-gradient(180deg,#0a3a55,#020a14)';
+    if (id === 'sunset')    return 'linear-gradient(160deg,#a83f6e,#ffd27a)';
+    if (id === 'autumn')    return 'linear-gradient(160deg,#a8662b,#d98a3a)';
+    if (id === 'storm')     return 'linear-gradient(160deg,#2a3340,#161a22)';
     if (NATION_IDS.has(id)) return "url('flags/"+id+".svg') center/cover";
     return (THEMES[id] && THEMES[id].accent) || '#888';
   }
@@ -1756,10 +1781,15 @@ function swatchStyle(cat, id){
   if (id === 'eightball') return 'radial-gradient(circle at 38% 32%, #4a4a52, #15151a 70%)';
   return (ORB_COLORS[id] && ORB_COLORS[id][0]) || TH().accent;
 }
+// seasonal themes rotate by month — only the in-season one is purchasable
+const SEASON_MONTHS = { winter:[11,0,1], sakura:[2,3,4], summer:[5,6,7], halloween:[8,9,10] };
+const SEASON_RETURN = { winter:'Dec', sakura:'Mar', summer:'Jun', halloween:'Sep' };
+function seasonNow(){ const m=new Date().getMonth(); for(const id in SEASON_MONTHS) if(SEASON_MONTHS[id].indexOf(m)>=0) return id; return ''; }
 function renderShop(){
   document.getElementById('shopCoins').textContent = fmt(coins);
   const iap = window.OMS_IAP;
   const iapReady = !!(iap && iap.ready);
+  const seasonId = seasonNow();
   let html = '';
   for (const [cat,label] of [['theme','THEMES'],['trail','TRAILS'],['orb','ORBS']]){
     html += `<button class="cattoggle${catOpen[cat]?' open':''}" data-act="cat" data-cat="${cat}">${label} <span class="cn">${COSMETICS[cat].length}</span><span class="chev">${catOpen[cat]?'▾':'▸'}</span></button>`;
@@ -1774,7 +1804,15 @@ function renderShop(){
               + `<span class="nm">Unlock ALL themes</span><button data-act="iapall">${price}</button></div>`;
       }
     }
-    for (const it of COSMETICS[cat]){
+    let list = COSMETICS[cat];
+    if (cat === 'theme'){   // base themes, then NATIONS, then PREMIUM sorted by coin price, then earned/ultra
+      const base = list.filter(t=>!t.premium && !t.nations && !t.winUnlock);
+      const nat  = list.filter(t=>t.nations);
+      const prem = list.filter(t=>t.premium && !t.ultra).sort((a,b)=>a.cost-b.cost);
+      const spec = list.filter(t=>t.ultra || t.winUnlock);
+      list = base.concat(nat, prem, spec);
+    }
+    for (const it of list){
       if (cat === 'theme'){
         if (it.nations){
           if (!shownNations){ const cnt = COSMETICS.theme.filter(t=>t.nations).length; html += `<button class="subcat natoggle" data-act="nations">🌍 NATIONS (${cnt})<span class="chev">${nationsOpen?'▾':'▸'}</span></button>`; shownNations = true; }
@@ -1797,6 +1835,9 @@ function renderShop(){
       else if (it.streakUnlock){                                     // earned via daily streak, not purchasable
         btns = `<button class="winlock" disabled>🔥 ${Math.min(bestStreak, it.streakUnlock)} / ${it.streakUnlock} day streak</button>`;
       }
+      else if (it.seasonal && it.id !== seasonId){                   // off-season seasonal theme — comes back later
+        btns = `<button class="winlock" disabled>🗓️ Back in ${SEASON_RETURN[it.id]}</button>`;
+      }
       else {
         btns = `<button class="buy" data-act="buy" data-cat="${cat}" data-id="${it.id}" ${coins<it.cost?'disabled':''}><span class="ci">C</span>${fmt(it.cost)}</button>`;
         if (cat === 'theme' && it.premium && iapReady){               // real-money alternative to grinding coins
@@ -1809,6 +1850,7 @@ function renderShop(){
       html += `<div class="item"><span class="sw" style="background:${swatchStyle(cat,it.id)}">${it.emoji||''}</span>`
             + `<span class="nm">${it.name}</span><span class="btns">${btns}</span></div>`;
       if (it.ultra || it.winUnlock) html += `<div class="exnote">Not included in the Unlock All bundle</div>`;
+      else if (it.seasonal) html += `<div class="exnote">Limited-time seasonal theme</div>`;
     }
   }
   if (iapReady) html += `<button class="restore" data-act="restore">Restore purchases</button>`;
@@ -2279,7 +2321,7 @@ function cyberSkyline(baseY, tile, hMin, hRange, par, fill, dim){
   }
 }
 // solid two-colour split background (top half / bottom half) with a soft same-colour
-// glow in each half and a thin divider — used by the comic-inspired themes.
+// glow in each half and a thin divider — used by the split-colour themes.
 // glow args are "r,g,b" strings (or null to skip that half's glow).
 function splitBg(topFill, botFill, topGlow, botGlow){
   const mid = Math.round(H*0.5);
@@ -2319,6 +2361,10 @@ function drawFlagBg(){
   } else { ctx.fillStyle=TH().accent; ctx.fillRect(0,0,W,H); }
   ctx.fillStyle='rgba(5,7,10,0.42)'; ctx.fillRect(0,0,W,H);
 }
+// ---- atmospheric helpers for the seasonal / weather themes ----
+function vgrad(cols){ const g=ctx.createLinearGradient(0,0,0,H); for(let i=0;i<cols.length;i++) g.addColorStop(i/(cols.length-1),cols[i]); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
+let _bgp=[], _bgk='';
+function bgField(kind,n){ if(_bgk!==kind){ _bgp=[]; for(let i=0;i<n;i++) _bgp.push({x:Math.random(),y:Math.random(),r:Math.random(),p:Math.random()*6.283,v:0.5+Math.random()}); _bgk=kind; } return _bgp; }
 function drawBackground(){
   if (TH().bg === 'space'){
     ctx.fillStyle = '#05070d'; ctx.fillRect(0,0,W,H);
@@ -2483,7 +2529,7 @@ function drawBackground(){
     const t=performance.now()/1000, pulse=0.5+0.5*Math.sin(t*1.5);
     let r=ctx.createRadialGradient(W*0.5,H*0.12,0,W*0.5,H*0.12,H*0.55);          // green canopy light
     r.addColorStop(0,`rgba(123,255,158,${0.18+0.06*pulse})`); r.addColorStop(1,'rgba(123,255,158,0)'); ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
-    // hot-pink energy splash behind the play area (the GFuel hero)
+    // hot-pink energy splash behind the play area
     r=ctx.createRadialGradient(W*0.5,H*0.42,0,W*0.5,H*0.42,H*0.42);
     r.addColorStop(0,`rgba(255,45,158,${0.34+0.12*pulse})`); r.addColorStop(0.55,'rgba(255,45,158,0.12)'); r.addColorStop(1,'rgba(255,45,158,0)');
     ctx.fillStyle=r; ctx.fillRect(0,0,W,H);
@@ -2543,7 +2589,7 @@ function drawBackground(){
     const base=H*0.93, lt=90, loff=((cameraX*0.25)%lt+lt)%lt;
     for(let i=-1;i<W/lt+2;i++){ const lx=i*lt-loff; ctx.beginPath(); ctx.moveTo(lx,H); ctx.quadraticCurveTo(lx+lt*0.3, base-26, lx+lt*0.5, base); ctx.quadraticCurveTo(lx+lt*0.7, base-26, lx+lt, H); ctx.fill(); }
   } else if (TH().bg === 'twitch'){
-    // stream purple with drifting chat-emote spam
+    // purple with drifting emoji
     const g = ctx.createLinearGradient(0,0,0,H);
     g.addColorStop(0,'#160d28'); g.addColorStop(1,'#0e0a18');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
@@ -2565,7 +2611,7 @@ function drawBackground(){
       ctx.fillText(e.ch, px, yy*H);
     }
     ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
-  } else if (TH().bg === 'bman' || TH().bg === 'black'){ ctx.fillStyle='#070708'; ctx.fillRect(0,0,W,H);  // solid black (accent pops): Bman/DV/LS
+  } else if (TH().bg === 'bman' || TH().bg === 'black'){ ctx.fillStyle='#070708'; ctx.fillRect(0,0,W,H);  // solid black (accent pops)
   } else if (TH().bg === 'prism'){
     const h = prismHue();                                   // ever-shifting full-spectrum backdrop
     const g = ctx.createLinearGradient(0,0,0,H);
@@ -2585,7 +2631,7 @@ function drawBackground(){
     g.addColorStop(0,'#3f6fc8'); g.addColorStop(0.5,'#f6f2e6'); g.addColorStop(1,'#c85f97');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   } else if (TH().bg === 'wh40k'){
-    ctx.fillStyle = '#0e2147'; ctx.fillRect(0,0,W,H);   // solid deep ultramarine navy (Vanguard)
+    ctx.fillStyle = '#0e2147'; ctx.fillRect(0,0,W,H);   // solid deep navy
   } else if (TH().bg === 'code'){
     // black with falling, shifting green digits (Datastream)
     ctx.fillStyle='#000700'; ctx.fillRect(0,0,W,H);
@@ -2618,6 +2664,50 @@ function drawBackground(){
       drawFlower(x, yy*H, f.size, f.petal, t*0.3 + f.ph);
     }
     ctx.globalAlpha = 1;
+  } else if (TH().bg === 'abyss'){
+    vgrad(['#0a3a55','#06243a','#020a14']);
+    const t=performance.now()/1000;
+    ctx.save(); ctx.globalAlpha=0.06; ctx.fillStyle='#7fe0ff';
+    for(let i=0;i<4;i++){ const x=W*(0.12+i*0.24)+Math.sin(t*0.2+i)*20; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+50,0); ctx.lineTo(x+180,H); ctx.lineTo(x+100,H); ctx.closePath(); ctx.fill(); }
+    ctx.restore();
+    ctx.strokeStyle='rgba(180,240,255,0.35)'; ctx.lineWidth=1.2;
+    for(const b of bgField('abyss',26)){ const yy=((b.y - t*b.v*0.05)%1+1)%1; const x=b.x*W+Math.sin(t*0.6+b.p)*10; ctx.beginPath(); ctx.arc(x,yy*H,1.5+b.r*4,0,Math.PI*2); ctx.stroke(); }
+  } else if (TH().bg === 'sunset'){
+    vgrad(['#2b1a55','#a83f6e','#ff8c42','#ffd27a']);
+    const sy=H*0.6; ctx.fillStyle='rgba(255,200,120,0.22)'; ctx.beginPath(); ctx.arc(W/2,sy,82,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,228,160,0.95)'; ctx.beginPath(); ctx.arc(W/2,sy,46,0,Math.PI*2); ctx.fill();
+  } else if (TH().bg === 'autumn'){
+    vgrad(['#5e3f1b','#a8662b','#d98a3a']);
+    const t=performance.now()/1000, cols=['#e0652b','#c9421f','#f0a23a'];
+    for(const f of bgField('autumn',22)){ const yy=((f.y + t*f.v*0.03)%1)*H; const x=f.x*W+Math.sin(t*0.5+f.p)*24; ctx.save(); ctx.translate(x,yy); ctx.rotate(t*0.6+f.p); ctx.fillStyle=cols[Math.floor(f.r*3)%3]; ctx.beginPath(); ctx.ellipse(0,0,5+f.r*3,2.5+f.r*1.5,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+  } else if (TH().bg === 'storm'){
+    vgrad(['#1a1f29','#2a3340','#161a22']);
+    const t=performance.now()/1000;
+    if (((t*0.9)%4) < 0.06){ ctx.fillStyle='rgba(200,210,255,0.16)'; ctx.fillRect(0,0,W,H); }
+    ctx.strokeStyle='rgba(170,190,220,0.35)'; ctx.lineWidth=1.2;
+    for(const r of bgField('storm',60)){ const yy=((r.y + t*r.v*0.22)%1)*H; const x=r.x*W; ctx.beginPath(); ctx.moveTo(x,yy); ctx.lineTo(x-3,yy+12); ctx.stroke(); }
+  } else if (TH().bg === 'halloween'){
+    vgrad(['#160a26','#2a1240','#3d1a14']);
+    ctx.fillStyle='#ffd98a'; ctx.beginPath(); ctx.arc(W*0.8,H*0.18,32,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#160a26'; ctx.beginPath(); ctx.arc(W*0.74,H*0.15,28,0,Math.PI*2); ctx.fill();
+    const t=performance.now()/1000; ctx.strokeStyle='#0a0410'; ctx.lineWidth=2; ctx.lineCap='round';
+    for(const b of bgField('halloween',9)){ const x=((b.x + t*b.v*0.03)%1)*W; const y=(0.15+b.y*0.5)*H+Math.sin(t*1.5+b.p)*10; const s=4+b.r*4; ctx.beginPath(); ctx.moveTo(x-2*s,y); ctx.quadraticCurveTo(x-s,y-s,x,y); ctx.quadraticCurveTo(x+s,y-s,x+2*s,y); ctx.stroke(); }
+    ctx.lineCap='butt';
+  } else if (TH().bg === 'winter'){
+    vgrad(['#0e2440','#1b3a5c','#2f5a7a']);
+    const t=performance.now()/1000; ctx.fillStyle='rgba(255,255,255,0.9)';
+    for(const s of bgField('winter',46)){ const yy=((s.y + t*s.v*0.03)%1)*H; const x=s.x*W+Math.sin(t*0.6+s.p)*14; ctx.beginPath(); ctx.arc(x,yy,1+s.r*2.2,0,Math.PI*2); ctx.fill(); }
+    for(let i=0;i<14;i++){ const x=(i+0.5)/14*W; const tw=0.5+0.5*Math.sin(t*2+i); ctx.fillStyle='hsla('+((i*40)%360)+',80%,65%,'+(0.4+0.5*tw)+')'; ctx.beginPath(); ctx.arc(x,H-10,3,0,Math.PI*2); ctx.fill(); }
+  } else if (TH().bg === 'sakura'){
+    vgrad(['#ffd9e8','#ffc2d6','#cfe0ff']);
+    const t=performance.now()/1000; ctx.fillStyle='rgba(255,150,190,0.85)';
+    for(const f of bgField('sakura',24)){ const yy=((f.y + t*f.v*0.025)%1)*H; const x=f.x*W+Math.sin(t*0.7+f.p)*26; ctx.save(); ctx.translate(x,yy); ctx.rotate(t*0.8+f.p); ctx.beginPath(); ctx.ellipse(0,0,4+f.r*2,2+f.r,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+  } else if (TH().bg === 'summer'){
+    vgrad(['#39c0ff','#7fe0ff','#ffe9a8']);
+    ctx.fillStyle='rgba(255,220,90,0.22)'; ctx.beginPath(); ctx.arc(W*0.78,H*0.22,72,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,235,130,0.95)'; ctx.beginPath(); ctx.arc(W*0.78,H*0.22,40,0,Math.PI*2); ctx.fill();
+    const t=performance.now()/1000; ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.4;
+    for(let i=0;i<6;i++){ const y=H*0.72+i*H*0.045; ctx.beginPath(); for(let x=0;x<=W;x+=12){ const yy=y+Math.sin(x*0.05+t*1.5+i)*2; x?ctx.lineTo(x,yy):ctx.moveTo(x,yy);} ctx.stroke(); }
   } else if (TH().bg === 'flag'){ drawFlagBg();
   } else {
     const g = ctx.createLinearGradient(0,0,0,H);
