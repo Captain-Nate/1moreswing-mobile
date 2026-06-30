@@ -400,6 +400,10 @@
     </div>
     <div id="settingsBody">
       <div class="setrow">
+        <div class="setlabel"><b>Haptics</b><span>Vibration feedback — Full taps every swing; Key only on banks &amp; milestones</span></div>
+        <button id="setHaptics" class="settoggle">Full</button>
+      </div>
+      <div class="setrow">
         <div class="setlabel"><b>Daily run reminder</b><span>A notification at 6:00 PM to play your daily run</span></div>
         <button id="setReminder" class="settoggle">On</button>
       </div>
@@ -778,7 +782,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, mode, name: playerName, pid: playerId, lastDailyDone, streak, bestStreak, coachSeen, remindersOn };
+  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, streak, bestStreak, coachSeen, remindersOn };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -807,6 +811,7 @@ function loadGame(){
     const savedTheme = s.themeName && migrateThemeId(s.themeName);
     if (savedTheme && THEMES[savedTheme]) themeName = savedTheme;
     if (typeof s.muted === 'boolean') muted = s.muted;
+    if (s.hapticsMode === 'full' || s.hapticsMode === 'key' || s.hapticsMode === 'off') hapticsMode = s.hapticsMode;
     if (s.mode === 'daily' || s.mode === 'free') mode = s.mode;
     if (typeof s.name === 'string') playerName = s.name;
     if (typeof s.lastDailyDone === 'number') lastDailyDone = s.lastDailyDone;
@@ -842,6 +847,7 @@ async function mergeCloudSave(){
     const cloudTheme = c.themeName && migrateThemeId(c.themeName);
     if (cloudTheme && THEMES[cloudTheme]){ themeName = cloudTheme; changed = true; }
     if (c.muted !== undefined){ muted = !!c.muted; changed = true; }
+    if (c.hapticsMode === 'full' || c.hapticsMode === 'key' || c.hapticsMode === 'off'){ hapticsMode = c.hapticsMode; changed = true; }
     if (c.mode === 'daily' || c.mode === 'free'){ mode = c.mode; changed = true; }
     if (c.name){ playerName = c.name; changed = true; }
     if (typeof c.lastDailyDone === 'number' && c.lastDailyDone > lastDailyDone){   // newer completion wins — adopt the streak that goes with it
@@ -910,6 +916,17 @@ async function toggleReminders(){
 function updateRemindBtn(){
   const b = document.getElementById('setReminder');
   if (b){ b.textContent = remindersOn ? 'On' : 'Off'; b.classList.toggle('on', remindersOn); }
+}
+// haptics: cycling Full -> Key only -> Off pill, persisted in the save
+function updateHapticsBtn(){
+  const b = document.getElementById('setHaptics');
+  if (b){ b.textContent = hapticsMode === 'full' ? 'Full' : hapticsMode === 'key' ? 'Key only' : 'Off';
+    b.classList.toggle('on', hapticsMode !== 'off'); }
+}
+function cycleHaptics(){
+  hapticsMode = hapticsMode === 'full' ? 'key' : hapticsMode === 'key' ? 'off' : 'full';
+  saveGame(); updateHapticsBtn();
+  haptic('medium');   // sample buzz of the newly-selected setting (no-op when Off)
 }
 // fire a one-off sample notification (id 4042, separate from the daily) so the look can be previewed
 async function sendTestNotification(){
@@ -1048,6 +1065,7 @@ function updateCamera(){
 
 // ---- synthesized SFX (no audio files) ----
 let actx = null, muted = false;
+let hapticsMode = 'full';   // 'full' = taps every swing, 'key' = banks/milestones only, 'off' = none (mobile only)
 function audioCtx(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
 function tone(freq, dur, type, vol, slideTo){
   if (muted) return; const a = audioCtx(); if(!a) return;
@@ -1074,6 +1092,17 @@ function sfxBank(){ tone(620,0.12,'triangle',0.16); setTimeout(()=>tone(820,0.14
 function sfxSkip(n){ for (let i=0;i<=n;i++) setTimeout(()=>tone(520+i*150, 0.10, 'square', 0.12), i*50); }
 function sfxDie(){ tone(220, 0.5, 'sawtooth', 0.18, 55); }
 function sfxPurchase(){ [523,659,784,1047,1319].forEach((f,i)=> setTimeout(()=> tone(f, 0.22, 'triangle', 0.16), i*65)); }   // C-E-G-C-E fanfare
+
+// ---- haptics (native only; no-op on web). swingTier taps fire only in 'full' mode ----
+function haptic(kind, swingTier){
+  if (!window.Capacitor || hapticsMode === 'off') return;
+  if (swingTier && hapticsMode !== 'full') return;        // per-swing taps are Full-only
+  const H = Capacitor.Plugins && Capacitor.Plugins.Haptics; if (!H) return;
+  try {
+    if (kind === 'success' || kind === 'warning' || kind === 'error') H.notification({ type: kind.toUpperCase() });
+    else H.impact({ style: kind.toUpperCase() });          // 'light' | 'medium' | 'heavy'
+  } catch (e) {}
+}
 
 // next anchor height: random WALK from the previous one, so neighbours stay
 // close enough in height to always be reachable in a chain.
@@ -1234,10 +1263,10 @@ function press(){
 
   // --- juice ---
   const [oc] = orbColors();
-  sfxGrab();
+  sfxGrab(); haptic('light', true);   // per-swing tap (Full mode only)
   burst(t.x, t.y, 7 + skipped*4, oc, 90 + skipped*40);
   addShake(2.4 + skipped*2.5);
-  if (skipped > 0){ sfxSkip(skipped); if (skipped >= 2) hitPause(4); }
+  if (skipped > 0){ sfxSkip(skipped); haptic('light', true); if (skipped >= 2) hitPause(4); }
   if (clutch){ slowmo(22); addShake(6); popup(t.x, t.y - 46, 'CLUTCH!', '#ffd95e', true); }
 }
 
@@ -1249,7 +1278,7 @@ function bank(){
     runCoinsEarned += earned;
     saveGame();
     popup(p.x, p.y - 34, `BANKED +${fmt(pending)}`, '#3fb950', true);
-    sfxBank(); burst(p.x, p.y, 26, '#3fb950', 220); addShake(5); hitPause(3);
+    sfxBank(); haptic('medium'); burst(p.x, p.y, 26, '#3fb950', 220); addShake(5); hitPause(3);
   }
   pending = 0; mult = 1;
 }
@@ -1268,7 +1297,7 @@ function release(){
 
   // --- juice ---
   const launch = Math.hypot(vx, vy) / DT;
-  sfxRelease(launch);
+  sfxRelease(launch); haptic('light', true);   // per-swing release tap (Full mode only)
   if (launch > K.BIG_LAUNCH){ addShake(Math.min(16, launch/90)); hitPause(3); }
 }
 
@@ -1358,7 +1387,7 @@ function showOverButtons(){
 function die(){
   best = Math.max(best, total);   // best = highest BANKED score
   state = 'dead';
-  sfxDie(); addShake(16); burst(p.x, p.y, 30, '#f85149', 260);
+  sfxDie(); haptic('heavy'); addShake(16); burst(p.x, p.y, 30, '#f85149', 260);
   lastScore = total; submittedRun = false;
   showOverButtons();
   syncUI();   // swap the top-right Pause button to a Home (⌂) button
@@ -1385,7 +1414,7 @@ function finish(){
     saveGame();
     scheduleDailyReminder(true);   // they just played today → first reminder is tomorrow (prompts for permission the first time)
   }
-  sfxBank(); addShake(8); burst(p.x, p.y, 34, '#ffd95e', 240);
+  sfxBank(); haptic('success'); addShake(8); burst(p.x, p.y, 34, '#ffd95e', 240);
   showOverButtons();
   syncUI();   // swap the top-right Pause button to a Home (⌂) button
   setTimeout(showShareCard, 1400);
@@ -1619,11 +1648,12 @@ infoEl.addEventListener('click', e=>{ if (e.target === infoEl) closeInfo(); }); 
 // ---------- settings ----------
 const settingsEl = document.getElementById('settings');
 let settingsOpen = false;
-function openSettings(){ settingsOpen = true; settingsEl.classList.add('open'); updateRemindBtn(); }
+function openSettings(){ settingsOpen = true; settingsEl.classList.add('open'); updateRemindBtn(); updateHapticsBtn(); }
 function closeSettings(){ settingsOpen = false; settingsEl.classList.remove('open'); }
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('settingsClose').addEventListener('click', closeSettings);
 settingsEl.addEventListener('click', e=>{ if (e.target === settingsEl) closeSettings(); });   // tap backdrop to close
+document.getElementById('setHaptics').addEventListener('click', cycleHaptics);
 document.getElementById('setReminder').addEventListener('click', toggleReminders);
 document.getElementById('setTestNotif').addEventListener('click', sendTestNotification);
 colorBtn.addEventListener('click', ()=>{
@@ -1813,7 +1843,7 @@ function renderShop(){
     let shownNations = false, shownPremium = false;
     // real-money "Unlock ALL themes" bundle (only when StoreKit is available and not everything's owned)
     if (cat === 'theme' && iapReady){
-      const bundle = COSMETICS.theme.filter(t => t.premium && !t.ultra);   // ultra (Prism) is NOT in the bundle
+      const bundle = COSMETICS.theme.filter(t => t.premium && !t.ultra && !t.seasonal);   // ultra (Prism) + seasonal themes are NOT in the bundle
       if (!bundle.every(t => owned.theme.includes(t.id))){
         const price = iap.priceForAll();
         if (price) html += `<div class="unlockall"><span class="sw" style="background:linear-gradient(135deg,#8957e5,#58a6ff)"></span>`
@@ -1866,7 +1896,7 @@ function renderShop(){
       html += `<div class="item"><span class="sw" style="background:${swatchStyle(cat,it.id)}">${it.emoji||''}</span>`
             + `<span class="nm">${it.name}</span><span class="btns">${btns}</span></div>`;
       if (it.ultra || it.winUnlock) html += `<div class="exnote">Not included in the Unlock All bundle</div>`;
-      else if (it.seasonal) html += `<div class="exnote">Limited-time seasonal theme</div>`;
+      else if (it.seasonal) html += `<div class="exnote">Limited-time seasonal — not in the Unlock All bundle</div>`;
     }
   }
   if (iapReady) html += `<button class="restore" data-act="restore">Restore purchases</button>`;
@@ -1891,7 +1921,7 @@ function renderShop(){
 let purchaseIntent = false, piTimer = 0;   // set on a deliberate IAP tap so restores/launch don't spray confetti
 function armPurchaseIntent(){ purchaseIntent = true; clearTimeout(piTimer); piTimer = setTimeout(() => { purchaseIntent = false; }, 90000); }   // auto-disarm if the buy is cancelled
 function celebratePurchase(label){
-  sfxPurchase();
+  sfxPurchase(); haptic('success');
   const toast = document.getElementById('fxToast');
   if (toast){ toast.textContent = `✓ ${label} unlocked!`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
   const fx = document.getElementById('fx'); if (!fx) return;
@@ -2008,7 +2038,7 @@ function renderPreviewBar(id){
 const IAP_APP_ID = 'com.captainnate.onemoreswing';
 window.OMS_IAP_CONFIG = (() => {
   const premium = COSMETICS.theme.filter(t => t.premium).map(t => t.id);                  // all individually buyable
-  const bundle  = COSMETICS.theme.filter(t => t.premium && !t.ultra).map(t => t.id);      // what "unlock all" grants (excludes ultra)
+  const bundle  = COSMETICS.theme.filter(t => t.premium && !t.ultra && !t.seasonal).map(t => t.id);  // what "unlock all" grants (excludes ultra + limited-time seasonal)
   const themeProducts = {};
   premium.forEach(id => { themeProducts[`${IAP_APP_ID}.theme.${id}`] = id; });   // productId -> theme id
   return { allProduct: `${IAP_APP_ID}.themes.all`, themeProducts, allThemeIds: bundle };
@@ -2218,7 +2248,7 @@ function doubleCoins(){
   saveGame();
   const toast = document.getElementById('fxToast');
   if (toast){ toast.innerHTML = `<span class="ci">C</span> Coins doubled! +${fmt(bonus)}`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
-  sfxPurchase();
+  sfxPurchase(); haptic('success');
   showOverButtons();                                                  // refresh the Free-Play over buttons
   if (document.getElementById('shareCard').classList.contains('show')) showShareCard();   // refresh the daily card's coin line
 }
@@ -2375,7 +2405,8 @@ function drawFlagBg(){
     let fw=W, fh=fw/ratio; if (fh>H){ fh=H; fw=fh*ratio; }
     ctx.drawImage(im, Math.round((W-fw)/2), Math.round((H-fh)/2), fw, fh);
   } else { ctx.fillStyle=TH().accent; ctx.fillRect(0,0,W,H); }
-  ctx.fillStyle='rgba(5,7,10,0.42)'; ctx.fillRect(0,0,W,H);
+  // light scrim only — keep the flag vivid while preserving contrast for the orb/score text
+  ctx.fillStyle='rgba(5,7,10,0.18)'; ctx.fillRect(0,0,W,H);
 }
 // ---- atmospheric helpers for the seasonal / weather themes ----
 function vgrad(cols){ const g=ctx.createLinearGradient(0,0,0,H); for(let i=0;i<cols.length;i++) g.addColorStop(i/(cols.length-1),cols[i]); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
@@ -3084,6 +3115,7 @@ syncUI();
 fetchWins().then(checkWinUnlock).catch(()=>{});   // unlock Minimalist if already at 100 wins, even without opening the leaderboard
 checkStreakUnlock();   // unlock Streak Flame if the player already has a qualifying best streak
 updateRemindBtn();       // reflect the saved reminder setting on the title button
+updateHapticsBtn();      // reflect the saved haptics setting
 ensureDailyReminder();   // keep the daily-run reminder scheduled (only if already permitted)
 requestAnimationFrame(frame);
 </script>

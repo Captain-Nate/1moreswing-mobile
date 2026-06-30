@@ -9,7 +9,7 @@ Two purchase types (both **Non-Consumable**):
 
 | Product ID | Price | What it unlocks |
 | --- | --- | --- |
-| `com.captainnate.onemoreswing.themes.all` | **$7.99** | every premium theme **except Prism** |
+| `com.captainnate.onemoreswing.themes.all` | **$7.99** | every premium theme **except Prism and the limited-time seasonal themes** (sakura/summer/halloween/winter) |
 | `com.captainnate.onemoreswing.theme.prism` | **$99.99** | Prism — ultra tier, real-money only, NOT in the bundle |
 | `com.captainnate.onemoreswing.theme.space` | $0.99 | Deep Space |
 | `com.captainnate.onemoreswing.theme.solar` | $0.99 | Solarpunk |
