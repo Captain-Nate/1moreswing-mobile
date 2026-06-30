@@ -784,6 +784,17 @@ function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
   writeToCloud();
 }
+// One-time theme-id migration: commit 0061847 renamed several premium theme ids
+// to generic names (THEMES keys + COSMETICS ids). Saves/cloud-saves written before
+// that commit still reference the old ids in owned.theme / themeName — remap them so
+// players don't lose unlocks or their equipped theme. Harmless to keep forever (no-op
+// once a save carries no old ids). Add an entry here for any future theme-id rename.
+const OWNED_THEME_ID_MIGRATION = {
+  twitch:'streamer', juicer:'jungle', wh40k:'vanguard', sman:'velocity',
+  bman:'midnight', joker:'nightshade', harley:'cottoncandy', dv:'inferno', ls:'glacier'
+};
+function migrateThemeId(id){ return OWNED_THEME_ID_MIGRATION[id] || id; }
+
 function loadGame(){
   try {
     const s = JSON.parse(localStorage.getItem('oms_save') || '{}');
@@ -791,8 +802,10 @@ function loadGame(){
     if (typeof s.coins === 'number') coins = s.coins;
     if (s.owned) for (const k in owned)              // union: keep defaults + anything previously owned
       if (Array.isArray(s.owned[k])) owned[k] = Array.from(new Set([...owned[k], ...s.owned[k]]));
+    owned.theme = Array.from(new Set(owned.theme.map(migrateThemeId)));   // remap pre-rename premium ids
     if (s.equipped) equipped = Object.assign(equipped, s.equipped);
-    if (s.themeName && THEMES[s.themeName]) themeName = s.themeName;
+    const savedTheme = s.themeName && migrateThemeId(s.themeName);
+    if (savedTheme && THEMES[savedTheme]) themeName = savedTheme;
     if (typeof s.muted === 'boolean') muted = s.muted;
     if (s.mode === 'daily' || s.mode === 'free') mode = s.mode;
     if (typeof s.name === 'string') playerName = s.name;
@@ -823,8 +836,11 @@ async function mergeCloudSave(){
       const m = Array.from(new Set([...owned[k], ...c.owned[k]]));
       if (m.length !== owned[k].length){ owned[k] = m; changed = true; }
     }
+    const remappedThemes = Array.from(new Set(owned.theme.map(migrateThemeId)));   // collapse/rename pre-rename ids merged in from cloud
+    if (remappedThemes.join('|') !== owned.theme.join('|')){ owned.theme = remappedThemes; changed = true; }
     if (c.equipped){ Object.assign(equipped, c.equipped); changed = true; }
-    if (c.themeName && THEMES[c.themeName]){ themeName = c.themeName; changed = true; }
+    const cloudTheme = c.themeName && migrateThemeId(c.themeName);
+    if (cloudTheme && THEMES[cloudTheme]){ themeName = cloudTheme; changed = true; }
     if (c.muted !== undefined){ muted = !!c.muted; changed = true; }
     if (c.mode === 'daily' || c.mode === 'free'){ mode = c.mode; changed = true; }
     if (c.name){ playerName = c.name; changed = true; }
