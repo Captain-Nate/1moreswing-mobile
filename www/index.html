@@ -228,6 +228,25 @@
     letter-spacing:1px; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.55); }
   #titleScreen .bigtitle b { color:var(--accent,#58a6ff); }
   #titleScreen .tagline { margin:0 0 4px; color:#8b949e; font-size:14px; letter-spacing:.4px; }
+  #streakChip { display:none; margin:2px 0 14px; padding:6px 14px; border-radius:999px;
+    background:rgba(255,140,40,.14); border:1px solid rgba(255,140,40,.45); color:#ffb572;
+    font-size:13.5px; font-weight:700; letter-spacing:.3px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; transition:transform .08s; }
+  #streakChip.show { display:inline-block; }
+  #streakChip:active { transform:scale(.96); }
+  #streakChip b { color:#ffd9b0; }
+  /* shared gold coin badge (matches the shop) in the streak chip + rewards modal */
+  #streakChip .ci, #infoBody .ci { display:inline-flex; align-items:center; justify-content:center;
+    width:14px; height:14px; border-radius:50%; margin-right:3px; vertical-align:middle; position:relative;
+    top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
+    background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
+  /* streak rewards ladder (inside the reused #info modal) */
+  #infoBody .streakRow { display:flex; align-items:center; gap:10px; padding:9px 0;
+    border-bottom:1px solid #21262d; font-size:14px; }
+  #infoBody .streakRow:last-child { border-bottom:none; }
+  #infoBody .streakRow .sd { flex:1 1 auto; color:#e6edf3; font-weight:600; }
+  #infoBody .streakRow .sr { color:#ffd95e; font-weight:700; }
+  #infoBody .streakRow .si { width:20px; text-align:center; }
   #playBtn { padding:14px 40px; border:none; border-radius:999px; background:var(--accent,#58a6ff);
     color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.45);
@@ -324,6 +343,7 @@
 <div id="titleScreen" class="show">
   <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
   <p class="tagline">Swing &middot; Skip &middot; Bank</p>
+  <div id="streakChip"></div>
   <button id="playBtn">&#9654; Play</button>
   <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg> Leaderboard</button>
   <button id="quitBtn">Quit</button>
@@ -493,6 +513,7 @@ function hsl2rgb(h, s, l){            // h 0-360, s/l 0-1 -> "r,g,b"
 const THEMES = {
   blue:    { accent:'#58a6ff', glow:'#cfe6ff', rgb:'88,166,255'  },
   red:     { accent:'#ff5d5d', glow:'#ffd2d2', rgb:'255,93,93'   },
+  green:   { accent:'#3fb950', glow:'#c4ffd4', rgb:'63,185,80'   },
   space:     { accent:'#34d399', glow:'#c6ffe9', rgb:'52,211,153',  bg:'space'     },
   vapor:     { accent:'#2de2e6', glow:'#bff8ff', rgb:'45,226,230',  bg:'vapor'     },  // cyan on a pink sunset
   unicorn:   { accent:'#ff8fd6', glow:'#ffe1f3', rgb:'255,143,214', bg:'unicorn'   },
@@ -529,6 +550,8 @@ const COSMETICS = {
   theme: [
     { id:'blue',  name:'Classic Blue', cost:0 },
     { id:'red',     name:'Crimson',      cost:0 },
+    // cheap coin-only "first theme" — no premium flag, so no IAP product and excluded from the Unlock-All bundle
+    { id:'green',   name:'Verdant',      cost:10000 },
     // premium themes — listed in ascending coin cost; streamer/creator themes priced cheap.
     { id:'space',     name:'Deep Space',    cost:100000,  premium:true },
     { id:'solar',     name:'Solarpunk',     cost:200000,  premium:true },
@@ -594,7 +617,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, mode, name: playerName, pid: playerId, lastDailyDone, remindersOn };
+  return { coins, owned, equipped, themeName: tn, muted, mode, name: playerName, pid: playerId, lastDailyDone, streak, bestStreak, remindersOn };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -613,6 +636,8 @@ function loadGame(){
     if (s.mode === 'daily' || s.mode === 'free') mode = s.mode;
     if (typeof s.name === 'string') playerName = s.name;
     if (typeof s.lastDailyDone === 'number') lastDailyDone = s.lastDailyDone;
+    if (typeof s.streak === 'number') streak = s.streak;
+    if (typeof s.bestStreak === 'number') bestStreak = s.bestStreak;
     if (typeof s.remindersOn === 'boolean') remindersOn = s.remindersOn;
   } catch(e){}
   if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
@@ -641,7 +666,12 @@ async function mergeCloudSave(){
     if (c.muted !== undefined){ muted = !!c.muted; changed = true; }
     if (c.mode === 'daily' || c.mode === 'free'){ mode = c.mode; changed = true; }
     if (c.name){ playerName = c.name; changed = true; }
-    if (typeof c.lastDailyDone === 'number' && c.lastDailyDone > lastDailyDone){ lastDailyDone = c.lastDailyDone; changed = true; }
+    if (typeof c.lastDailyDone === 'number' && c.lastDailyDone > lastDailyDone){   // newer completion wins — adopt the streak that goes with it
+      lastDailyDone = c.lastDailyDone;
+      if (typeof c.streak === 'number') streak = c.streak;
+      changed = true;
+    }
+    if (typeof c.bestStreak === 'number' && c.bestStreak > bestStreak){ bestStreak = c.bestStreak; changed = true; }
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
     if (changed){ saveGame(); syncUI(); updateRemindBtn(); if (lbOpen) showTab(); }   // refresh leaderboard if it's open when the cloud identity lands
   } catch(e){}
@@ -763,6 +793,9 @@ let rng = Math.random;     // current run's random source (set per run)
 let mode = 'daily';        // 'daily' | 'free'
 let dayNumber = 1;
 let lastDailyDone = 0;     // day number of the most recent completed daily (drives the reminder skip-today)
+let streak = 0;            // consecutive-day daily-completion streak, as of lastDailyDone
+let bestStreak = 0;        // highest streak ever reached
+let streakBonus = 0;       // milestone coin reward earned by this run (for the share card)
 let remindersOn = true;    // user setting: daily-run reminder notification on/off
 let finishX = null;        // x of the daily finish line (null = endless / Free Play)
 let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
@@ -771,6 +804,21 @@ let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun 
 let myWins = 0;   // player's all-time wins (from the leaderboard) — drives the Minimalist theme unlock
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
 let usedRevive = false, adShowing = false;
+
+// Streak = consecutive days you complete the daily. It stays "alive" if your last
+// completion was today or yesterday; miss a whole day and it reads 0 until you finish
+// another daily. Hitting a milestone day pays a one-time coin bonus from this table.
+const STREAK_MILESTONES = { 3:5000, 7:15000, 14:50000, 30:150000 };   // coin rewards (shop themes start at 12,000)
+const STREAK_DAYS = Object.keys(STREAK_MILESTONES).map(Number).sort((a,b)=>a-b);
+function liveStreak(){
+  return (lastDailyDone === dayNumber || lastDailyDone === dayNumber - 1) ? streak : 0;
+}
+// the next reward milestone strictly above the live streak (null once all are reached)
+function nextMilestone(){
+  const ls = liveStreak();
+  for (const d of STREAK_DAYS) if (d > ls) return { day:d, reward:STREAK_MILESTONES[d] };
+  return null;
+}
 
 // ---- game state ----
 let p, prevP, state, anchor, ropeLen, anchors, platforms, genX, lastY, cameraX, dist, cleared, trail, lastReleased;
@@ -892,7 +940,7 @@ function newRun(){
   anchors = []; platforms = []; cleared = 0; trail = []; popups = [];
   lastReleased = null; anchorGenCount = 0; finishX = null; runTime = 0;
   total = 0; pending = 0; mult = 1;
-  runRoute = new Array(K.DAILY_LENGTH).fill(false); runCoinsEarned = 0;
+  runRoute = new Array(K.DAILY_LENGTH).fill(false); runCoinsEarned = 0; streakBonus = 0;
   document.getElementById('shareCard').classList.remove('show');
 
   // first anchor sits right where the player starts, so we begin already swinging
@@ -955,7 +1003,10 @@ function press(){
   const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
   if (paused || shopOpen || lbOpen || titleOpen || infoOpen || settingsOpen || previewing) return;
   const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
-  if (state === 'dead' || state === 'finished'){ newRun(); consumeRelease = true; return; }
+  // Daily finish: a tap shows the result card instead of restarting — restarting here would
+  // wipe total/runRoute/runCoinsEarned before the (delayed) share card reads them → empty card.
+  if (state === 'finished'){ showShareCard(); consumeRelease = true; return; }
+  if (state === 'dead'){ newRun(); consumeRelease = true; return; }
   if (state !== 'flying' && state !== 'landed') return;
   const clutch = flightLowY > H*K.DEATH_FRAC - K.NEARMISS;   // dipped scary-low this flight = a save
   const t = pickTarget();
@@ -1117,8 +1168,17 @@ function finish(){
   best = Math.max(best, total);
   state = 'finished';
   lastScore = total; submittedRun = false;
-  if (mode === 'daily'){ lastDailyDone = dayNumber; saveGame();
-    scheduleDailyReminder(true); }   // they just played today → first reminder is tomorrow (prompts for permission the first time)
+  if (mode === 'daily'){
+    if (lastDailyDone !== dayNumber){                                 // first completion of today's daily
+      streak = (lastDailyDone === dayNumber - 1) ? streak + 1 : 1;    // continue if yesterday's was done, else restart at 1
+      if (streak > bestStreak) bestStreak = streak;
+      lastDailyDone = dayNumber;
+      const sb = STREAK_MILESTONES[streak];                           // one-time milestone coin reward
+      if (sb){ coins += sb; runCoinsEarned += sb; streakBonus = sb; }
+    }
+    saveGame();
+    scheduleDailyReminder(true);   // they just played today → first reminder is tomorrow (prompts for permission the first time)
+  }
   sfxBank(); addShake(8); burst(p.x, p.y, 34, '#ffd95e', 240);
   showOverButtons();
   syncUI();   // swap the top-right Pause button to a Home (⌂) button
@@ -1194,6 +1254,20 @@ function syncUI(){
   // screens: title overlay, top-right button mode, and the pause "Menu" button
   const over = (state === 'dead' || state === 'finished');
   const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
+  const sc = document.getElementById('streakChip');   // 🔥 streak status + next reward on the title screen
+  if (sc){
+    const ls = liveStreak(), nm = nextMilestone();
+    let txt = ls >= 1 ? `🔥 <b>${ls}</b>-day streak`
+            : bestStreak >= 1 ? `🔥 Best streak <b>${bestStreak}</b>`
+            : `🔥 Start a daily streak`;
+    if (nm){
+      const hitsToday = lastDailyDone !== dayNumber && nm.day === ls + 1;   // finishing today's daily reaches it
+      txt += hitsToday ? ` &middot; <span class="ci">C</span><b>+${fmt(nm.reward)}</b> today!`
+                       : ` &middot; day ${nm.day} = <span class="ci">C</span><b>+${fmt(nm.reward)}</b>`;
+    }
+    sc.innerHTML = txt + ` <span style="opacity:.55;font-weight:400">&#9656;</span>`;
+    sc.classList.add('show');
+  }
   const pausedMenu = paused && !titleOpen && !over;
   const tt = document.getElementById('toTitleBtn');  if (tt) tt.classList.toggle('show', pausedMenu);
   const rb = document.getElementById('resumeBtn');   if (rb) rb.classList.toggle('show', pausedMenu);
@@ -1303,6 +1377,34 @@ function openInfo(which){
 function closeInfo(){ infoOpen = false; infoEl.classList.remove('open'); }
 document.getElementById('aboutLink').addEventListener('click',   e=>{ e.preventDefault(); openInfo('about'); });
 document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventDefault(); openInfo('privacy'); });
+
+// Streak rewards ladder — reuses the #info modal, built live from the current streak.
+function openStreakInfo(){
+  const ls = liveStreak(), nm = nextMilestone();
+  const rows = STREAK_DAYS.map(d => {
+    const reward = STREAK_MILESTONES[d];
+    const done = ls >= d, isNext = nm && nm.day === d;
+    const icon = done ? '<span style="color:#3fb950">✓</span>'
+               : isNext ? '🔥' : '<span style="color:#6e7681">○</span>';
+    const dayCol = done ? '#8b949e' : isNext ? '#ffb572' : '#e6edf3';
+    return `<div class="streakRow"><span class="si">${icon}</span>` +
+           `<span class="sd" style="color:${dayCol}">Day ${d}${isNext?' &middot; <span style="color:#8b949e;font-weight:400">next</span>':''}</span>` +
+           `<span class="sr"><span class="ci">C</span>+${fmt(reward)}</span></div>`;
+  }).join('');
+  const status = ls >= 1
+    ? `Current streak: <b style="color:#ffb572">${ls} day${ls>1?'s':''}</b>` + (bestStreak>ls?` &middot; best ${bestStreak}`:'')
+    : (bestStreak >= 1 ? `Best streak: <b style="color:#ffb572">${bestStreak}</b> &middot; play today to start a new one`
+                       : `Finish today's daily to start your streak.`);
+  document.getElementById('infoTitle').textContent = 'DAILY STREAK';
+  document.getElementById('infoBody').innerHTML =
+    `<h3>Daily Streak 🔥</h3>` +
+    `<p>Complete the daily run on consecutive days to build your streak. Miss a whole day and it resets to zero.</p>` +
+    `<p class="muted">${status}</p>` +
+    `<h4>Milestone rewards</h4>${rows}` +
+    `<p class="muted" style="margin-top:12px">Coins are paid once each time you reach a milestone day.</p>`;
+  infoOpen = true; infoEl.classList.add('open');
+}
+document.getElementById('streakChip').addEventListener('click', openStreakInfo);
 document.getElementById('infoClose').addEventListener('click', closeInfo);
 infoEl.addEventListener('click', e=>{ if (e.target === infoEl) closeInfo(); });   // tap backdrop to close
 
@@ -1350,6 +1452,7 @@ shareBtn.addEventListener('click', () => {
 function showShareCard(){
   const card = document.getElementById('shareCard');
   if (!card) return;
+  if (state !== 'finished' || titleOpen) return;   // the run was restarted / player went Home before the delayed card fired — don't draw a stale or empty card
 
   document.getElementById('sc-day').textContent = `Day ${dayNumber}`;
   document.getElementById('sc-score').textContent = fmt(total);
@@ -1371,10 +1474,21 @@ function showShareCard(){
 
   // Stats line
   const hitCount = runRoute.filter(Boolean).length;
-  document.getElementById('sc-stats').innerHTML =
+  let statsHtml =
     `<b style="color:#e6edf3">${hitCount}/${runRoute.length}</b> anchors used&nbsp;&nbsp;·&nbsp;&nbsp;` +
     `⏱ <b style="color:#e6edf3">${fmtTime(finishTime)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;` +
     `<span class="ci">C</span><b style="color:#ffd95e">+${runCoinsEarned}</b>`;
+  const ls = liveStreak();
+  if (finished && ls >= 1){
+    statsHtml += `<br>🔥 <b style="color:#ffb572">${ls}-day streak</b>` +
+      (streakBonus ? `&nbsp;&nbsp;·&nbsp;&nbsp;<span class="ci">C</span><b style="color:#ffd95e">+${streakBonus}</b> bonus` : '');
+    const nm = nextMilestone();
+    if (nm){
+      const away = nm.day - ls;
+      statsHtml += `<br><span style="color:#8b949e;font-size:12px">Next reward: <span class="ci">C</span><b style="color:#ffd95e">+${fmt(nm.reward)}</b> at day ${nm.day} (${away} more day${away>1?'s':''})</span>`;
+    }
+  }
+  document.getElementById('sc-stats').innerHTML = statsHtml;
 
   card.classList.add('show');
 }
@@ -1400,11 +1514,13 @@ document.getElementById('sc-shareBtn').addEventListener('click', async () => {
     }
     rows.push(row);
   }
+  const ls = liveStreak();
   const text =
     `1 More Swing — Day ${dayNumber}\n` +
     `Score: ${fmt(total)}\n` +
     `${rows.join('\n')}\n` +
-    `${hitCount}/${runRoute.length} anchors used · ⏱ ${fmtTime(finishTime)} · 🪙 +${runCoinsEarned}`;
+    `${hitCount}/${runRoute.length} anchors used · ⏱ ${fmtTime(finishTime)} · 🪙 +${runCoinsEarned}` +
+    (finished && ls >= 1 ? `\n🔥 ${ls}-day streak` : '');
   try { if (navigator.share){ await navigator.share({ text }); return; } } catch(e){ if (e?.name === 'AbortError') return; }
   try {
     await navigator.clipboard.writeText(text);
