@@ -172,6 +172,9 @@
   #shopBody { padding:8px 20px 20px; overflow-y:auto; }
   #shop .cat { color:#8b949e; font-size:12px; letter-spacing:1px; margin:16px 0 8px; }
   #shop .subcat { color:#ffb572; font-size:10.5px; font-weight:700; letter-spacing:1.5px; margin:12px 0 6px; padding-top:8px; border-top:1px solid #21262d; }
+  #shop .natoggle { display:flex; align-items:center; width:100%; box-sizing:border-box; background:none; border:none; border-top:1px solid #21262d; cursor:pointer; font-family:inherit; text-align:left; -webkit-tap-highlight-color:transparent; }
+  #shop .natoggle .chev { margin-left:auto; font-size:13px; }
+  #shop .natoggle:active { transform:scale(.99); }
   #shop .item { display:flex; align-items:center; gap:12px; padding:9px 10px; border-radius:10px; }
   #shop .item:hover { background:#161b22; }
   #shop .sw { width:26px; height:26px; border-radius:50%; flex:0 0 auto; box-shadow:0 0 8px rgba(0,0,0,.4) inset;
@@ -544,6 +547,46 @@ const THEMES = {
   england:     { accent:'#e8202a', glow:'#ffd3d6', rgb:'232,32,42',   bg:'flag' },
   france:      { accent:'#1f3fb0', glow:'#cdd9ff', rgb:'31,63,176',   bg:'flag' },
   portugal:    { accent:'#a3142e', glow:'#ffccd0', rgb:'163,20,46',   bg:'flag' },
+  algeria:     { accent:'#1aa05a', glow:'#bff5dd', rgb:'26,160,90',   bg:'flag' },
+  australia:   { accent:'#3f7fe6', glow:'#cdd9ff', rgb:'63,127,230',  bg:'flag' },
+  austria:     { accent:'#ed2939', glow:'#ffd3cf', rgb:'237,41,57',   bg:'flag' },
+  belgium:     { accent:'#facc15', glow:'#fff4b8', rgb:'250,204,21',  bg:'flag' },
+  bosnia:      { accent:'#fecb00', glow:'#fff4b8', rgb:'254,203,0',   bg:'flag' },
+  canada:      { accent:'#e8202a', glow:'#ffd3d6', rgb:'232,32,42',   bg:'flag' },
+  capeverde:   { accent:'#3f7fe6', glow:'#cdd9ff', rgb:'63,127,230',  bg:'flag' },
+  colombia:    { accent:'#facc15', glow:'#fff4b8', rgb:'250,204,21',  bg:'flag' },
+  croatia:     { accent:'#e21b1b', glow:'#ffd0cb', rgb:'226,27,27',   bg:'flag' },
+  curacao:     { accent:'#2f7fed', glow:'#cdd9ff', rgb:'47,127,237',  bg:'flag' },
+  czechia:     { accent:'#2f6fed', glow:'#cdd9ff', rgb:'47,111,237',  bg:'flag' },
+  drcongo:     { accent:'#1f9fff', glow:'#cfeaff', rgb:'31,159,255',  bg:'flag' },
+  ecuador:     { accent:'#ffd000', glow:'#fff4b8', rgb:'255,208,0',   bg:'flag' },
+  egypt:       { accent:'#e8202a', glow:'#ffd3d6', rgb:'232,32,42',   bg:'flag' },
+  germany:     { accent:'#ffce00', glow:'#fff4b8', rgb:'255,206,0',   bg:'flag' },
+  ghana:       { accent:'#facc15', glow:'#fff4b8', rgb:'250,204,21',  bg:'flag' },
+  haiti:       { accent:'#2f4fd0', glow:'#cdd9ff', rgb:'47,79,208',   bg:'flag' },
+  iran:        { accent:'#1aa05a', glow:'#bff5dd', rgb:'26,160,90',   bg:'flag' },
+  iraq:        { accent:'#e8202a', glow:'#ffd3d6', rgb:'232,32,42',   bg:'flag' },
+  ivorycoast:  { accent:'#f77f00', glow:'#ffe0b8', rgb:'247,127,0',   bg:'flag' },
+  japan:       { accent:'#e8334d', glow:'#ffd3d6', rgb:'232,51,77',   bg:'flag' },
+  jordan:      { accent:'#1aa05a', glow:'#bff5dd', rgb:'26,160,90',   bg:'flag' },
+  morocco:     { accent:'#e02530', glow:'#ffd0cb', rgb:'224,37,48',   bg:'flag' },
+  newzealand:  { accent:'#2f6fed', glow:'#cdd9ff', rgb:'47,111,237',  bg:'flag' },
+  norway:      { accent:'#e02540', glow:'#ffd0d8', rgb:'224,37,64',   bg:'flag' },
+  panama:      { accent:'#2f4fd0', glow:'#cdd9ff', rgb:'47,79,208',   bg:'flag' },
+  paraguay:    { accent:'#2f6fed', glow:'#cdd9ff', rgb:'47,111,237',  bg:'flag' },
+  qatar:       { accent:'#a8245a', glow:'#f0c6d2', rgb:'168,36,90',   bg:'flag' },
+  saudi:       { accent:'#1aa05a', glow:'#bff5dd', rgb:'26,160,90',   bg:'flag' },
+  scotland:    { accent:'#2f7fed', glow:'#cdd9ff', rgb:'47,127,237',  bg:'flag' },
+  senegal:     { accent:'#1aa05a', glow:'#bff5dd', rgb:'26,160,90',   bg:'flag' },
+  southafrica: { accent:'#1aa05a', glow:'#bff5dd', rgb:'26,160,90',   bg:'flag' },
+  southkorea:  { accent:'#e8334d', glow:'#ffd3d6', rgb:'232,51,77',   bg:'flag' },
+  spain:       { accent:'#f1bf00', glow:'#fff4b8', rgb:'241,191,0',   bg:'flag' },
+  sweden:      { accent:'#ffcc00', glow:'#fff4b8', rgb:'255,204,0',   bg:'flag' },
+  switzerland: { accent:'#e8202a', glow:'#ffd3d6', rgb:'232,32,42',   bg:'flag' },
+  tunisia:     { accent:'#e8202a', glow:'#ffd3d6', rgb:'232,32,42',   bg:'flag' },
+  turkiye:     { accent:'#e8202a', glow:'#ffd3d6', rgb:'232,32,42',   bg:'flag' },
+  uruguay:     { accent:'#3f7fe6', glow:'#cdd9ff', rgb:'63,127,230',  bg:'flag' },
+  uzbekistan:  { accent:'#1bb6c9', glow:'#c6f0f8', rgb:'27,182,201',  bg:'flag' },
   space:     { accent:'#34d399', glow:'#c6ffe9', rgb:'52,211,153',  bg:'space'     },
   vapor:     { accent:'#2de2e6', glow:'#bff8ff', rgb:'45,226,230',  bg:'vapor'     },  // cyan on a pink sunset
   unicorn:   { accent:'#ff8fd6', glow:'#ffe1f3', rgb:'255,143,214', bg:'unicorn'   },
@@ -583,14 +626,54 @@ const COSMETICS = {
     // cheap coin-only "first theme" — no premium flag, so no IAP product and excluded from the Unlock-All bundle
     { id:'green',   name:'Verdant',      cost:10000 },
     // "Nations" — cheap coin-only recolor themes (no premium flag → no IAP, excluded from bundle)
-    { id:'argentina',   name:'Argentina',   cost:20000, nations:true },
-    { id:'brazil',      name:'Brazil',      cost:20000, nations:true },
-    { id:'england',     name:'England',     cost:20000, nations:true },
-    { id:'france',      name:'France',      cost:20000, nations:true },
-    { id:'mexico',      name:'Mexico',      cost:20000, nations:true },
-    { id:'netherlands', name:'Netherlands', cost:20000, nations:true },
-    { id:'portugal',    name:'Portugal',    cost:20000, nations:true },
-    { id:'usa',         name:'USA',         cost:20000, nations:true },
+    { id:'algeria',     name:'Algeria',       cost:20000, nations:true },
+    { id:'argentina',   name:'Argentina',     cost:20000, nations:true },
+    { id:'australia',   name:'Australia',     cost:20000, nations:true },
+    { id:'austria',     name:'Austria',       cost:20000, nations:true },
+    { id:'belgium',     name:'Belgium',       cost:20000, nations:true },
+    { id:'bosnia',      name:'Bosnia',        cost:20000, nations:true },
+    { id:'brazil',      name:'Brazil',        cost:20000, nations:true },
+    { id:'canada',      name:'Canada',        cost:20000, nations:true },
+    { id:'capeverde',   name:'Cape Verde',    cost:20000, nations:true },
+    { id:'colombia',    name:'Colombia',      cost:20000, nations:true },
+    { id:'croatia',     name:'Croatia',       cost:20000, nations:true },
+    { id:'curacao',     name:'Curaçao',       cost:20000, nations:true },
+    { id:'czechia',     name:'Czechia',       cost:20000, nations:true },
+    { id:'drcongo',     name:'DR Congo',      cost:20000, nations:true },
+    { id:'ecuador',     name:'Ecuador',       cost:20000, nations:true },
+    { id:'egypt',       name:'Egypt',         cost:20000, nations:true },
+    { id:'england',     name:'England',       cost:20000, nations:true },
+    { id:'france',      name:'France',        cost:20000, nations:true },
+    { id:'germany',     name:'Germany',       cost:20000, nations:true },
+    { id:'ghana',       name:'Ghana',         cost:20000, nations:true },
+    { id:'haiti',       name:'Haiti',         cost:20000, nations:true },
+    { id:'iran',        name:'Iran',          cost:20000, nations:true },
+    { id:'iraq',        name:'Iraq',          cost:20000, nations:true },
+    { id:'ivorycoast',  name:'Ivory Coast',   cost:20000, nations:true },
+    { id:'japan',       name:'Japan',         cost:20000, nations:true },
+    { id:'jordan',      name:'Jordan',        cost:20000, nations:true },
+    { id:'mexico',      name:'Mexico',        cost:20000, nations:true },
+    { id:'morocco',     name:'Morocco',       cost:20000, nations:true },
+    { id:'netherlands', name:'Netherlands',   cost:20000, nations:true },
+    { id:'newzealand',  name:'New Zealand',   cost:20000, nations:true },
+    { id:'norway',      name:'Norway',        cost:20000, nations:true },
+    { id:'panama',      name:'Panama',        cost:20000, nations:true },
+    { id:'paraguay',    name:'Paraguay',      cost:20000, nations:true },
+    { id:'portugal',    name:'Portugal',      cost:20000, nations:true },
+    { id:'qatar',       name:'Qatar',         cost:20000, nations:true },
+    { id:'saudi',       name:'Saudi Arabia',  cost:20000, nations:true },
+    { id:'scotland',    name:'Scotland',      cost:20000, nations:true },
+    { id:'senegal',     name:'Senegal',       cost:20000, nations:true },
+    { id:'southafrica', name:'South Africa',  cost:20000, nations:true },
+    { id:'southkorea',  name:'South Korea',   cost:20000, nations:true },
+    { id:'spain',       name:'Spain',         cost:20000, nations:true },
+    { id:'sweden',      name:'Sweden',        cost:20000, nations:true },
+    { id:'switzerland', name:'Switzerland',   cost:20000, nations:true },
+    { id:'tunisia',     name:'Tunisia',       cost:20000, nations:true },
+    { id:'turkiye',     name:'Türkiye',       cost:20000, nations:true },
+    { id:'uruguay',     name:'Uruguay',       cost:20000, nations:true },
+    { id:'usa',         name:'USA',           cost:20000, nations:true },
+    { id:'uzbekistan',  name:'Uzbekistan',    cost:20000, nations:true },
     // premium themes — listed in ascending coin cost; streamer/creator themes priced cheap.
     { id:'space',     name:'Deep Space',    cost:100000,  premium:true },
     { id:'solar',     name:'Solarpunk',     cost:200000,  premium:true },
@@ -1599,6 +1682,7 @@ document.getElementById('sc-shareBtn').addEventListener('click', async () => {
 // ---------- shop ----------
 const shopEl = document.getElementById('shop');
 let shopOpen = false;
+let nationsOpen = false;   // collapsed NATIONS subgroup in the shop
 function swatchStyle(cat, id){
   if (cat === 'theme'){
     if (id === 'space')     return 'radial-gradient(circle at 32% 30%, #34d399, #05070d 78%)';
@@ -1614,14 +1698,7 @@ function swatchStyle(cat, id){
     if (id === 'twitch')    return 'linear-gradient(135deg,#9146ff,#6441a5)';
     if (id === 'wh40k')     return 'linear-gradient(135deg,#0a1c44,#1f3f86 55%,#f5c542)';
     if (id === 'code')      return 'radial-gradient(circle at 35% 30%, #39ff7a, #001a05 80%)';
-    if (id === 'brazil')      return 'linear-gradient(135deg,#009739,#ffdf00)';
-    if (id === 'netherlands') return 'linear-gradient(180deg,#ae1c28,#f2f2f2 52%,#21468b)';
-    if (id === 'argentina')   return 'linear-gradient(180deg,#74acdf,#f2f2f2 52%,#74acdf)';
-    if (id === 'mexico')      return 'linear-gradient(90deg,#006847,#f2f2f2 52%,#ce1126)';
-    if (id === 'usa')         return 'linear-gradient(135deg,#3c3b6e,#f2f2f2 52%,#b22234)';
-    if (id === 'england')     return 'linear-gradient(135deg,#f2f2f2,#ce1124)';
-    if (id === 'france')      return 'linear-gradient(90deg,#0055a4,#f2f2f2 52%,#ef4135)';
-    if (id === 'portugal')    return 'linear-gradient(90deg,#006600,#ff0000)';
+    if (NATION_IDS.has(id)) return "url('flags/"+id+".svg') center/cover";
     return (THEMES[id] && THEMES[id].accent) || '#888';
   }
   if (id === 'rainbow') return 'conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red)';
@@ -1656,8 +1733,10 @@ function renderShop(){
     }
     for (const it of COSMETICS[cat]){
       if (cat === 'theme'){
-        if (it.nations && !shownNations){ html += `<div class="subcat">🌍 NATIONS</div>`; shownNations = true; }
-        else if (it.premium && !shownPremium){ html += `<div class="subcat">PREMIUM</div>`; shownPremium = true; }
+        if (it.nations){
+          if (!shownNations){ const cnt = COSMETICS.theme.filter(t=>t.nations).length; html += `<button class="subcat natoggle" data-act="nations">🌍 NATIONS (${cnt})<span class="chev">${nationsOpen?'▾':'▸'}</span></button>`; shownNations = true; }
+          if (!nationsOpen) continue;   // collapsed by default — don't render the 48 nation rows
+        } else if (it.premium && !shownPremium){ html += `<div class="subcat">PREMIUM</div>`; shownPremium = true; }
       }
       const isOwned = owned[cat].includes(it.id);
       const isEq    = cat === 'theme' ? themeName === it.id : equipped[cat] === it.id;
@@ -1693,7 +1772,8 @@ function renderShop(){
   body.innerHTML = html;
   body.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', () => {
     const { act, cat, id } = b.dataset;
-    if (act === 'buy') buyItem(cat, id);
+    if (act === 'nations'){ nationsOpen = !nationsOpen; renderShop(); }
+    else if (act === 'buy') buyItem(cat, id);
     else if (act === 'equip') equipItem(cat, id);
     else if (act === 'preview') startPreview(id);
     else if (act === 'iapbuy'){ armPurchaseIntent(); iap.buyTheme(id); }
@@ -2170,57 +2250,19 @@ function drawCoinIcon(cx, cy, r){
   ctx.fillText('C', cx, cy + asc/2);
   ctx.textAlign = 'left';   // restore HUD default
 }
-// ---- flag backgrounds for the "Nations" themes: true flag aspect ratio, centred, black letterbox ----
-// Each flag fn draws into a local w×h rect (0,0 origin); drawFlagBg positions + clips it.
-const FLAG_RATIO = { netherlands:1.5, france:1.5, mexico:1.75, argentina:1.55, england:1.6, portugal:1.5, brazil:1.4286, usa:1.9 };
-function fHband(w,h,cols){ const n=cols.length; for(let i=0;i<n;i++){ ctx.fillStyle=cols[i]; ctx.fillRect(0, Math.floor(h*i/n), w, Math.ceil(h/n)+1); } }
-function fVband(w,h,cols){ const n=cols.length; for(let i=0;i<n;i++){ ctx.fillStyle=cols[i]; ctx.fillRect(Math.floor(w*i/n), 0, Math.ceil(w/n)+1, h); } }
-function fStar(cx,cy,r,col){ ctx.fillStyle=col; ctx.beginPath(); for(let i=0;i<10;i++){ const rad=i%2?r*0.4:r; const a=-Math.PI/2+i*Math.PI/5; const x=cx+Math.cos(a)*rad, y=cy+Math.sin(a)*rad; i?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.closePath(); ctx.fill(); }
-function fSun(cx,cy,r,col){ ctx.fillStyle=col; for(let i=0;i<32;i++){ const a=i/32*Math.PI*2; ctx.beginPath(); ctx.moveTo(cx+Math.cos(a)*r*1.85, cy+Math.sin(a)*r*1.85); ctx.lineTo(cx+Math.cos(a+0.07)*r, cy+Math.sin(a+0.07)*r); ctx.lineTo(cx+Math.cos(a-0.07)*r, cy+Math.sin(a-0.07)*r); ctx.closePath(); ctx.fill(); } ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#c98a0a'; ctx.lineWidth=Math.max(1,r*0.08); ctx.beginPath(); ctx.arc(cx,cy,r*0.68,0,Math.PI*2); ctx.stroke(); }
-function fShield(cx,cy,w,h,col){ ctx.fillStyle=col; const t=cy-h/2,b=cy+h/2; ctx.beginPath(); ctx.moveTo(cx-w/2,t); ctx.lineTo(cx+w/2,t); ctx.lineTo(cx+w/2,t+h*0.5); ctx.quadraticCurveTo(cx+w/2,b,cx,b); ctx.quadraticCurveTo(cx-w/2,b,cx-w/2,t+h*0.5); ctx.closePath(); ctx.fill(); }
-function fCastle(cx,cy,s){ ctx.fillStyle='#ffd000'; ctx.fillRect(cx-s/2, cy-s*0.05, s, s*0.55); for(let i=-1;i<=1;i++){ ctx.fillRect(cx+i*s*0.34-s*0.13, cy-s*0.38, s*0.26, s*0.36); } }
-function fQuina(cx,cy,s){ ctx.fillStyle='#1a3a8f'; const w=s,h=s*1.18,t=cy-h/2,b=cy+h/2; ctx.beginPath(); ctx.moveTo(cx-w/2,t); ctx.lineTo(cx+w/2,t); ctx.lineTo(cx+w/2,t+h*0.5); ctx.quadraticCurveTo(cx+w/2,b,cx,b); ctx.quadraticCurveTo(cx-w/2,b,cx-w/2,t+h*0.5); ctx.closePath(); ctx.fill(); ctx.fillStyle='#ffffff'; const d=s*0.23, rr=Math.max(0.5,s*0.1); [[0,0],[-d,-d],[d,-d],[-d,d],[d,d]].forEach(p=>{ ctx.beginPath(); ctx.arc(cx+p[0], cy+p[1]*0.92, rr, 0, Math.PI*2); ctx.fill(); }); }
-const FLAGS = {
-  netherlands(w,h){ fHband(w,h,['#ae1c28','#ffffff','#21468b']); },
-  france(w,h){ fVband(w,h,['#0055a4','#ffffff','#ef4135']); },
-  mexico(w,h){ fVband(w,h,['#006847','#ffffff','#ce1126']); },
-  argentina(w,h){ fHband(w,h,['#75aadb','#ffffff','#75aadb']); fSun(w/2,h/2,h*0.13,'#f6b40e'); },
-  england(w,h){ ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,w,h); ctx.fillStyle='#ce1124'; const t=h*0.2; ctx.fillRect(0,(h-t)/2,w,t); ctx.fillRect((w-t)/2,0,t,h); },
-  portugal(w,h){ ctx.fillStyle='#006600'; ctx.fillRect(0,0,w,h); ctx.fillStyle='#d52b1e'; ctx.fillRect(w*0.4,0,w*0.6,h);
-    const cx=w*0.4, cy=h/2, R=h*0.22;
-    // armillary sphere: rim, polar axis, equator (edge-on + band), two meridians, two tropics, tilted ecliptic
-    ctx.fillStyle='#f1c40f'; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='#7a5e08'; ctx.lineWidth=Math.max(1,R*0.04); ctx.lineJoin='round';
-    ctx.beginPath(); ctx.arc(cx,cy,R*0.99,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx,cy,R*0.99,R*0.36,0,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx,cy,R*0.66,R*0.97,0,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx,cy,R*0.32,R*0.97,0,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx,cy-R*0.52,R*0.6,R*0.14,0,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx,cy+R*0.52,R*0.6,R*0.14,0,0,Math.PI*2); ctx.stroke();
-    ctx.save(); ctx.translate(cx,cy); ctx.rotate(-0.42); ctx.beginPath(); ctx.ellipse(0,0,R*0.99,R*0.18,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
-    // escudo: red bordure with 7 gold castles, white field, 5 blue quinas (each with 5 bezants)
-    const sw=R*0.86, sh=R*1.26;
-    fShield(cx,cy,sw,sh,'#d52b1e');
-    const castle=sw*0.17;
-    [[0,-0.45],[-0.33,-0.32],[0.33,-0.32],[-0.43,0.03],[0.43,0.03],[-0.25,0.40],[0.25,0.40]].forEach(([px,py])=> fCastle(cx+sw*px, cy+sh*py, castle));
-    fShield(cx,cy,sw*0.58,sh*0.64,'#ffffff');
-    const qs=sw*0.19, qd=sw*0.17;
-    [[0,0],[0,-1],[0,1],[-1,0],[1,0]].forEach(([dx,dy])=> fQuina(cx+dx*qd, cy+dy*qd*1.12, qs)); },
-  brazil(w,h){ ctx.fillStyle='#009b3a'; ctx.fillRect(0,0,w,h); ctx.save(); ctx.translate(w/2,h/2); ctx.fillStyle='#fedf00'; const dx=w*0.42, dy=h*0.42; ctx.beginPath(); ctx.moveTo(0,-dy); ctx.lineTo(dx,0); ctx.lineTo(0,dy); ctx.lineTo(-dx,0); ctx.closePath(); ctx.fill(); ctx.fillStyle='#002776'; ctx.beginPath(); ctx.arc(0,0,h*0.245,0,Math.PI*2); ctx.fill(); ctx.restore(); },
-  usa(w,h){ const n=13; for(let i=0;i<n;i++){ ctx.fillStyle=i%2?'#ffffff':'#b22234'; ctx.fillRect(0,Math.floor(h*i/n),w,Math.ceil(h/n)+1); } const cw=w*0.4, ch=h*7/13; ctx.fillStyle='#3c3b6e'; ctx.fillRect(0,0,cw,ch); const ux=cw/12, uy=ch/10, sr=Math.min(ux,uy)*0.62; for(let row=0;row<9;row++){ const even=row%2===0, cols=even?6:5; for(let c=0;c<cols;c++){ const cx=(even?(2*c+1):(2*c+2))*ux, cy=(row+1)*uy; fStar(cx,cy,sr,'#ffffff'); } } },
-};
+// ---- flag backgrounds: real flag artwork (SVG) drawn letterboxed, dimmed for gameplay ----
+const NATION_IDS = new Set(COSMETICS.theme.filter(t=>t.nations).map(t=>t.id));
+const _flagImg = {};
+function flagImg(id){ let im=_flagImg[id]; if(!im){ im=new Image(); im.src='flags/'+id+'.svg'; _flagImg[id]=im; } return im; }
 function drawFlagBg(){
-  ctx.fillStyle='#05070a'; ctx.fillRect(0,0,W,H);              // black letterbox bars
-  const f = FLAGS[themeName]; if (!f) return;
-  const ratio = FLAG_RATIO[themeName] || 1.5;
-  let fw = W, fh = fw/ratio;
-  if (fh > H){ fh = H; fw = fh*ratio; }                        // never overflow (e.g. landscape)
-  const fx = Math.round((W-fw)/2), fy = Math.round((H-fh)/2);
-  ctx.save(); ctx.beginPath(); ctx.rect(fx,fy,fw,fh); ctx.clip();
-  ctx.translate(fx,fy); f(fw,fh); ctx.restore();
-  ctx.fillStyle='rgba(5,7,10,0.42)'; ctx.fillRect(0,0,W,H);    // dim so anchors/orb/platforms read on top
+  ctx.fillStyle='#05070a'; ctx.fillRect(0,0,W,H);
+  const im=flagImg(themeName);
+  if (im.complete && im.naturalWidth){
+    const ratio=im.naturalWidth/im.naturalHeight;
+    let fw=W, fh=fw/ratio; if (fh>H){ fh=H; fw=fh*ratio; }
+    ctx.drawImage(im, Math.round((W-fw)/2), Math.round((H-fh)/2), fw, fh);
+  } else { ctx.fillStyle=TH().accent; ctx.fillRect(0,0,W,H); }
+  ctx.fillStyle='rgba(5,7,10,0.42)'; ctx.fillRect(0,0,W,H);
 }
 function drawBackground(){
   if (TH().bg === 'space'){
