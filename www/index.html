@@ -477,7 +477,9 @@ const K = {
 
   // --- scoring / banking / skip bonus (Phase 2) ---
   ANCHOR_POINTS:   100,   // base score for grabbing a fresh anchor.
-  COIN_RATE:       0.10,  // coins earned per banked point (lower = grindier shop). Global economy dial.
+  COIN_RATE:       0.07,  // coins per banked point at full rate (below the per-run knee). (mobile = grindier than web, to preserve theme IAP value)
+  COIN_KNEE:       25000, // coins earned this run before diminishing returns kick in (protects casual runs).
+  COIN_TAIL:       0.30,  // marginal coin rate past the knee — compresses monster runs.
   MULT_PER_ANCHOR: 0.5,   // multiplier gained per anchor in the chain.
   SKIP_MULT_BONUS: 0.5,   // EXTRA multiplier per dot skipped in a single jump.
   SKIP_POINTS:     150,   // EXTRA base score per dot skipped.
@@ -1281,7 +1283,14 @@ function press(){
 function bank(){
   if (pending > 0){
     total += pending;
-    const earned = Math.round(pending * K.COIN_RATE);
+    // per-run diminishing returns: full rate until COIN_KNEE coins earned this run, then COIN_TAIL.
+    // compresses huge multiplier banks (skill->coins spread) without punishing casual play.
+    const raw = pending * K.COIN_RATE;
+    let earned;
+    if (runCoinsEarned >= K.COIN_KNEE)            earned = raw * K.COIN_TAIL;
+    else if (runCoinsEarned + raw <= K.COIN_KNEE) earned = raw;
+    else { const u = K.COIN_KNEE - runCoinsEarned; earned = u + (raw - u) * K.COIN_TAIL; }
+    earned = Math.round(earned);
     coins += earned;   // lifetime spendable wallet (persists across runs)
     runCoinsEarned += earned;
     saveGame();
