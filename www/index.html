@@ -1167,7 +1167,7 @@ function newRun(){
   lastReleased = null; anchorGenCount = 0; finishX = null; runTime = 0;
   total = 0; pending = 0; mult = 1;
   runRoute = new Array(K.DAILY_LENGTH).fill(false); runCoinsEarned = 0; streakBonus = 0;
-  document.getElementById('shareCard').classList.remove('show');
+  document.getElementById('shareCard').classList.remove('show'); shareCardDismissed = false;
 
   // first anchor sits right where the player starts, so we begin already swinging
   const first = { x: 320, y: H * 0.26, got:true };
@@ -1239,7 +1239,11 @@ function press(){
   const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
   // Daily finish: a tap shows the result card instead of restarting — restarting here would
   // wipe total/runRoute/runCoinsEarned before the (delayed) share card reads them → empty card.
-  if (state === 'finished'){ showShareCard(); consumeRelease = true; return; }
+  if (state === 'finished'){
+    // first tap shows the result card; once it's been closed, a tap replays instead of reopening it
+    if (shareCardDismissed){ newRun(); consumeRelease = true; return; }
+    showShareCard(); consumeRelease = true; return;
+  }
   if (state === 'dead'){ newRun(); consumeRelease = true; return; }
   if (state !== 'flying' && state !== 'landed') return;
   const clutch = flightLowY > H*K.DEATH_FRAC - K.NEARMISS;   // dipped scary-low this flight = a save
@@ -1455,6 +1459,7 @@ function revive(){
 // ---------- input ----------
 let spaceDown = false, pointerActive = false;
 let consumeRelease = false;   // swallow the tap that restarts a run so it doesn't also launch
+let shareCardDismissed = false;   // once the daily result card is closed, a tap replays instead of reopening it
 cv.addEventListener('pointerdown', e=>{ e.preventDefault(); pointerActive = true; press(); });
 // Kill the iOS long-press magnifier/loupe during a hold on the playfield. user-select:none
 // alone doesn't always stop it; preventing the touch gesture does (pointer events still fire).
@@ -1755,11 +1760,12 @@ function showShareCard(){
 }
 
 document.getElementById('sc-closeBtn').addEventListener('click', () => {
-  document.getElementById('shareCard').classList.remove('show');
+  document.getElementById('shareCard').classList.remove('show'); shareCardDismissed = true;
 });
 document.getElementById('shareCard').addEventListener('click', e => {
-  if (e.target === document.getElementById('shareCard'))
-    document.getElementById('shareCard').classList.remove('show');
+  if (e.target === document.getElementById('shareCard')){
+    document.getElementById('shareCard').classList.remove('show'); shareCardDismissed = true;
+  }
 });
 
 document.getElementById('sc-shareBtn').addEventListener('click', async () => {
