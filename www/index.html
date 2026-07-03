@@ -60,8 +60,7 @@
     background:rgba(22,27,34,.85); color:#e6edf3; font-size:16px; cursor:pointer;
     display:flex; align-items:center; justify-content:center; line-height:1;
     -webkit-tap-highlight-color:transparent; transition:transform .08s, border-color .15s; }
-  #ui button:hover { border-color:#8b949e; }
-  #ui button:active { transform:scale(.92); }
+  #ui button:active { transform:scale(.92); border-color:#8b949e; }   /* grey only while pressed; :hover would stick grey on touch */
   #ui button svg { width:22px; height:22px; }   /* uniform, slightly bigger icons (overrides inline svg dims) */
   #ui #modeBtn { width:auto; padding:0 14px; gap:6px; font-size:14px; font-weight:800;
     border-color:var(--accent,#58a6ff); color:var(--accent,#58a6ff); }
@@ -545,6 +544,10 @@ window.addEventListener('resize', resize);
 // whenever the device rotates.
 window.addEventListener('orientationchange', () => setTimeout(resize, 100));
 window.addEventListener('load', resize);
+// Full-screen ads (and the app returning to the foreground) can make WebKit drop the safe-area
+// insets until it reprocesses viewport-fit — recompute so the HUD doesn't end up under the notch.
+function recomputeSafeArea(){ resize(); setTimeout(resize, 120); setTimeout(resize, 500); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) recomputeSafeArea(); });
 resize();
 setTimeout(resize, 200); setTimeout(resize, 600);
 
@@ -1984,8 +1987,11 @@ function renderShop(){
 // ---------- purchase celebration (confetti + "Unlocked!" toast) ----------
 let purchaseIntent = false, piTimer = 0;   // set on a deliberate IAP tap so restores/launch don't spray confetti
 function armPurchaseIntent(){ purchaseIntent = true; clearTimeout(piTimer); piTimer = setTimeout(() => { purchaseIntent = false; }, 90000); }   // auto-disarm if the buy is cancelled
-function celebratePurchase(label){
-  queueFanfare();   // the StoreKit sheet killed the audio graph; the fanfare plays on the player's next tap
+function celebratePurchase(label, needsAudioRecover){
+  // Coin buys happen with live audio -> play the fanfare now. IAP buys follow the StoreKit sheet,
+  // which killed the audio graph -> queue it to ride the player's next tap.
+  if (needsAudioRecover) queueFanfare();
+  else { const a = audioCtx(); if (a && a.state !== 'running') a.resume().catch(function(){}); sfxPurchase(); }
   haptic('success');
   const toast = document.getElementById('fxToast');
   if (toast){ toast.textContent = `✓ ${label} unlocked!`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
@@ -2018,7 +2024,7 @@ let appActive = true, pendingCelebration = null;
 function flushCelebration(){
   if (!pendingCelebration) return;
   const l = pendingCelebration; pendingCelebration = null;
-  setTimeout(() => celebratePurchase(l), 150);   // brief beat for the dialog to finish dismissing
+  setTimeout(() => celebratePurchase(l, true), 150);   // IAP: audio graph was killed by the sheet -> queue the fanfare for the next tap
 }
 if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   Capacitor.Plugins.App.addListener('appStateChange', ({ isActive }) => {
@@ -2286,6 +2292,7 @@ function showRewardedAd(onReward, btn){
   if (btn){ btn.dataset.label = btn.textContent; btn.textContent = 'Loading ad…'; btn.disabled = true; }
   const done = (rewarded) => {
     adShowing = false;
+    recomputeSafeArea();                // the full-screen ad can drop the safe-area insets -> keep the HUD off the notch
     if (btn){ btn.disabled = false; btn.textContent = btn.dataset.label; }
     if (rewarded) onReward();           // only grant the reward if the ad actually completed
   };
