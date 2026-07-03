@@ -29,6 +29,9 @@
         const closeSub  = await AdMob.addListener('onRewardedVideoAdDismissed', async () => {
           if (rewardSub && rewardSub.remove) await rewardSub.remove();
           if (closeSub  && closeSub.remove)  await closeSub.remove();
+          // The ad deactivated the iOS audio session — reactivate it before the reward callback runs,
+          // so the fanfare + resumed gameplay aren't silent (WebAudio stays 'running' but muted).
+          try { if (window.OMS_AudioSession && window.OMS_AudioSession.reactivate) await window.OMS_AudioSession.reactivate(); } catch (e) {}
           finish(rewarded);
         });
         await AdMob.prepareRewardVideoAd({ adId, isTesting: TESTING_ADS });

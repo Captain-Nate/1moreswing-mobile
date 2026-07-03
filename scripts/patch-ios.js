@@ -138,6 +138,82 @@ public class CloudSavePlugin: CAPPlugin, CAPBridgedPlugin {
   console.log('[patch-ios] Created CloudSavePlugin.swift (iCloud KV Store).');
 }
 
+// Creates a tiny Capacitor plugin (AudioSessionPlugin.swift) that reactivates the
+// shared AVAudioSession. AdMob rewarded video (and the StoreKit purchase sheet)
+// deactivate the app's audio session; the WebAudio context stays 'running' but goes
+// silent until the session is reactivated. JS calls AudioSession.reactivate() after ads.
+function createAudioSessionPlugin() {
+  if (!fs.existsSync(appSwiftDir)) return;
+  const dst = path.join(appSwiftDir, 'AudioSessionPlugin.swift');
+  if (fs.existsSync(dst)) return;
+  fs.writeFileSync(dst,
+`import Foundation
+import Capacitor
+import AVFoundation
+
+@objc(AudioSessionPlugin)
+public class AudioSessionPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "AudioSessionPlugin"
+    public let jsName = "AudioSession"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "reactivate", returnType: CAPPluginReturnPromise),
+    ]
+
+    // AdMob (and the StoreKit sheet) deactivate the session, and AdMob tears it down
+    // asynchronously AFTER the ad dismisses — so reactivate now and again a few times over ~1s
+    // to win the race. .ambient keeps respecting the silent switch and mixes with other audio.
+    @objc func reactivate(_ call: CAPPluginCall) {
+        activateSession()
+        for delay in [0.2, 0.5, 1.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { self.activateSession() }
+        }
+        call.resolve()
+    }
+
+    private func activateSession() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.ambient, options: [.mixWithOthers])
+            try session.setActive(true)
+        } catch {}
+    }
+}
+`);
+  console.log('[patch-ios] Created AudioSessionPlugin.swift.');
+}
+
+// Register AudioSessionPlugin in an existing MainViewController.swift (created before this plugin existed).
+function ensureAudioSessionRegistered() {
+  const dst = path.join(appSwiftDir, 'MainViewController.swift');
+  if (!fs.existsSync(dst)) return;
+  let src = fs.readFileSync(dst, 'utf8');
+  if (src.includes('AudioSessionPlugin')) return;
+  src = src.replace(
+    'bridge?.registerPluginInstance(CloudSavePlugin())',
+    'bridge?.registerPluginInstance(CloudSavePlugin())\n        bridge?.registerPluginInstance(AudioSessionPlugin())'
+  );
+  fs.writeFileSync(dst, src);
+  console.log('[patch-ios] MainViewController.swift: registered AudioSessionPlugin.');
+}
+
+// Add AudioSessionPlugin.swift to the Xcode build (idempotent; separate from the CloudSave add).
+function addAudioSessionToPbxproj() {
+  if (!fs.existsSync(pbxproj)) return;
+  let pb = fs.readFileSync(pbxproj, 'utf8');
+  if (pb.includes('AudioSessionPlugin.swift')) return;
+  const ref = 'A1B2C3D4E5F60005AABBCCDD', build = 'A1B2C3D4E5F60006AABBCCDD';
+  pb = pb.replace('/* End PBXBuildFile section */',
+    `\t\t${build} /* AudioSessionPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = ${ref} /* AudioSessionPlugin.swift */; };\n/* End PBXBuildFile section */`);
+  pb = pb.replace('/* End PBXFileReference section */',
+    `\t\t${ref} /* AudioSessionPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionPlugin.swift; sourceTree = "<group>"; };\n/* End PBXFileReference section */`);
+  pb = pb.replace('504EC3071FED79650016851F /* AppDelegate.swift */,',
+    `504EC3071FED79650016851F /* AppDelegate.swift */,\n\t\t\t\t${ref} /* AudioSessionPlugin.swift */,`);
+  pb = pb.replace('504EC3081FED79650016851F /* AppDelegate.swift in Sources */,',
+    `504EC3081FED79650016851F /* AppDelegate.swift in Sources */,\n\t\t\t\t${build} /* AudioSessionPlugin.swift in Sources */,`);
+  fs.writeFileSync(pbxproj, pb);
+  console.log('[patch-ios] pbxproj: added AudioSessionPlugin.swift to build.');
+}
+
 function createMainViewController() {
   if (!fs.existsSync(appSwiftDir)) return;
   const dst = path.join(appSwiftDir, 'MainViewController.swift');
@@ -149,6 +225,7 @@ function createMainViewController() {
 class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(CloudSavePlugin())
+        bridge?.registerPluginInstance(AudioSessionPlugin())
     }
 }
 `);
@@ -247,7 +324,10 @@ patchPodfile();
 patchInfoPlist();
 syncStoreKit();
 createCloudSavePlugin();
+createAudioSessionPlugin();
 createMainViewController();
+ensureAudioSessionRegistered();
 patchStoryboard();
 patchEntitlements();
 addSwiftFilesToPbxproj();
+addAudioSessionToPbxproj();

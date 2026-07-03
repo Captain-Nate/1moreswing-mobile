@@ -422,7 +422,11 @@
 </div>
 <script>/* Mobile app build only: load AdMob glue + StoreKit in-app purchases inside Capacitor. No-op on the web. */
 if (window.Capacitor) {
-  if (typeof Capacitor.registerPlugin === 'function') window.OMS_CloudSave = Capacitor.registerPlugin('CloudSave');
+  // Native plugins are registered by MainViewController (registerPluginInstance) and exposed on
+  // Capacitor.Plugins. (Capacitor.registerPlugin isn't available on this bridge global.)
+  var _P = window.Capacitor.Plugins || {};
+  window.OMS_CloudSave = _P.CloudSave;
+  window.OMS_AudioSession = _P.AudioSession;   // reactivates AVAudioSession after ads/StoreKit (see patch-ios.js)
   ['mobile-ads.js','iap.js'].forEach(function(src){ var s = document.createElement('script'); s.src = src; document.head.appendChild(s); });
 }</script>
 <div id="lb">
@@ -1077,15 +1081,34 @@ let actx = null, muted = false;
 let hapticsMode = 'full';   // 'full' = taps every swing, 'key' = banks/milestones only, 'off' = none (mobile only)
 let rocketLaunchT = -1e9;   // Liftoff theme: timestamp of the current single rocket flight (armed on run start / preview)
 function audioCtx(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
-// iOS audio interruptions (toggling the silent switch, calls, backgrounding) leave the
-// AudioContext 'suspended' OR 'interrupted' — resume anything not already running so sound
-// comes back (haptics keep working, which is why only the audio dies). Recreate if it closed.
+// iOS interruptions (silent-switch toggle, calls, backgrounding) leave the AudioContext
+// 'suspended'/'interrupted' — resume anything not running so sound returns (haptics keep working).
 function resumeAudio(){
   let a = audioCtx(); if (!a) return;
   if (a.state === 'closed'){ actx = null; a = audioCtx(); if (!a) return; }
   if (a.state !== 'running'){ try { a.resume(); } catch(e){} }
 }
-document.addEventListener('pointerdown', resumeAudio, true);   // any tap recovers audio after an interruption
+// Reactivate the native iOS audio session — AdMob ads + the StoreKit sheet deactivate it. Native plugin; no-op on web.
+function reactivateNativeAudio(){
+  try { if (window.OMS_AudioSession && window.OMS_AudioSession.reactivate) return window.OMS_AudioSession.reactivate(); } catch(e){}
+  return Promise.resolve();
+}
+// After an ad / the StoreKit sheet, the WebAudio graph is disconnected — setActive() or resume() alone
+// won't reconnect it; only a FRESH AudioContext does, and iOS reliably restarts audio only in a user
+// gesture. So on the next tap: reactivate the native session, then close + recreate the context.
+let audioNeedsHardRecover = false, pendingFanfare = false;
+function hardRecoverAudio(){
+  reactivateNativeAudio();
+  let a = audioCtx(); if (a){ try { a.close(); } catch(e){} }
+  actx = null; a = audioCtx();
+  if (a) a.resume().catch(function(){});
+}
+function onGestureAudio(){
+  if (audioNeedsHardRecover){ audioNeedsHardRecover = false; hardRecoverAudio(); } else resumeAudio();
+  if (pendingFanfare){ pendingFanfare = false; setTimeout(sfxPurchase, 220); }   // play the queued reward fanfare after the recreate
+}
+function queueFanfare(){ audioNeedsHardRecover = true; pendingFanfare = true; reactivateNativeAudio(); }   // celebration sound rides the next tap
+document.addEventListener('pointerdown', onGestureAudio, true);   // any tap resumes audio; first tap after an ad hard-recreates the context (+ plays a queued fanfare)
 function tone(freq, dur, type, vol, slideTo){
   if (muted) return; const a = audioCtx(); if(!a) return;
   const o=a.createOscillator(), g=a.createGain(), t0=a.currentTime;
@@ -1111,22 +1134,6 @@ function sfxBank(){ tone(620,0.12,'triangle',0.16); setTimeout(()=>tone(820,0.14
 function sfxSkip(n){ for (let i=0;i<=n;i++) setTimeout(()=>tone(520+i*150, 0.10, 'square', 0.12), i*50); }
 function sfxDie(){ tone(220, 0.5, 'sawtooth', 0.18, 55); }
 function sfxPurchase(){ [523,659,784,1047,1319].forEach((f,i)=> setTimeout(()=> tone(f, 0.22, 'triangle', 0.16), i*65)); }   // C-E-G-C-E fanfare
-// after a rewarded ad or the StoreKit sheet the audio context is suspended/interrupted (and iOS
-// may leave the audio session deactivated) — resume it, and if that doesn't yield a live context
-// shortly after, recreate it (a fresh context establishes a fresh audio session) before playing.
-function playFanfare(){
-  let a = audioCtx(); if (!a) return;
-  if (a.state === 'running'){ sfxPurchase(); return; }
-  a.resume().catch(function(){});
-  setTimeout(function(){
-    let b = audioCtx();
-    if (b && b.state === 'running'){ sfxPurchase(); return; }
-    try { if (b) b.close(); } catch(e){}
-    actx = null;                                   // recreate on next audioCtx() -> fresh AVAudioSession
-    let c = audioCtx();
-    if (c) c.resume().then(sfxPurchase).catch(sfxPurchase); else sfxPurchase();
-  }, 350);
-}
 
 // ---- haptics (native only; no-op on web). swingTier taps fire only in 'full' mode ----
 function haptic(kind, swingTier){
@@ -1480,6 +1487,8 @@ function revive(){
   const ob = document.getElementById('overBtns'); if (ob) ob.classList.remove('show');
   hideGameOverAd();
   addShake(6); burst(p.x, p.y, 18, TH().accent, 150);
+  audioNeedsHardRecover = true; reactivateNativeAudio();   // ad killed audio; the next swing recreates the context so gameplay sound returns
+  syncUI();   // back to an active run: hide the top-right group + restore the Pause icon (was showing Home/over state)
 }
 
 // ---------- input ----------
@@ -1976,7 +1985,7 @@ function renderShop(){
 let purchaseIntent = false, piTimer = 0;   // set on a deliberate IAP tap so restores/launch don't spray confetti
 function armPurchaseIntent(){ purchaseIntent = true; clearTimeout(piTimer); piTimer = setTimeout(() => { purchaseIntent = false; }, 90000); }   // auto-disarm if the buy is cancelled
 function celebratePurchase(label){
-  playFanfare();   // resume audio if the StoreKit sheet suspended it, then play the fanfare
+  queueFanfare();   // the StoreKit sheet killed the audio graph; the fanfare plays on the player's next tap
   haptic('success');
   const toast = document.getElementById('fxToast');
   if (toast){ toast.textContent = `✓ ${label} unlocked!`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
@@ -2304,7 +2313,7 @@ function doubleCoins(){
   saveGame();
   const toast = document.getElementById('fxToast');
   if (toast){ toast.innerHTML = `<span class="ci">C</span> Coins doubled! +${fmt(bonus)}`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
-  playFanfare(); haptic('success');
+  queueFanfare(); haptic('success');   // ad killed the audio graph; fanfare + gameplay sound come back on the next tap
   showOverButtons();                                                  // refresh the Free-Play over buttons
   if (document.getElementById('shareCard').classList.contains('show')) showShareCard();   // refresh the daily card's coin line
 }
