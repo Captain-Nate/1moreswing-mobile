@@ -55,7 +55,8 @@
     background:rgba(13,17,23,.6); padding:5px 12px; border-radius:999px; }
   #footer a { color:#9aa4b0; text-decoration:underline; }
   #footer a:hover { color:#e6edf3; }
-  #ui { position:fixed; top:calc(16px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); display:flex; gap:10px; z-index:10; }
+  #ui { position:fixed; top:calc(16px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; z-index:10; }
+  .uibreak { flex-basis:100%; height:0; }   /* forces the mode button onto its own row below the icons */
   #ui button { width:42px; height:42px; border-radius:12px; border:1px solid var(--accent,#58a6ff);
     background:rgba(22,27,34,.85); color:#e6edf3; font-size:16px; cursor:pointer;
     display:flex; align-items:center; justify-content:center; line-height:1;
@@ -286,12 +287,16 @@
     -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.45);
     transition:transform .08s; }
   #playBtn:active { transform:scale(.95); }
-  #titleLbBtn { margin-top:14px; padding:12px 32px; border:none; border-radius:999px;
-    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:16px; cursor:pointer;
+  #titleLbBtn { margin-top:14px; padding:14px 32px; border:none; border-radius:999px;
+    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
     display:inline-flex; align-items:center; gap:8px; -webkit-tap-highlight-color:transparent;
     box-shadow:0 8px 26px rgba(0,0,0,.45); transition:transform .08s; }
   #titleLbBtn svg { display:block; }
   #titleLbBtn:active { transform:scale(.95); }
+  #titleModeBtn { margin-top:14px; padding:14px 32px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
+    background:rgba(22,27,34,.55); color:var(--accent,#58a6ff); font-weight:800; font-size:18px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; transition:transform .08s; }
+  #titleModeBtn:active { transform:scale(.95); }
   #quitBtn { margin-top:14px; padding:9px 26px; border-radius:999px; border:1px solid #30363d;
     background:transparent; color:#8b949e; font-weight:600; font-size:14px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; }
@@ -301,13 +306,13 @@
   #titleScreen .titleLinks a { color:#9aa4b0; text-decoration:underline; }
   /* "Menu" button shown over the pause overlay to return to the title */
   #resumeBtn { position:fixed; left:50%; top:calc(50% + 30px); transform:translateX(-50%);
-    z-index:16; display:none; padding:12px 34px; border-radius:999px; border:none;
-    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:16px; cursor:pointer;
+    z-index:16; display:none; padding:14px 34px; border-radius:999px; border:none;
+    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; box-shadow:0 8px 24px rgba(0,0,0,.4); }
   #resumeBtn.show { display:block; }
-  #toTitleBtn { position:fixed; left:50%; top:calc(50% + 92px); transform:translateX(-50%);
-    z-index:16; display:none; padding:10px 22px; border-radius:999px; border:1px solid #30363d;
-    background:rgba(22,27,34,.92); color:#e6edf3; font-weight:700; font-size:14px; cursor:pointer;
+  #toTitleBtn { position:fixed; left:50%; top:calc(50% + 100px); transform:translateX(-50%);
+    z-index:16; display:none; padding:14px 34px; border-radius:999px; border:1px solid #30363d;
+    background:rgba(22,27,34,.92); color:#e6edf3; font-weight:800; font-size:18px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; }
   #toTitleBtn.show { display:block; }
 
@@ -344,12 +349,13 @@
 <canvas id="c"></canvas>
 <div id="title">1 MORE <b>SWING</b></div>
 <div id="ui">
-  <button id="modeBtn" title="Daily / Free Play">&#128197;</button>
   <button id="shopBtn" title="Shop"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/><path d="M2 3h3l2.4 12.4a1.5 1.5 0 0 0 1.5 1.2h8.2a1.5 1.5 0 0 0 1.5-1.2L22 7H6"/></svg></button>
   <button id="muteBtn" title="Mute">&#128266;</button>
   <button id="colorBtn" title="Toggle colour"><span class="dot"></span></button>
   <button id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   <button id="pauseBtn" title="Pause"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.4"/><rect x="13.5" y="5" width="4" height="14" rx="1.4"/></svg></button>
+  <span class="uibreak"></span>
+  <button id="modeBtn" title="Daily / Free Play">&#128197;</button>
 </div>
 <div id="overBtns">
   <button id="reviveBtn">▶ Continue · Ad</button>
@@ -383,6 +389,7 @@
   <div id="streakChip"></div>
   <button id="playBtn">&#9654; Play</button>
   <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg> Leaderboard</button>
+  <button id="titleModeBtn">Daily Challenge</button>
   <button id="quitBtn">Quit</button>
   <div class="titleLinks">
     <a href="#" id="aboutLink">About</a> &middot; <a href="#" id="privacyLink">Privacy</a>
@@ -533,10 +540,13 @@ function resize(){
   cv.width = W * DPR; cv.height = H * DPR;
   ctx.setTransform(DPR,0,0,DPR,0,0);
   const ps = getComputedStyle(safeProbe);
-  SAFE_TOP = parseFloat(ps.paddingTop) || 0;
-  SAFE_RIGHT = parseFloat(ps.paddingRight) || 0;
-  SAFE_BOTTOM = parseFloat(ps.paddingBottom) || 0;
-  SAFE_LEFT = parseFloat(ps.paddingLeft) || 0;
+  // Sticky: keep the largest inset ever measured. Portrait-locked, so insets never shrink — but a
+  // full-screen ad / relayout can transiently report 0, which would drop the HUD under the notch.
+  // Never let that spurious 0 win.
+  SAFE_TOP = Math.max(SAFE_TOP, parseFloat(ps.paddingTop) || 0);
+  SAFE_RIGHT = Math.max(SAFE_RIGHT, parseFloat(ps.paddingRight) || 0);
+  SAFE_BOTTOM = Math.max(SAFE_BOTTOM, parseFloat(ps.paddingBottom) || 0);
+  SAFE_LEFT = Math.max(SAFE_LEFT, parseFloat(ps.paddingLeft) || 0);
 }
 window.addEventListener('resize', resize);
 // Safe-area insets aren't applied until WebKit processes viewport-fit, which can
@@ -1542,6 +1552,8 @@ function syncUI(){
   muteBtn.title = muted ? 'Unmute' : 'Mute';
   modeBtn.innerHTML = mode === 'daily' ? 'Daily' : '&#8734; Free Play'; // ∞ = endless Free Play
   modeBtn.title = mode === 'daily' ? 'Daily challenge — tap for Free Play' : 'Free Play — tap for Daily';
+  const titleModeLabel = document.getElementById('titleModeBtn');
+  if (titleModeLabel) titleModeLabel.innerHTML = mode === 'daily' ? 'Daily Challenge' : '&#8734; Free Play';
   // favicon follows the current colour scheme
   const fav = document.getElementById('favicon');
   if (fav){
@@ -1553,9 +1565,11 @@ function syncUI(){
   // cleaner look: during an active run show only the Pause button (top-right). The
   // mode / shop / sound / theme buttons appear when paused, on the game-over screen, or on the title.
   const playing = !paused && !over && !titleOpen;
-  ['modeBtn','shopBtn','muteBtn','colorBtn'].forEach(id => {
+  ['shopBtn','muteBtn','colorBtn'].forEach(id => {
     const b = document.getElementById(id); if (b) b.style.display = playing ? 'none' : '';
   });
+  // upper-right mode button shows only when paused/over; on the title it lives in the center stack instead
+  const modeUp = document.getElementById('modeBtn'); if (modeUp) modeUp.style.display = (playing || titleOpen) ? 'none' : '';
   const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
   const sc = document.getElementById('streakChip');   // 🔥 streak status + next reward on the title screen
   if (sc){
@@ -1732,6 +1746,7 @@ pauseBtn.addEventListener('click', () => {   // doubles as Home (→ title) on t
 });
 muteBtn.addEventListener('click', ()=>{ muted = !muted; if (!muted) resumeAudio(); syncUI(); saveGame(); });
 modeBtn.addEventListener('click', ()=>{ mode = mode === 'daily' ? 'free' : 'daily'; saveGame(); newRun(); syncUI(); });
+document.getElementById('titleModeBtn').addEventListener('click', ()=>{ mode = mode === 'daily' ? 'free' : 'daily'; saveGame(); syncUI(); });  // title: just switch mode; Play starts the run in it
 
 // ---------- share result (spoiler-free) ----------
 function shareText(){
