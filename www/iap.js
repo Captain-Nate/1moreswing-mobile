@@ -42,19 +42,28 @@
       var offer = p && p.getOffer && p.getOffer();
       if (offer) offer.order();
     }
-    function applyOwned() {
-      productIds.forEach(function (id) {
-        var own = false; try { own = store.owned(id); } catch (e) {}
-        if (own && window.OMS_applyEntitlement) window.OMS_applyEntitlement(id);
+    // Only grant a theme when its transaction is FINISHED (a genuinely completed purchase).
+    // store.owned()/isOwned also returns true for an APPROVED-but-unfinished transaction, so polling
+    // it mid-purchase would grant + persist a theme that the user then cancels. Gate strictly on FINISHED.
+    function grantFinished() {
+      var seen = {};
+      (store.localReceipts || []).forEach(function (receipt) {
+        (receipt.transactions || []).forEach(function (tx) {
+          if (!tx || tx.state !== CdvPurchase.TransactionState.FINISHED || tx.isConsumed) return;
+          (tx.products || []).forEach(function (p) {
+            if (p && p.id && !seen[p.id]) { seen[p.id] = true; if (window.OMS_applyEntitlement) window.OMS_applyEntitlement(p.id); }
+          });
+        });
       });
     }
-    function refresh() { applyOwned(); if (window.OMS_onIapUpdated) window.OMS_onIapUpdated(); }
+    function refresh() { grantFinished(); if (window.OMS_onIapUpdated) window.OMS_onIapUpdated(); }
 
     store.when()
-      .productUpdated(refresh)
-      .receiptUpdated(refresh)      // ownership reloads (restore / launch entitlements) surface here
+      .productUpdated(function () { if (window.OMS_onIapUpdated) window.OMS_onIapUpdated(); })  // price/UI refresh only — never grant mid-flow
+      .receiptUpdated(refresh)      // restore / launch entitlements surface here (FINISHED only, so cancelled/approved don't leak)
       .approved(function (t) { t.verify(); })
-      .verified(function (r) { r.finish(); refresh(); });
+      .verified(function (r) { r.finish(); })
+      .finished(refresh);           // a completed purchase reaches FINISHED here -> grant now
     store.error(function (e) { console.warn('[IAP]', (e && e.message) || e); });
 
     window.OMS_IAP = {
