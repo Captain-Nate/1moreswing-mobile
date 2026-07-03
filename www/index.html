@@ -56,16 +56,17 @@
   #footer a { color:#9aa4b0; text-decoration:underline; }
   #footer a:hover { color:#e6edf3; }
   #ui { position:fixed; top:calc(16px + env(safe-area-inset-top)); right:calc(16px + env(safe-area-inset-right)); display:flex; gap:10px; z-index:10; }
-  #ui button { width:42px; height:42px; border-radius:12px; border:1px solid #30363d;
+  #ui button { width:42px; height:42px; border-radius:12px; border:1px solid var(--accent,#58a6ff);
     background:rgba(22,27,34,.85); color:#e6edf3; font-size:16px; cursor:pointer;
     display:flex; align-items:center; justify-content:center; line-height:1;
     -webkit-tap-highlight-color:transparent; transition:transform .08s, border-color .15s; }
   #ui button:hover { border-color:#8b949e; }
   #ui button:active { transform:scale(.92); }
-  #ui #modeBtn { width:auto; padding:0 13px; gap:6px; font-size:13px; font-weight:800;
+  #ui button svg { width:22px; height:22px; }   /* uniform, slightly bigger icons (overrides inline svg dims) */
+  #ui #modeBtn { width:auto; padding:0 14px; gap:6px; font-size:14px; font-weight:800;
     border-color:var(--accent,#58a6ff); color:var(--accent,#58a6ff); }
   #colorBtn { font-size:0; }
-  #colorBtn .dot { width:18px; height:18px; border-radius:50%; box-shadow:0 0 8px currentColor; }
+  #colorBtn .dot { width:21px; height:21px; border-radius:50%; box-shadow:0 0 8px currentColor; }
   #overBtns { position:fixed; left:50%; top:calc(50% + 116px); transform:translateX(-50%);
     display:none; gap:10px; z-index:15; }
   #overBtns.show { display:flex; }
@@ -240,7 +241,7 @@
     #title { display:none; }                 /* branding hidden during play to avoid button overlap */
     /* keep insets here too — this query overrides the base rules' env() offsets */
     #ui { top:calc(10px + env(safe-area-inset-top)); right:calc(10px + env(safe-area-inset-right)); gap:7px; }
-    #ui button { width:38px; height:38px; font-size:15px; border-radius:10px; }
+    #ui button { width:44px; height:44px; font-size:17px; border-radius:11px; }
     /* lift above the home indicator (hint fades on first touch) */
     #hint { font-size:11px; bottom:calc(46px + env(safe-area-inset-bottom)); padding:5px 11px; max-width:88vw; }
   }
@@ -735,7 +736,7 @@ const COSMETICS = {
     // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
     { id:'prism',   name:'Prism',        cost:0, premium:true, ultra:true },
     // earned, not bought — unlocks at 100 all-time wins on the leaderboard
-    { id:'mono',    name:'Minimalist',   cost:0, winUnlock:100 },
+    { id:'mono',    name:'Epic Minimalist', cost:0, winUnlock:100 },
   ],
   trail: [
     { id:'classic', name:'Classic Trail', cost:0      },
@@ -1076,6 +1077,15 @@ let actx = null, muted = false;
 let hapticsMode = 'full';   // 'full' = taps every swing, 'key' = banks/milestones only, 'off' = none (mobile only)
 let rocketLaunchT = -1e9;   // Liftoff theme: timestamp of the current single rocket flight (armed on run start / preview)
 function audioCtx(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+// iOS audio interruptions (toggling the silent switch, calls, backgrounding) leave the
+// AudioContext 'suspended' OR 'interrupted' — resume anything not already running so sound
+// comes back (haptics keep working, which is why only the audio dies). Recreate if it closed.
+function resumeAudio(){
+  let a = audioCtx(); if (!a) return;
+  if (a.state === 'closed'){ actx = null; a = audioCtx(); if (!a) return; }
+  if (a.state !== 'running'){ try { a.resume(); } catch(e){} }
+}
+document.addEventListener('pointerdown', resumeAudio, true);   // any tap recovers audio after an interruption
 function tone(freq, dur, type, vol, slideTo){
   if (muted) return; const a = audioCtx(); if(!a) return;
   const o=a.createOscillator(), g=a.createGain(), t0=a.currentTime;
@@ -1101,6 +1111,22 @@ function sfxBank(){ tone(620,0.12,'triangle',0.16); setTimeout(()=>tone(820,0.14
 function sfxSkip(n){ for (let i=0;i<=n;i++) setTimeout(()=>tone(520+i*150, 0.10, 'square', 0.12), i*50); }
 function sfxDie(){ tone(220, 0.5, 'sawtooth', 0.18, 55); }
 function sfxPurchase(){ [523,659,784,1047,1319].forEach((f,i)=> setTimeout(()=> tone(f, 0.22, 'triangle', 0.16), i*65)); }   // C-E-G-C-E fanfare
+// after a rewarded ad or the StoreKit sheet the audio context is suspended/interrupted (and iOS
+// may leave the audio session deactivated) — resume it, and if that doesn't yield a live context
+// shortly after, recreate it (a fresh context establishes a fresh audio session) before playing.
+function playFanfare(){
+  let a = audioCtx(); if (!a) return;
+  if (a.state === 'running'){ sfxPurchase(); return; }
+  a.resume().catch(function(){});
+  setTimeout(function(){
+    let b = audioCtx();
+    if (b && b.state === 'running'){ sfxPurchase(); return; }
+    try { if (b) b.close(); } catch(e){}
+    actx = null;                                   // recreate on next audioCtx() -> fresh AVAudioSession
+    let c = audioCtx();
+    if (c) c.resume().then(sfxPurchase).catch(sfxPurchase); else sfxPurchase();
+  }, 350);
+}
 
 // ---- haptics (native only; no-op on web). swingTier taps fire only in 'full' mode ----
 function haptic(kind, swingTier){
@@ -1236,7 +1262,7 @@ function showCoach(html, ms){
 function press(){
   const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
   if (paused || shopOpen || lbOpen || titleOpen || infoOpen || settingsOpen || previewing) return;
-  const ac = audioCtx(); if (ac && ac.state === 'suspended') ac.resume();   // unlock audio on gesture
+  resumeAudio();   // unlock/recover audio on gesture (handles iOS 'interrupted' state, not just 'suspended')
   // Daily finish: a tap shows the result card instead of restarting — restarting here would
   // wipe total/runRoute/runCoinsEarned before the (delayed) share card reads them → empty card.
   if (state === 'finished'){
@@ -1512,6 +1538,12 @@ function syncUI(){
   }
   // screens: title overlay, top-right button mode, and the pause "Menu" button
   const over = (state === 'dead' || state === 'finished');
+  // cleaner look: during an active run show only the Pause button (top-right). The
+  // mode / shop / sound / theme buttons appear when paused, on the game-over screen, or on the title.
+  const playing = !paused && !over && !titleOpen;
+  ['modeBtn','shopBtn','muteBtn','colorBtn'].forEach(id => {
+    const b = document.getElementById(id); if (b) b.style.display = playing ? 'none' : '';
+  });
   const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
   const sc = document.getElementById('streakChip');   // 🔥 streak status + next reward on the title screen
   if (sc){
@@ -1686,7 +1718,7 @@ colorBtn.addEventListener('click', ()=>{
 pauseBtn.addEventListener('click', () => {   // doubles as Home (→ title) on the run-over screen
   if (state === 'dead' || state === 'finished') showTitle(); else togglePause();
 });
-muteBtn.addEventListener('click', ()=>{ muted = !muted; syncUI(); saveGame(); });
+muteBtn.addEventListener('click', ()=>{ muted = !muted; if (!muted) resumeAudio(); syncUI(); saveGame(); });
 modeBtn.addEventListener('click', ()=>{ mode = mode === 'daily' ? 'free' : 'daily'; saveGame(); newRun(); syncUI(); });
 
 // ---------- share result (spoiler-free) ----------
@@ -1944,7 +1976,8 @@ function renderShop(){
 let purchaseIntent = false, piTimer = 0;   // set on a deliberate IAP tap so restores/launch don't spray confetti
 function armPurchaseIntent(){ purchaseIntent = true; clearTimeout(piTimer); piTimer = setTimeout(() => { purchaseIntent = false; }, 90000); }   // auto-disarm if the buy is cancelled
 function celebratePurchase(label){
-  sfxPurchase(); haptic('success');
+  playFanfare();   // resume audio if the StoreKit sheet suspended it, then play the fanfare
+  haptic('success');
   const toast = document.getElementById('fxToast');
   if (toast){ toast.textContent = `✓ ${label} unlocked!`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
   const fx = document.getElementById('fx'); if (!fx) return;
@@ -1976,12 +2009,12 @@ let appActive = true, pendingCelebration = null;
 function flushCelebration(){
   if (!pendingCelebration) return;
   const l = pendingCelebration; pendingCelebration = null;
-  setTimeout(() => celebratePurchase(l), 450);   // let Apple's dialog finish dismissing first
+  setTimeout(() => celebratePurchase(l), 150);   // brief beat for the dialog to finish dismissing
 }
 if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   Capacitor.Plugins.App.addListener('appStateChange', ({ isActive }) => {
     appActive = isActive;
-    if (isActive) flushCelebration();   // user pressed OK / dialog dismissed → app active again
+    if (isActive){ flushCelebration(); resumeAudio(); }   // user pressed OK / returned → app active again
   });
 }
 function celebratePurchaseWhenActive(label){
@@ -1993,7 +2026,7 @@ function celebratePurchaseWhenActive(label){
   // StoreKit Testing, which doesn't drive the app lifecycle) — wait long enough that the
   // purchase sheet has dismissed. On a real device the appStateChange→active path fires
   // first, so this longer delay never actually applies there.
-  if (appActive) setTimeout(flushCelebration, 1300);
+  if (appActive) setTimeout(flushCelebration, 250);   // grant now lands after the sheet closes (on FINISHED) with the app already active, so no long fallback needed
 }
 
 function buyItem(cat, id){
@@ -2271,7 +2304,7 @@ function doubleCoins(){
   saveGame();
   const toast = document.getElementById('fxToast');
   if (toast){ toast.innerHTML = `<span class="ci">C</span> Coins doubled! +${fmt(bonus)}`; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); }
-  sfxPurchase(); haptic('success');
+  playFanfare(); haptic('success');
   showOverButtons();                                                  // refresh the Free-Play over buttons
   if (document.getElementById('shareCard').classList.contains('show')) showShareCard();   // refresh the daily card's coin line
 }
@@ -3012,15 +3045,15 @@ function draw(){
     ctx.fillText(fmt(total), 13, 46);
     let yy = 65;
     if (pending > 0){
-      ctx.fillStyle = TH().accent; ctx.font = '600 13px ui-sans-serif, system-ui';
-      ctx.fillText(`+${fmt(pending)} at risk`, 14, yy); yy += 17;
+      ctx.fillStyle = TH().accent; ctx.font = '600 11px ui-sans-serif, system-ui';
+      ctx.fillText(`+${fmt(pending)} at risk`, 14, yy); yy += 16;
     }
-    ctx.fillStyle = '#ffd95e'; ctx.font = '700 11px ui-sans-serif, system-ui';
+    ctx.fillStyle = '#ffd95e'; ctx.font = '700 10px ui-sans-serif, system-ui';
     ctx.fillText(`★ High Score  ${fmt(best)}`, 14, yy);
     if (mode === 'free'){                                  // live coins-earned tally for this Free Play run
       yy += 17;
       drawCoinIcon(14 + 6, yy - 4, 6);
-      ctx.fillStyle = '#f0c34a'; ctx.font = '700 11px ui-sans-serif, system-ui'; ctx.textAlign = 'left';
+      ctx.fillStyle = '#f0c34a'; ctx.font = '700 10px ui-sans-serif, system-ui'; ctx.textAlign = 'left';
       ctx.fillText(`Coins Earned  ${fmt(runCoinsEarned)}`, 30, yy);
     }
   } else {
