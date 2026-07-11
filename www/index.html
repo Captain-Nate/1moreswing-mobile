@@ -320,13 +320,17 @@
   #resumeBtn { position:fixed; left:50%; top:calc(50% + 30px); transform:translateX(-50%);
     z-index:16; display:none; padding:14px 34px; border-radius:999px; border:none;
     background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent; box-shadow:0 8px 24px rgba(0,0,0,.4); }
+    -webkit-tap-highlight-color:transparent; box-shadow:0 8px 24px rgba(0,0,0,.4);
+    transition:transform .08s; }
   #resumeBtn.show { display:block; }
+  /* press feedback like the title buttons — keep translateX(-50%) so it stays centred while it shrinks */
+  #resumeBtn:active { transform:translateX(-50%) scale(.95); }
   #toTitleBtn { position:fixed; left:50%; top:calc(50% + 100px); transform:translateX(-50%);
     z-index:16; display:none; padding:14px 34px; border-radius:999px; border:1px solid #30363d;
     background:rgba(22,27,34,.92); color:#e6edf3; font-weight:800; font-size:18px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent; }
+    -webkit-tap-highlight-color:transparent; transition:transform .08s; }
   #toTitleBtn.show { display:block; }
+  #toTitleBtn:active { transform:translateX(-50%) scale(.95); }
 
   /* ---- in-app About / Privacy / Settings pages ---- */
   #info, #settings { position:fixed; inset:0; z-index:22; display:none; box-sizing:border-box;
