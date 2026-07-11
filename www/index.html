@@ -857,7 +857,13 @@ function loadGame(){
   if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
 }
 
+// Gate cloud writes until the initial iCloud pull has had a chance to land. Otherwise a fresh
+// install's default state (0 coins, no themes) writes up and clobbers the real save before
+// mergeCloudSave() can read it down — which is how a reinstall wipes progress. Flipped true once we
+// pull real cloud data, or after a grace window (brand-new user / genuinely empty iCloud).
+let cloudReady = false;
 function writeToCloud(){
+  if (!cloudReady) return;
   const p = window.OMS_CloudSave; if (!p) return;
   p.set({ key:'oms_save', value:JSON.stringify(saveSnapshot()) }).catch(()=>{});
 }
@@ -866,6 +872,7 @@ async function mergeCloudSave(){
   try {
     const { value } = await p.get({ key:'oms_save' });
     if (!value) return;
+    cloudReady = true;   // real cloud data exists — safe to write from here (won't overwrite it with defaults)
     const c = JSON.parse(value); let changed = false;
     if (typeof c.coins === 'number' && c.coins > coins){ coins = c.coins; changed = true; }
     // On a fresh install (no local id) adopt the cloud's player id so the player's
@@ -3291,6 +3298,20 @@ function frame(now){
 }
 loadGame();
 mergeCloudSave();   // async: pulls cloud save from iCloud KV; updates coins/owned/equipped then re-syncs
+// iCloud KV downloads asynchronously — a fresh install's first read usually precedes the value landing,
+// so a one-shot merge restores nothing on reinstall. Retry a few times, and re-merge whenever the native
+// plugin reports the cloud data actually arrived (didChangeExternallyNotification).
+[1200, 3000, 6000].forEach(ms => setTimeout(mergeCloudSave, ms));
+if (window.OMS_CloudSave && OMS_CloudSave.addListener) OMS_CloudSave.addListener('cloudChanged', mergeCloudSave);
+// If no cloud data ever arrives (genuinely empty iCloud / brand-new user), enable writes after the
+// pull window so their progress still gets backed up. Do one last read first, so a slow-but-real
+// sync isn't mistaken for an empty cloud and overwritten with defaults; mergeCloudSave() flips
+// cloudReady itself if data finally landed.
+setTimeout(async () => {
+  if (cloudReady) return;
+  try { await mergeCloudSave(); } catch (e) {}
+  if (!cloudReady){ cloudReady = true; writeToCloud(); }
+}, 8000);
 newRun();
 syncUI();
 fetchWins().then(checkWinUnlock).catch(()=>{});   // unlock Minimalist if already at 100 wins, even without opening the leaderboard

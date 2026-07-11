@@ -114,9 +114,26 @@ public class CloudSavePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "set", returnType: CAPPluginReturnPromise),
     ]
 
+    override public func load() {
+        // iCloud KV downloads asynchronously — a fresh install's first read almost
+        // always precedes the value landing. Kick a sync at launch and notify JS when
+        // cloud data actually arrives so it can re-merge (otherwise reinstalls restore nothing).
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(cloudChanged(_:)),
+            name: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: NSUbiquitousKeyValueStore.default)
+        NSUbiquitousKeyValueStore.default.synchronize()
+    }
+
+    @objc func cloudChanged(_ note: Notification) {
+        notifyListeners("cloudChanged", data: [:])
+    }
+
     @objc func get(_ call: CAPPluginCall) {
         let key = call.getString("key") ?? ""
         guard !key.isEmpty else { call.reject("key required"); return }
+        NSUbiquitousKeyValueStore.default.synchronize()
         let val = NSUbiquitousKeyValueStore.default.string(forKey: key)
         call.resolve(["value": val as Any])
     }
