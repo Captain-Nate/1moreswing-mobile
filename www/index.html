@@ -257,6 +257,18 @@
     letter-spacing:1px; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.55); }
   #titleScreen .bigtitle b { color:var(--accent,#58a6ff); }
   #titleScreen .tagline { margin:0 0 4px; color:#8b949e; font-size:14px; letter-spacing:.4px; }
+  /* personalized greeting + tappable name entry (reuses playerName; syncs with the leaderboard) */
+  #titleGreet { margin:-6px 0 0; text-align:center; min-height:22px; }
+  #titleGreet .greetTxt { color:#c9d3de; font-size:15px; font-weight:600; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; }
+  #titleGreet .greetTxt b { color:var(--accent,#58a6ff); }
+  #titleGreet .greetEmpty { color:var(--accent,#58a6ff); font-weight:700; }
+  #titleGreet .greetErr { color:#f85149; font-weight:700; cursor:default; }
+  #titleGreet .greetEdit { opacity:.5; font-weight:400; margin-left:3px; }
+  #titleGreet input { width:210px; max-width:70vw; text-align:center; font-size:15px; font-weight:600;
+    padding:7px 14px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
+    background:rgba(22,27,34,.75); color:#e6edf3; outline:none; }
+  #titleGreet input::placeholder { color:#6b7480; font-weight:400; }
   #streakChip { display:none; margin:2px 0 14px; padding:6px 14px; border-radius:999px;
     background:rgba(255,140,40,.14); border:1px solid rgba(255,140,40,.45); color:#ffb572;
     font-size:13.5px; font-weight:700; letter-spacing:.3px; cursor:pointer;
@@ -386,6 +398,7 @@
 <div id="titleScreen" class="show">
   <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
   <p class="tagline">Swing &middot; Skip &middot; Bank</p>
+  <div id="titleGreet"></div>
   <div id="streakChip"></div>
   <button id="playBtn">&#9654; Play</button>
   <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg> Leaderboard</button>
@@ -847,7 +860,7 @@ function loadGame(){
     if (typeof s.muted === 'boolean') muted = s.muted;
     if (s.hapticsMode === 'full' || s.hapticsMode === 'key' || s.hapticsMode === 'off') hapticsMode = s.hapticsMode;
     if (s.mode === 'daily' || s.mode === 'free') mode = s.mode;
-    if (typeof s.name === 'string') playerName = s.name;
+    if (typeof s.name === 'string'){ playerName = s.name; if (playerName.trim()) returningPlayer = true; }
     if (typeof s.lastDailyDone === 'number') lastDailyDone = s.lastDailyDone;
     if (typeof s.streak === 'number') streak = s.streak;
     if (typeof s.bestStreak === 'number') bestStreak = s.bestStreak;
@@ -890,7 +903,7 @@ async function mergeCloudSave(){
     if (c.muted !== undefined){ muted = !!c.muted; changed = true; }
     if (c.hapticsMode === 'full' || c.hapticsMode === 'key' || c.hapticsMode === 'off'){ hapticsMode = c.hapticsMode; changed = true; }
     if (c.mode === 'daily' || c.mode === 'free'){ mode = c.mode; changed = true; }
-    if (c.name){ playerName = c.name; changed = true; }
+    if (c.name){ playerName = c.name; returningPlayer = true; changed = true; }
     if (typeof c.lastDailyDone === 'number' && c.lastDailyDone > lastDailyDone){   // newer completion wins — adopt the streak that goes with it
       lastDailyDone = c.lastDailyDone;
       if (typeof c.streak === 'number') streak = c.streak;
@@ -1045,6 +1058,8 @@ let finishX = null;        // x of the daily finish line (null = endless / Free 
 let runTime = 0, finishTime = 0, finishBonus = 0;   // active play time + finish time-bonus
 let runRoute = [], runCoinsEarned = 0;              // per-run stats for the share card (runRoute[i] = grabbed route anchor i+1)
 let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false, editingName = false;
+let editingTitleName = false;   // title-screen name field is in edit mode
+let returningPlayer = false;    // had a saved name at launch (localStorage or iCloud) → greet "Welcome back" vs "Hey" for first-timers
 let myWins = 0;   // player's all-time wins (from the leaderboard) — drives the Minimalist theme unlock
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
 let usedRevive = false, adShowing = false, doubledRun = false;
@@ -1551,6 +1566,47 @@ const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="curren
 const PLAY_ICON  = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
 const SOUND_ON  = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>';
 const SOUND_OFF = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+// Title-screen greeting + tappable name entry. Reuses playerName, so it stays in sync with the
+// leaderboard (same var, same saveGame path) and now persists across reinstalls via CloudSave.
+function renderTitleGreet(){
+  const el = document.getElementById('titleGreet'); if (!el) return;
+  if (!titleOpen){ editingTitleName = false; return; }   // only lives on the title; reset edit state on leave
+  if (editingTitleName){
+    if (document.getElementById('greetInput')) return;   // already editing — don't rebuild (would drop focus)
+    el.innerHTML = `<input id="greetInput" maxlength="16" placeholder="enter your name" value="${escapeHtml(playerName)}">`;
+    const inp = document.getElementById('greetInput');
+    inp.focus(); inp.select();
+    // Commit on blur (tap Play / tap away) or Return. Reject profane names (isClean) without blocking
+    // Play: a rejected name is simply not saved — the previous name stays. Never persists profanity.
+    const commit = () => {
+      if (!editingTitleName) return;
+      const v = inp.value.trim().slice(0, 16);
+      editingTitleName = false;
+      if (v && !isClean(v)){ renderTitleGreet(); flashGreetMsg('That name isn’t allowed'); return; }
+      playerName = v; saveGame(); renderTitleGreet();
+    };
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter' || e.keyCode === 13){ e.preventDefault(); commit(); } });
+    return;
+  }
+  const name = playerName.trim();
+  if (!name){
+    el.innerHTML = `<span class="greetTxt greetEmpty">&#9998; Tap to set your name</span>`;
+  } else {
+    const greet = returningPlayer ? 'Welcome back,' : 'Hey,';
+    const wave  = returningPlayer ? '' : ' &#128075;';
+    el.innerHTML = `<span class="greetTxt">${greet} <b>${escapeHtml(name)}</b>${wave} <span class="greetEdit">&#9998;</span></span>`;
+  }
+  const t = el.querySelector('.greetTxt');
+  if (t) t.addEventListener('click', () => { editingTitleName = true; renderTitleGreet(); });
+}
+// brief inline warning in the greeting slot (e.g. rejected name), auto-reverts to the normal greeting
+function flashGreetMsg(msg){
+  const el = document.getElementById('titleGreet'); if (!el) return;
+  el.innerHTML = `<span class="greetTxt greetErr">${escapeHtml(msg)}</span>`;
+  clearTimeout(flashGreetMsg._t);
+  flashGreetMsg._t = setTimeout(renderTitleGreet, 1800);
+}
 function syncUI(){
   document.documentElement.style.setProperty('--accent', TH().accent);
   const cdot = colorBtn.querySelector('.dot');
@@ -1600,6 +1656,7 @@ function syncUI(){
     sc.innerHTML = txt + ` <span style="opacity:.55;font-weight:400">&#9656;</span>`;
     sc.classList.add('show');
   }
+  renderTitleGreet();
   const pausedMenu = paused && !titleOpen && !over;
   const tt = document.getElementById('toTitleBtn');  if (tt) tt.classList.toggle('show', pausedMenu);
   const rb = document.getElementById('resumeBtn');   if (rb) rb.classList.toggle('show', pausedMenu);
@@ -2205,13 +2262,21 @@ function tagOf(pid){ let h=5381; const s=String(pid); for(let i=0;i<s.length;i++
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 // profanity filter (must match the server's isClean in functions/api/scores.js)
-const BANNED = [
-  'fuck','shit','bitch','cunt','asshole','bastard','slut','whore','piss','dick',
-  'pussy','dildo','jizz','wank','twat','bollock','boner','semen','ejaculat',
-  'masturbat','blowjob','handjob','cumshot','cocksuck','cockhead','motherfuck',
-  'bullshit','dumbass','jackass','dickhead','nigger','nigga','faggot','retard',
-  'rapist','molest','pedo','paedo','nazi','kike','spic','chink','coon','wetback',
-  'tranny','dyke','porn','hentai','fellatio','goatse','scrotum'
+// Two tiers to avoid flagging real names (the "Scunthorpe problem"):
+//  • SUBSTR — vulgar terms that virtually never occur inside legitimate names → blocked anywhere
+//    (so compounds like "fuckface", "shithead", "dickhead" are still caught).
+//  • WORD — terms that DO occur inside real names/words → blocked only as a standalone word,
+//    never embedded: dick→Dickinson, ass→Cassidy, cock→Cockburn, cunt→Scunthorpe, nazi→Nazir/Ignazio,
+//    rapist→therapist, porn→Porntip, coon→raccoon, spic→spicy, dyke→Van Dyke, semen→Semenov, piss→Pissarro.
+const BAN_SUBSTR = [
+  'fuck','shit','bitch','faggot','nigger','nigga','kike','motherfuck','cocksuck','cockhead',
+  'dickhead','asshole','dumbass','jackass','bullshit','pussy','whore','slut','dildo','jizz',
+  'blowjob','handjob','cumshot','ejaculat','masturbat','bollock','fellatio','goatse','molest',
+  'pedo','paedo','wetback','tranny','hentai','wank','twat','bastard','retard'
+];
+const BAN_WORD = [
+  'dick','cock','cunt','ass','anal','piss','cum','coon','spic','chink','dyke','fag',
+  'tit','tits','homo','nazi','rapist','porn','semen','boner','scrotum'
 ];
 function deleet(s){
   return String(s).toLowerCase()
@@ -2224,8 +2289,13 @@ function deleet(s){
     .replace(/[^a-z]/g,'');
 }
 function isClean(name){
-  const n = deleet(name), c = n.replace(/(.)\1+/g,'$1');
-  return !BANNED.some(w => n.includes(w) || c.includes(w));
+  const n = deleet(name), c = n.replace(/(.)\1+/g,'$1');   // c collapses runs: shiiit → shit
+  if (BAN_SUBSTR.some(w => n.includes(w) || c.includes(w))) return false;
+  // whole-word tier: block only if the normalized name IS the word (also catches "d i c k" → "dick")
+  // or a separate token equals it ("the dick") — never when embedded in a longer name.
+  const toks = String(name).toLowerCase().split(/[^a-z0-9]+/).map(deleet).filter(Boolean);
+  if (BAN_WORD.some(w => n === w || c === w || toks.includes(w))) return false;
+  return true;
 }
 async function fetchScores(day){ try{ const r=await fetch(`${API_BASE}/api/scores?day=${day}&platform=${PLATFORM}`); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
 async function fetchToken(){ try{ const r=await fetch(`${API_BASE}/api/token`); if(!r.ok) return ''; return (await r.json()).token||''; }catch(e){ return ''; } }
@@ -2267,7 +2337,8 @@ function renderLB(data){
   lbBody.innerHTML = html;
 
   const inp = document.getElementById('lbName');
-  if (inp){ inp.focus(); inp.addEventListener('input', ()=>{ playerName = inp.value.trim().slice(0,16); saveGame(); }); }
+  // store only clean names (isClean), and mirror the change onto the title-screen greeting
+  if (inp){ inp.focus(); inp.addEventListener('input', ()=>{ const v = inp.value.trim().slice(0,16); if (isClean(v)){ playerName = v; saveGame(); renderTitleGreet(); } }); }
   const edit = document.getElementById('lbEdit');
   if (edit) edit.addEventListener('click', e=>{ e.preventDefault(); editingName = true; renderLB(data); });
   const sub = document.getElementById('lbSubmit');
@@ -2278,7 +2349,7 @@ function renderLB(data){
       setTimeout(()=>{ sub.textContent = `Submit my ${fmt(lastScore)}`; sub.style.background = ''; sub.style.color = ''; }, 2000);
       return;
     }
-    playerName = nm; editingName = false; saveGame();
+    playerName = nm; editingName = false; saveGame(); renderTitleGreet();
     sub.textContent = 'Submitting…'; sub.disabled = true;
     const res = await submitScoreNow();
     submittedRun = !!res;
