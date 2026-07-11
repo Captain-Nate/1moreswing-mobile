@@ -832,7 +832,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, streak, bestStreak, coachSeen, remindersOn };
+  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, streak, best, bestStreak, coachSeen, remindersOn };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -867,6 +867,7 @@ function loadGame(){
     if (typeof s.name === 'string'){ playerName = s.name; if (playerName.trim()) returningPlayer = true; }
     if (typeof s.lastDailyDone === 'number') lastDailyDone = s.lastDailyDone;
     if (typeof s.streak === 'number') streak = s.streak;
+    if (typeof s.best === 'number') best = s.best;               // high score (highest banked run) — persist across sessions
     if (typeof s.bestStreak === 'number') bestStreak = s.bestStreak;
     if (typeof s.coachSeen === 'boolean') coachSeen = s.coachSeen;
     if (typeof s.remindersOn === 'boolean') remindersOn = s.remindersOn;
@@ -913,6 +914,7 @@ async function mergeCloudSave(){
       if (typeof c.streak === 'number') streak = c.streak;
       changed = true;
     }
+    if (typeof c.best === 'number' && c.best > best){ best = c.best; changed = true; }   // high score — keep the higher across devices
     if (typeof c.bestStreak === 'number' && c.bestStreak > bestStreak){ bestStreak = c.bestStreak; changed = true; checkStreakUnlock(); }
     if (c.coachSeen && !coachSeen){ coachSeen = true; changed = true; }
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
@@ -1487,6 +1489,7 @@ function showOverButtons(){
 
 function die(){
   best = Math.max(best, total);   // best = highest BANKED score
+  saveGame();                     // persist the new high score now — die() didn't save before, so best was lost on close
   state = 'dead';
   sfxDie(); haptic('heavy'); addShake(16); burst(p.x, p.y, 30, '#f85149', 260);
   lastScore = total; submittedRun = false;
