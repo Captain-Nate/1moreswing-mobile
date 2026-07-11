@@ -527,9 +527,12 @@ const ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 // safe-area insets (notch / Dynamic Island / home indicator), in CSS px
 let SAFE_TOP = 0, SAFE_BOTTOM = 0, SAFE_LEFT = 0, SAFE_RIGHT = 0;
-// hidden probe whose padding resolves env(safe-area-inset-*) to real px
+// hidden probe whose padding resolves env(safe-area-inset-*) to real px. It must stay laid out
+// with a real (non-zero) box: iOS WebKit can report 0 for env() padding on a 0×0 / visibility:hidden
+// element even when env() resolves fine for visible elements — that would draw the top-left HUD too
+// high, up under the notch / Dynamic Island. opacity:0 keeps it invisible but fully laid out.
 const safeProbe = document.createElement('div');
-safeProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;'
+safeProbe.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;z-index:-1;'
   + 'pointer-events:none;padding-top:env(safe-area-inset-top);'
   + 'padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);'
   + 'padding-left:env(safe-area-inset-left);';
@@ -559,7 +562,8 @@ window.addEventListener('load', resize);
 function recomputeSafeArea(){ resize(); setTimeout(resize, 120); setTimeout(resize, 500); }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) recomputeSafeArea(); });
 resize();
-setTimeout(resize, 200); setTimeout(resize, 600);
+requestAnimationFrame(() => requestAnimationFrame(resize));   // remeasure once layout + viewport-fit insets settle
+setTimeout(resize, 200); setTimeout(resize, 600); setTimeout(resize, 1200);
 
 let debug = false, runCount = 0, best = 0, paused = false;
 
@@ -583,6 +587,8 @@ const THEMES = {
   sunset:    { accent:'#ff8c42', glow:'#ffe0c0', rgb:'255,140,66',  bg:'sunset'    },
   autumn:    { accent:'#e0652b', glow:'#ffd8b0', rgb:'224,101,43',  bg:'autumn'    },
   storm:     { accent:'#9fb3d9', glow:'#d8e2f5', rgb:'159,179,217', bg:'storm'     },
+  // added 2026-07-04 (IAP product + web-repo parity still TODO). More themes queued in docs/pending-themes.md
+  fireworks: { accent:'#ffd23f', glow:'#fff0b8', rgb:'255,210,63',  bg:'fireworks' },  // night skyline + bursting fireworks
   // "Nations" — cheap recolor themes (timed to the World Cup); flag-accent colours, no custom bg
   brazil:      { accent:'#f7d417', glow:'#fff4b0', rgb:'247,212,23',  bg:'flag' },
   netherlands: { accent:'#ff7a18', glow:'#ffd9b0', rgb:'255,122,24',  bg:'flag' },
@@ -750,6 +756,8 @@ const COSMETICS = {
     { id:'storm',     name:'Thunderstorm',   cost:380000, premium:true },
     { id:'halloween', name:'Spooky Night',   cost:420000, premium:true, seasonal:true },
     { id:'winter',    name:'Winter Frost',   cost:450000, premium:true, seasonal:true },
+    // added 2026-07-04. More themes queued in docs/pending-themes.md (add back in a post-launch update)
+    { id:'fireworks', name:'Fireworks',      cost:460000, premium:true, seasonal:true },
     // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
     { id:'prism',   name:'Prism',        cost:0, premium:true, ultra:true },
     // earned, not bought — unlocks at 100 all-time wins on the leaderboard
@@ -2896,6 +2904,38 @@ function drawBackground(){
     ctx.fillStyle='rgba(255,235,130,0.95)'; ctx.beginPath(); ctx.arc(W*0.78,H*0.22,40,0,Math.PI*2); ctx.fill();
     const t=performance.now()/1000; ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.4;
     for(let i=0;i<6;i++){ const y=H*0.72+i*H*0.045; ctx.beginPath(); for(let x=0;x<=W;x+=12){ const yy=y+Math.sin(x*0.05+t*1.5+i)*2; x?ctx.lineTo(x,yy):ctx.moveTo(x,yy);} ctx.stroke(); }
+  } else if (TH().bg === 'fireworks'){
+    // night skyline + staggered fireworks bursts
+    vgrad(['#0a0a1e','#141033','#241a42']);
+    const t=performance.now()/1000;
+    // city skyline: two depth layers, lit window grids, rooftop setbacks + blinking aviation lights
+    const hsh=n=>{ const s=Math.sin(n*127.1+31.7)*43758.5453; return s-Math.floor(s); };
+    const skyline=(baseCol, seed, minH, maxH, wMin, wSpread, alpha)=>{
+      ctx.globalAlpha=alpha; let x=-12, i=seed;
+      while(x<W+12){
+        const w=wMin+Math.floor(hsh(i)*wSpread), top=H-(minH+hsh(i*1.7+seed)*(maxH-minH));
+        ctx.fillStyle=baseCol; ctx.fillRect(x,top,w,H-top);
+        ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(x,top,w,2);                      // rooftop edge
+        if(alpha>=1){
+          if(hsh(i*2.3)>0.62){ const sw=w*0.42; ctx.fillStyle=baseCol; ctx.fillRect(x+w/2-sw/2, top-11, sw, 12); }  // setback
+          for(let wy=top+7; wy<H-4; wy+=10)                                                   // lit window grid
+            for(let wx=x+4; wx<x+w-4; wx+=9){ const l=hsh(wx*0.7+wy*3.1+i);
+              if(l>0.5){ ctx.fillStyle='rgba(255,'+((200+l*40)|0)+',120,'+(0.3+l*0.5)+')'; ctx.fillRect(wx,wy,3,4); } }
+          if(hsh(i+7)>0.8){ ctx.fillStyle='rgba(255,70,70,'+(0.35+0.6*Math.abs(Math.sin(t*2+i)))+')';   // blinking rooftop light
+            ctx.beginPath(); ctx.arc(x+w/2, top, 1.8, 0, Math.PI*2); ctx.fill(); }
+        }
+        x+=w+2; i++;
+      }
+      ctx.globalAlpha=1;
+    };
+    skyline('#0b0b24', 41, 40, 120, 20, 20, 0.55);   // distant layer (dim, bluish, no windows)
+    skyline('#06060f', 4,  70, 200, 22, 24, 1);       // front layer (windows + rooftop details)
+    for(const [xf,yf,col,off] of [[0.25,0.28,'255,90,120',0],[0.55,0.2,'120,200,255',1.3],[0.78,0.34,'255,210,80',2.6],[0.4,0.4,'180,120,255',3.7]]){
+      const life=(t*0.5+off)%1, cx=xf*W, cy=yf*H;
+      if(life<0.85){ const rad=life*70+8, a=1-life/0.85;
+        for(let k=0;k<18;k++){ const ang=k/18*Math.PI*2; const px=cx+Math.cos(ang)*rad; const py=cy+Math.sin(ang)*rad+life*life*40;
+          ctx.fillStyle=`rgba(${col},${a*0.9})`; ctx.beginPath(); ctx.arc(px,py,1.8,0,Math.PI*2); ctx.fill(); }
+        ctx.fillStyle=`rgba(${col},${a*0.5})`; ctx.beginPath(); ctx.arc(cx,cy,rad*0.15,0,Math.PI*2); ctx.fill(); } }
   } else if (TH().bg === 'flag'){ drawFlagBg();
   } else {
     const g = ctx.createLinearGradient(0,0,0,H);
