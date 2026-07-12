@@ -1,7 +1,7 @@
 # App Store Connect — Listing copy + Privacy labels (DRAFT for review)
 
 App: **1 More Swing** · Bundle ID `com.captainnate.onemoreswing`
-Status: draft, to review before submission. Screenshots + final AdMob swap still pending.
+Status: **copy + privacy finalized 2026-07-11.** AdMob App ID + iOS ad unit real & wired; ads = non-personalized; privacy labels decided (no tracking / no ATT / not linked); subtitle + keywords locked. Still pending (your side): marketing screenshots, age rating, flip `TESTING_ADS=false` for the release build, Archive + attach Fireworks IAP + submit.
 
 ---
 
@@ -9,8 +9,8 @@ Status: draft, to review before submission. Screenshots + final AdMob swap still
 
 ### Names & URLs
 - **App Name** (≤30 chars): `1 More Swing`
-- **Subtitle** (≤30 chars): `Swing, fling & beat the daily` *(29)*
-  - alts: `One-button swing arcade` · `Swing far. Climb the ranks.`
+- **Subtitle** (≤30 chars): `Daily one-button arcade` *(23)* — 3 distinct high-value terms (daily, one-button, arcade), none of which repeat the App Name, so Apple auto-indexes all of them for search.
+  - alts: `Swing, fling & beat the daily` *(29)* · `One-button arcade, beat daily` *(29)* · `Swing far. Climb the ranks.`
 - **Primary Category:** Games → **Arcade**
 - **Secondary Category:** Games → Casual
 - **Support URL:** `https://1moreswing.com/contact`
@@ -25,9 +25,13 @@ Time your swings, chain your momentum, and fling as far as you can. A fresh dail
 
 ### Keywords (≤100 chars, comma-separated, no spaces)
 ```
-swing,fling,arcade,physics,onebutton,daily,leaderboard,casual,highscore,rope,grapple,skill,streak,themes
+physics,leaderboard,casual,highscore,rope,grapple,timing,reflex,pendulum,addictive,hypercasual
 ```
-*(review/trim to fit 100 including commas; drop lowest-value ones if over.)*
+*(94 chars — fits.)* ASO rule: words in the **App Name** + **Subtitle** are auto-indexed, so never repeat
+them in keywords. With App Name "1 More Swing" + Subtitle "Daily one-button arcade", that means
+`swing`, `daily`, `one-button`/`onebutton`, and `arcade` are already covered — so they're intentionally
+**left out** of keywords. Dropped low-value `themes`; added high-intent casual terms `addictive` + `hypercasual`.
+(If you revert the subtitle to a `swing…daily` variant, add `arcade` + `onebutton` back here.)
 
 ### Description (≤4000 chars)
 ```
@@ -67,21 +71,25 @@ First release! Swing, fling, and climb the daily leaderboard. Thanks for playing
 
 **Does this app collect data? → YES** (driven mainly by AdMob + the leaderboard).
 
-### A. AdMob (Google Mobile Ads) — the big one
-The rewarded-ad SDK collects data. ⚠️ **Do not free-hand this** — use **Google's official "AdMob and Apple's App Privacy" disclosure guide** for the exact list of data types/purposes to check; Google maintains the authoritative mapping. Expect to declare roughly:
-- **Identifiers → Device ID** (advertising identifier) — Purpose: Third-Party Advertising — **Used to Track You: YES**
-- **Usage Data → Product Interaction** — Advertising / Analytics — Tracking: Yes
+### A. AdMob (Google Mobile Ads) — NON-PERSONALIZED (decided 2026-07-11)
+**We serve non-personalized ads only.** The app never requests ATT and never runs the UMP consent
+flow, so on iOS the SDK has no IDFA → it serves non-personalized (contextual) ads. This keeps AdMob
+**out of "tracking"** and means **no ATT prompt**. Still cross-check Google's official "AdMob and Apple's
+App Privacy" disclosure guide, but expect to declare roughly:
+- **Identifiers → Device ID** — Purpose: Third-Party Advertising — **Used to Track You: NO** (non-personalized)
+- **Usage Data → Product Interaction** — Third-Party Advertising — Tracking: No
 - **Diagnostics → Crash + Performance Data** — App Functionality/Analytics — Tracking: No
-- **Location → Coarse Location** — verify against Google's guide (may or may not apply)
+- **Location → Coarse Location** — verify against Google's guide (may or may not apply); Tracking: No
 
-Because AdMob personalized ads = **tracking**, you MUST show the **ATT prompt** (already wired: `NSUserTrackingUsageDescription` in patch-ios). 
-- **Simplification option:** if you configure AdMob for **non-personalized ads only**, you can avoid the "tracking" declaration + ATT — at the cost of some ad revenue. Decide before submission.
+**No ATT prompt** — we don't request tracking (enforced in `www/mobile-ads.js`, see the comment there).
+The unused `NSUserTrackingUsageDescription` string in Info.plist is harmless (only surfaces if you *request*
+ATT, which we don't) — optional to remove.
 
 ### B. Leaderboard (our backend at 1moreswing.com)
 The app sends a **player-chosen nickname + score + a random device-generated player ID**.
-- **Identifiers → User ID** (the pseudonymous playerId) — Purpose: App Functionality — Linked: see note — Tracking: No
-- **User Content / Other Data** → nickname + score — App Functionality — Tracking: No
-- Note: there's **no real identity** (no email/login/real name), so this is pseudonymous. Reasonable to declare as **App Functionality, not used for tracking**. "Linked to you" is arguable — conservative answer is Yes (persistent ID); many account-less games say No. Pick and be consistent.
+- **Identifiers → User ID** (the pseudonymous playerId) — Purpose: App Functionality — **Linked: No** — Tracking: No
+- **User Content / Other Data** → nickname + score — App Functionality — **Linked: No** — Tracking: No
+- Note: there's **no real identity** (no email/login/real name), so this is pseudonymous. Declared as **App Functionality, Not Linked, not used for tracking** (decided 2026-07-11).
 
 ### C. iCloud cloud save
 Coins/themes/name stored in the user's **own iCloud key-value store** (Apple's `CloudSave`). This stays in the user's iCloud and is generally **NOT declared as developer data collection**. Leave out unless you also send it to your own server (you don't).
@@ -91,16 +99,16 @@ Coins/themes/name stored in the user's **own iCloud key-value store** (Apple's `
 - No account system.
 
 ### Summary answers to have ready in App Store Connect
-1. Collect data? **Yes**
-2. Data used to **track**: **Yes** (AdMob device ID / ad data) — *unless* you switch to non-personalized ads.
-3. Data **linked** to user: AdMob advertising data; (leaderboard ID/nickname — your call).
-4. Data **not linked**: diagnostics/crash, usage data.
-5. ATT prompt required: **Yes** (already implemented).
+1. Collect data? **Yes** (AdMob + leaderboard)
+2. Data used to **track**: **NO** — non-personalized ads, no ATT, no IDFA.
+3. Data **linked** to user: none required (AdMob non-personalized data is not linked to identity; leaderboard ID/nickname — see decision below).
+4. Data **not linked**: diagnostics/crash, usage/ad interaction, advertising Device ID.
+5. ATT prompt required: **NO**.
 
 ---
 
-### Open decisions for tomorrow's review
-- [ ] Personalized vs non-personalized AdMob ads (drives the whole "tracking" + ATT story)
-- [ ] Leaderboard data: declare "linked" Yes or No
+### Decisions
+- [x] **AdMob ads: NON-PERSONALIZED** (decided 2026-07-11) → no tracking, no ATT. Enforced in `www/mobile-ads.js`.
+- [x] **Leaderboard data "linked": NO** (decided 2026-07-11) — account-less; a random device playerId + chosen nickname, no real identity = pseudonymous, not linked to a person.
 - [ ] Final subtitle + keyword trim
 - [ ] Confirm age rating after setting AdMob ad content rating

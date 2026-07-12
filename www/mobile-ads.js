@@ -18,6 +18,13 @@
   };
   const adId = REWARDED[platform] || REWARDED.android;
 
+  // ── Ads are NON-PERSONALIZED by design (privacy decision 2026-07-11) ──
+  // We deliberately never call AdMob.requestTrackingAuthorization() or run the UMP consent
+  // flow. On iOS, with no ATT authorization the SDK has no IDFA, so it serves non-personalized
+  // (contextual) ads → no cross-app "tracking", no ATT prompt, and a clean App Store privacy
+  // label ("Data not used to track you"). Do NOT add an ATT / personalized-ads request without
+  // revisiting the privacy nutrition labels. (Android, when it ships, has no ATT — it'll need
+  // UMP consent or npa=1 to stay non-personalized there.)
   try { await AdMob.initialize({ initializeForTesting: TESTING_ADS }); } catch (e) {}
 
   window.OMS_showRewarded = function () {
