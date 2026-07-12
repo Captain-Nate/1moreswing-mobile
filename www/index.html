@@ -2021,6 +2021,9 @@ function swatchStyle(cat, id){
 const SEASON_MONTHS = { winter:[11,0,1], sakura:[2,3,4], summer:[5,6,7], halloween:[8,9,10] };
 const SEASON_RETURN = { winter:'Dec', sakura:'Mar', summer:'Jun', halloween:'Sep' };
 function seasonNow(){ const m=new Date().getMonth(); for(const id in SEASON_MONTHS) if(SEASON_MONTHS[id].indexOf(m)>=0) return id; return ''; }
+// Limited-time seasonal themes are purchasable ONLY during their season — off-season they're locked to
+// BUY (both coins and real-money IAP). Already-owned ones stay equippable year-round (ownership is separate).
+function offSeasonLocked(it){ return !!(it && it.seasonal && it.id !== seasonNow()); }
 function renderShop(){
   document.getElementById('shopCoins').textContent = fmt(coins);
   const iap = window.OMS_IAP;
@@ -2101,7 +2104,7 @@ function renderShop(){
     else if (act === 'buy') buyItem(cat, id);
     else if (act === 'equip') equipItem(cat, id);
     else if (act === 'preview') startPreview(id);
-    else if (act === 'iapbuy'){ armPurchaseIntent(); iap.buyTheme(id); }
+    else if (act === 'iapbuy'){ const t = COSMETICS.theme.find(x=>x.id===id); if (t && offSeasonLocked(t)) return; armPurchaseIntent(); iap.buyTheme(id); }
     else if (act === 'iapall'){ armPurchaseIntent(); iap.buyAll(); }
     else if (act === 'restore') iap.restore();
   }));
@@ -2169,7 +2172,7 @@ function celebratePurchaseWhenActive(label){
 
 function buyItem(cat, id){
   const it = COSMETICS[cat].find(x => x.id === id);
-  if (!it || it.ultra || owned[cat].includes(id) || coins < it.cost) return;   // ultra is real-money only
+  if (!it || it.ultra || offSeasonLocked(it) || owned[cat].includes(id) || coins < it.cost) return;   // ultra is real-money only; seasonal only in-season
   coins -= it.cost; owned[cat].push(id);
   if (cat === 'theme'){ themeName = id; syncUI(); } else equipped[cat] = id;
   saveGame(); renderShop();
@@ -2212,6 +2215,7 @@ function renderPreviewBar(id){
   else if (it.ultra){     const p = iapReady && iap.priceForTheme(id);
                           action = p ? `<button class="piap" data-pact="iapbuy" data-id="${id}">${p}</button>` : ''; }
   else if (it.winUnlock)  action = '';                            // earned, not purchasable
+  else if (offSeasonLocked(it)) action = `<button class="pbuy" disabled>🗓️ Back in ${SEASON_RETURN[it.id]}</button>`;   // limited-time seasonal, out of season → not buyable
   else {
     if (iapReady && it.premium){ const p = iap.priceForTheme(id); if (p) action += `<button class="piap" data-pact="iapbuy" data-id="${id}">${p}</button>`; }
     action += `<button class="pbuy" data-pact="buy" data-id="${id}" ${coins<it.cost?'disabled':''}><span class="ci">C</span>${fmt(it.cost)}</button>`;
@@ -2223,7 +2227,7 @@ function renderPreviewBar(id){
     if (pact === 'done'){ endPreview(false); openShop(); }
     else if (pact === 'equip'){ endPreview(true); equipItem('theme', tid); openShop(); }
     else if (pact === 'buy'){ const had = owned.theme.includes(tid); buyItem('theme', tid); if (owned.theme.includes(tid) && !had) endPreview(true); }
-    else if (pact === 'iapbuy'){ armPurchaseIntent(); window.OMS_IAP && window.OMS_IAP.buyTheme(tid); }  // stays in preview; finalized on entitlement
+    else if (pact === 'iapbuy'){ const t = COSMETICS.theme.find(x=>x.id===tid); if (t && offSeasonLocked(t)) return; armPurchaseIntent(); window.OMS_IAP && window.OMS_IAP.buyTheme(tid); }  // stays in preview; finalized on entitlement
   }));
   bar.classList.add('show');
 }
