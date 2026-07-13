@@ -443,13 +443,28 @@
       "internalID": "C3E4F5A6-3333-4C5D-9E6F-7A8B9C0D1E2F",
       "localizations": [
         {
-          "description": "Unlock the Prism theme — an ever-shifting full-spectrum colourway. The ultimate flex.",
+          "description": "Unlock the Prism theme \u2014 an ever-shifting full-spectrum colourway. The ultimate flex.",
           "displayName": "Prism Theme",
           "locale": "en_US"
         }
       ],
       "productID": "com.captainnate.onemoreswing.theme.prism",
       "referenceName": "Prism Theme",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "ABC64C0B-AEF3-4CEA-99E8-939683338393",
+      "localizations": [
+        {
+          "description": "Unlock the Fireworks theme.",
+          "displayName": "Fireworks Theme",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.captainnate.onemoreswing.theme.fireworks",
+      "referenceName": "Fireworks Theme",
       "type": "NonConsumable"
     }
   ],
