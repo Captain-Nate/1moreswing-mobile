@@ -81,6 +81,15 @@ function patchInfoPlist() {
     );
   }
 
+  // 4. Only standard OS encryption (HTTPS) is used — auto-answer export compliance so every
+  // uploaded build skips the "Missing Compliance" manage step in App Store Connect.
+  if (!src.includes('ITSAppUsesNonExemptEncryption')) {
+    src = src.replace(
+      /(<key>UIRequiresFullScreen<\/key>)/,
+      '<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>\n\t$1'
+    );
+  }
+
   if (src !== before) {
     fs.writeFileSync(plist, src);
     console.log('[patch-ios] Info.plist: AdMob id + portrait-only orientation.');
