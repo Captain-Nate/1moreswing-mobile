@@ -10,7 +10,7 @@
 
   // Flip to false ONLY for the App Store release build. Kept true during development
   // so your own device sees TEST ads — never click live ads on your own AdMob account.
-  const TESTING_ADS = true;
+  const TESTING_ADS = false;
 
   const REWARDED = {
     ios:     'ca-app-pub-4322452976770818/4305833249',   // real iOS rewarded unit

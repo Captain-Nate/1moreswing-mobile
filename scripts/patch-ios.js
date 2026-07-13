@@ -55,16 +55,22 @@ function patchInfoPlist() {
   let src = fs.readFileSync(plist, 'utf8');
   const before = src;
 
-  // 1. AdMob App ID (+ ATT key) — once
+  // 1. AdMob App ID — once
   if (!src.includes('GADApplicationIdentifier')) {
     const keys =
       "\t<!-- Google AdMob App ID (real, 1 More Swing). (auto-applied by scripts/patch-ios.js) -->\n" +
       "\t<key>GADApplicationIdentifier</key>\n" +
-      `\t<string>${ADMOB_APP_ID}</string>\n` +
-      "\t<key>NSUserTrackingUsageDescription</key>\n" +
-      "\t<string>This identifier will be used to deliver personalized ads to you.</string>\n";
+      `\t<string>${ADMOB_APP_ID}</string>\n`;
     src = src.replace(/(<dict>\n)/, `$1${keys}`); // insert after the opening <dict>
   }
+
+  // 1b. Ads are NON-PERSONALIZED and we never request ATT — the ATT usage string must NOT ship:
+  // its mere presence makes App Store Connect demand "tracking" privacy labels and blocks
+  // publishing the (accurate) no-tracking labels. Strip it if a previous patch added it.
+  src = src.replace(
+    /\t<key>NSUserTrackingUsageDescription<\/key>\n\t<string>[^<]*<\/string>\n/,
+    ''
+  );
 
   // 2. Lock orientation to portrait (iPhone + iPad) — the game is portrait-only
   src = src.replace(
