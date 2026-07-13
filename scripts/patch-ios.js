@@ -72,6 +72,15 @@ function patchInfoPlist() {
     '$1\n\t\t<string>UIInterfaceOrientationPortrait</string>\n\t$2'
   );
 
+  // 3. Portrait-only iPad apps must opt OUT of iPad multitasking (Split View), or App Store
+  // upload fails with "Invalid bundle … include all orientations to support iPad multitasking".
+  if (!src.includes('UIRequiresFullScreen')) {
+    src = src.replace(
+      /(<key>UISupportedInterfaceOrientations<\/key>)/,
+      '<key>UIRequiresFullScreen</key>\n\t<true/>\n\t$1'
+    );
+  }
+
   if (src !== before) {
     fs.writeFileSync(plist, src);
     console.log('[patch-ios] Info.plist: AdMob id + portrait-only orientation.');
