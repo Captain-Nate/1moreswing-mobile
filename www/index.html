@@ -475,7 +475,7 @@ if (window.Capacitor) {
     <div id="shopBody"></div>
   </div>
 </div>
-<div id="hint">Hold to swing &amp; <b>pump</b> &middot; release to launch &middot; skip dots for bonus &middot; drop on a <b>BANK</b> pad</div>
+<div id="hint" class="hide">Hold to swing &amp; <b>pump</b> &middot; release to launch &middot; skip dots for bonus &middot; drop on a <b>BANK</b> pad<br>New here? Tap <b>About</b> for tips &amp; how to play</div>
 <script>
 /* =========================================================================
    1 MORE SWING — PHASE 3: swing + greed/banking + skip bonus + JUICE.
@@ -832,7 +832,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, remindersOn, ratePrompted };
+  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, hintSeen, remindersOn, ratePrompted };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -872,6 +872,7 @@ function loadGame(){
     if (typeof s.best === 'number') best = s.best;               // high score (highest banked run) — persist across sessions
     if (typeof s.bestStreak === 'number') bestStreak = s.bestStreak;
     if (typeof s.coachSeen === 'boolean') coachSeen = s.coachSeen;
+    if (typeof s.hintSeen === 'boolean') hintSeen = s.hintSeen;
     if (typeof s.remindersOn === 'boolean') remindersOn = s.remindersOn;
   } catch(e){}
   if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
@@ -921,6 +922,7 @@ async function mergeCloudSave(){
     if (typeof c.dailiesCompleted === 'number' && c.dailiesCompleted > dailiesCompleted){ dailiesCompleted = c.dailiesCompleted; changed = true; checkDailyUnlock(); }
     if (c.ratePrompted && !ratePrompted){ ratePrompted = true; changed = true; }   // don't re-ask if they rated on another device
     if (c.coachSeen && !coachSeen){ coachSeen = true; changed = true; }
+    if (c.hintSeen && !hintSeen){ hintSeen = true; changed = true; }
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
     if (changed){ saveGame(); syncUI(); updateRemindBtn(); if (lbOpen) showTab(); }   // refresh leaderboard if it's open when the cloud identity lands
   } catch(e){}
@@ -1075,6 +1077,7 @@ let returningPlayer = false;    // had a saved name at launch (localStorage or i
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
 let usedRevive = false, adShowing = false, doubledRun = false;
 let coachSeen = false;   // has the one-time multiplier coach-mark been shown?
+let hintSeen = false;    // has the first-run controls hint been shown (once ever)?
 
 // Streak = consecutive days you complete the daily. It stays "alive" if your last
 // completion was today or yesterday; miss a whole day and it reads 0 until you finish
@@ -1314,6 +1317,7 @@ function pickTarget(){
 
 // one-time teaching banner; auto-fades. (ms default ~6s so a new player can read it)
 let coachTimer = 0;
+let hintTimer = 0;
 function showCoach(html, ms){
   const c = document.getElementById('coach'); if (!c) return;
   c.innerHTML = html; c.classList.add('show');
@@ -1321,7 +1325,7 @@ function showCoach(html, ms){
 }
 
 function press(){
-  const h = document.getElementById('hint'); if (h) h.classList.add('hide');   // hide tutorial hint after first touch
+  // first-run controls hint now fades on its own 7s timer (see startGame) — a touch no longer hides it early
   if (paused || shopOpen || lbOpen || titleOpen || infoOpen || settingsOpen || previewing) return;
   resumeAudio();   // unlock/recover audio on gesture (handles iOS 'interrupted' state, not just 'suspended')
   // Daily finish: a tap shows the result card instead of restarting — restarting here would
@@ -1689,7 +1693,14 @@ function syncUI(){
 }
 function togglePause(){ paused = !paused; syncUI(); }
 function showTitle(){ titleOpen = true;  paused = false; syncUI(); }   // back to the title from pause
-function startGame(){ titleOpen = false; paused = false; newRun(); syncUI(); }  // Play
+function startGame(){   // Play
+  titleOpen = false; paused = false; newRun(); syncUI();
+  if (!hintSeen){        // first game ever: show the controls hint right at the start and let it linger so they can read it
+    hintSeen = true; saveGame();
+    const h = document.getElementById('hint');
+    if (h){ h.classList.remove('hide'); clearTimeout(hintTimer); hintTimer = setTimeout(() => h.classList.add('hide'), 7000); }
+  }
+}
 document.getElementById('playBtn').addEventListener('click', startGame);
 document.getElementById('toTitleBtn').addEventListener('click', showTitle);
 document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; syncUI(); });
