@@ -777,8 +777,8 @@ const COSMETICS = {
     { id:'fireworks', name:'Fireworks',      cost:460000, premium:true },   // normal premium theme: coins or $0.99, included in Unlock All
     // ultra tier — real-money only ($99.99), NOT included in the "unlock all" bundle
     { id:'prism',   name:'Prism',        cost:0, premium:true, ultra:true },
-    // earned, not bought — unlocks at 100 all-time wins on the leaderboard
-    { id:'mono',    name:'Epic Minimalist', cost:0, winUnlock:100 },
+    // earned, not bought — unlocks after completing 100 daily challenges
+    { id:'mono',    name:'Epic Minimalist', cost:0, dailyUnlock:100 },
   ],
   trail: [
     { id:'classic', name:'Classic Trail', cost:0      },
@@ -832,7 +832,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, streak, best, bestStreak, coachSeen, remindersOn };
+  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, remindersOn };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -866,6 +866,7 @@ function loadGame(){
     if (s.mode === 'daily' || s.mode === 'free') mode = s.mode;
     if (typeof s.name === 'string'){ playerName = s.name; if (playerName.trim()) returningPlayer = true; }
     if (typeof s.lastDailyDone === 'number') lastDailyDone = s.lastDailyDone;
+    if (typeof s.dailiesCompleted === 'number') dailiesCompleted = s.dailiesCompleted;
     if (typeof s.streak === 'number') streak = s.streak;
     if (typeof s.best === 'number') best = s.best;               // high score (highest banked run) — persist across sessions
     if (typeof s.bestStreak === 'number') bestStreak = s.bestStreak;
@@ -916,6 +917,7 @@ async function mergeCloudSave(){
     }
     if (typeof c.best === 'number' && c.best > best){ best = c.best; changed = true; }   // high score — keep the higher across devices
     if (typeof c.bestStreak === 'number' && c.bestStreak > bestStreak){ bestStreak = c.bestStreak; changed = true; checkStreakUnlock(); }
+    if (typeof c.dailiesCompleted === 'number' && c.dailiesCompleted > dailiesCompleted){ dailiesCompleted = c.dailiesCompleted; changed = true; checkDailyUnlock(); }
     if (c.coachSeen && !coachSeen){ coachSeen = true; changed = true; }
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
     if (changed){ saveGame(); syncUI(); updateRemindBtn(); if (lbOpen) showTab(); }   // refresh leaderboard if it's open when the cloud identity lands
@@ -1056,6 +1058,7 @@ let rng = Math.random;     // current run's random source (set per run)
 let mode = 'daily';        // 'daily' | 'free'
 let dayNumber = 1;
 let lastDailyDone = 0;     // day number of the most recent completed daily (drives the reminder skip-today)
+let dailiesCompleted = 0;  // cumulative distinct daily challenges completed — unlocks Epic Minimalist (mono) at 100
 let streak = 0;            // consecutive-day daily-completion streak, as of lastDailyDone
 let bestStreak = 0;        // highest streak ever reached
 let streakBonus = 0;       // milestone coin reward earned by this run (for the share card)
@@ -1066,7 +1069,6 @@ let runRoute = [], runCoinsEarned = 0;              // per-run stats for the sha
 let lbOpen = false, playerName = '', playerId = '', lastScore = 0, submittedRun = false, editingName = false;
 let editingTitleName = false;   // title-screen name field is in edit mode
 let returningPlayer = false;    // had a saved name at launch (localStorage or iCloud) → greet "Welcome back" vs "Hey" for first-timers
-let myWins = 0;   // player's all-time wins (from the leaderboard) — drives the Minimalist theme unlock
 let titleOpen = true;      // start on the title screen; pauses the game loop until Play
 let usedRevive = false, adShowing = false, doubledRun = false;
 let coachSeen = false;   // has the one-time multiplier coach-mark been shown?
@@ -1511,6 +1513,7 @@ function finish(){
       streak = (lastDailyDone === dayNumber - 1) ? streak + 1 : 1;    // continue if yesterday's was done, else restart at 1
       if (streak > bestStreak) bestStreak = streak;
       lastDailyDone = dayNumber;
+      dailiesCompleted++; checkDailyUnlock();                          // this distinct day counts once → unlock Epic Minimalist at 100
       const sb = STREAK_MILESTONES[streak];                           // one-time milestone coin reward
       if (sb){ coins += sb; runCoinsEarned += sb; streakBonus = sb; }
       checkStreakUnlock();                                            // unlock the exclusive Streak Flame trail
@@ -2045,10 +2048,10 @@ function renderShop(){
     }
     let list = COSMETICS[cat];
     if (cat === 'theme'){   // base themes, then NATIONS, then PREMIUM sorted by coin price, then earned/ultra
-      const base = list.filter(t=>!t.premium && !t.nations && !t.winUnlock);
+      const base = list.filter(t=>!t.premium && !t.nations && !t.dailyUnlock);
       const nat  = list.filter(t=>t.nations);
       const prem = list.filter(t=>t.premium && !t.ultra).sort((a,b)=>a.cost-b.cost);
-      const spec = list.filter(t=>t.ultra || t.winUnlock);
+      const spec = list.filter(t=>t.ultra || t.dailyUnlock);
       list = base.concat(nat, prem, spec);
     }
     for (const it of list){
@@ -2068,8 +2071,8 @@ function renderShop(){
         btns = p ? `<button class="iap ultra" data-act="iapbuy" data-id="${it.id}">${p}</button>`
                  : `<button class="iap ultra" disabled>$99.99</button>`;
       }
-      else if (it.winUnlock){                                        // earned by wins, not purchasable
-        btns = `<button class="winlock" disabled>${Math.min(myWins, it.winUnlock)} / ${it.winUnlock} wins</button>`;
+      else if (it.dailyUnlock){                                      // earned by completing daily challenges, not purchasable
+        btns = `<button class="winlock" disabled>${Math.min(dailiesCompleted, it.dailyUnlock)} / ${it.dailyUnlock} dailies</button>`;
       }
       else if (it.streakUnlock){                                     // earned via daily streak, not purchasable
         btns = `<button class="winlock" disabled>🔥 ${Math.min(bestStreak, it.streakUnlock)} / ${it.streakUnlock} day streak</button>`;
@@ -2088,7 +2091,7 @@ function renderShop(){
       if (cat === 'theme' && !isEq) btns += `<button class="preview" data-act="preview" data-id="${it.id}">Preview</button>`;
       html += `<div class="item"><span class="sw" style="background:${swatchStyle(cat,it.id)}">${it.emoji||''}</span>`
             + `<span class="nm">${it.name}</span><span class="btns">${btns}</span></div>`;
-      if (it.ultra || it.winUnlock) html += `<div class="exnote">Not included in the Unlock All bundle</div>`;
+      if (it.ultra || it.dailyUnlock) html += `<div class="exnote">Not included in the Unlock All bundle</div>`;
       else if (it.seasonal) html += `<div class="exnote">Limited-time seasonal — not in the Unlock All bundle</div>`;
     }
   }
@@ -2214,7 +2217,7 @@ function renderPreviewBar(id){
   if (isOwned)            action = `<button class="pbuy" data-pact="equip" data-id="${id}">Equip</button>`;
   else if (it.ultra){     const p = iapReady && iap.priceForTheme(id);
                           action = p ? `<button class="piap" data-pact="iapbuy" data-id="${id}">${p}</button>` : ''; }
-  else if (it.winUnlock)  action = '';                            // earned, not purchasable
+  else if (it.dailyUnlock)  action = '';                            // earned, not purchasable
   else if (offSeasonLocked(it)) action = `<button class="pbuy" disabled>🗓️ Back in ${SEASON_RETURN[it.id]}</button>`;   // limited-time seasonal, out of season → not buyable
   else {
     if (iapReady && it.premium){ const p = iap.priceForTheme(id); if (p) action += `<button class="piap" data-pact="iapbuy" data-id="${id}">${p}</button>`; }
@@ -2369,13 +2372,10 @@ function renderLB(data){
 }
 let lbTab = 'today';
 async function fetchWins(){ try{ const r = await fetch(`${API_BASE}/api/wins?platform=${PLATFORM}`); if(!r.ok) return null; return await r.json(); } catch(e){ return null; } }
-// read the player's win count from the leaderboard and unlock the Minimalist theme at the threshold
-function checkWinUnlock(data){
-  if (!data || !data.champions) return;
-  const me = data.champions.find(c => c.tag === tagOf(playerId));
-  myWins = me ? (me.wins || 0) : 0;
+// unlock Epic Minimalist once 100 distinct daily challenges have been completed (local count — no leaderboard needed)
+function checkDailyUnlock(){
   const mono = COSMETICS.theme.find(t => t.id === 'mono');
-  if (mono && myWins >= mono.winUnlock && !owned.theme.includes('mono')){
+  if (mono && dailiesCompleted >= mono.dailyUnlock && !owned.theme.includes('mono')){
     owned.theme.push('mono'); saveGame();
     if (shopOpen) renderShop();
   }
@@ -2389,7 +2389,6 @@ function checkStreakUnlock(){
   }
 }
 function renderWins(data){
-  checkWinUnlock(data);
   const myTag = tagOf(playerId);
   let html = '';
   if (!data || !data.champions)    html += `<div class="msg">Leaderboard offline.</div>`;
@@ -3396,7 +3395,7 @@ setTimeout(async () => {
 }, 8000);
 newRun();
 syncUI();
-fetchWins().then(checkWinUnlock).catch(()=>{});   // unlock Minimalist if already at 100 wins, even without opening the leaderboard
+checkDailyUnlock();   // unlock Epic Minimalist if the player already has 100 completed dailies
 checkStreakUnlock();   // unlock Streak Flame if the player already has a qualifying best streak
 updateRemindBtn();       // reflect the saved reminder setting on the title button
 updateHapticsBtn();      // reflect the saved haptics setting
