@@ -832,7 +832,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, remindersOn };
+  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, remindersOn, ratePrompted };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -867,6 +867,7 @@ function loadGame(){
     if (typeof s.name === 'string'){ playerName = s.name; if (playerName.trim()) returningPlayer = true; }
     if (typeof s.lastDailyDone === 'number') lastDailyDone = s.lastDailyDone;
     if (typeof s.dailiesCompleted === 'number') dailiesCompleted = s.dailiesCompleted;
+    if (typeof s.ratePrompted === 'boolean') ratePrompted = s.ratePrompted;
     if (typeof s.streak === 'number') streak = s.streak;
     if (typeof s.best === 'number') best = s.best;               // high score (highest banked run) — persist across sessions
     if (typeof s.bestStreak === 'number') bestStreak = s.bestStreak;
@@ -918,6 +919,7 @@ async function mergeCloudSave(){
     if (typeof c.best === 'number' && c.best > best){ best = c.best; changed = true; }   // high score — keep the higher across devices
     if (typeof c.bestStreak === 'number' && c.bestStreak > bestStreak){ bestStreak = c.bestStreak; changed = true; checkStreakUnlock(); }
     if (typeof c.dailiesCompleted === 'number' && c.dailiesCompleted > dailiesCompleted){ dailiesCompleted = c.dailiesCompleted; changed = true; checkDailyUnlock(); }
+    if (c.ratePrompted && !ratePrompted){ ratePrompted = true; changed = true; }   // don't re-ask if they rated on another device
     if (c.coachSeen && !coachSeen){ coachSeen = true; changed = true; }
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
     if (changed){ saveGame(); syncUI(); updateRemindBtn(); if (lbOpen) showTab(); }   // refresh leaderboard if it's open when the cloud identity lands
@@ -1059,6 +1061,7 @@ let mode = 'daily';        // 'daily' | 'free'
 let dayNumber = 1;
 let lastDailyDone = 0;     // day number of the most recent completed daily (drives the reminder skip-today)
 let dailiesCompleted = 0;  // cumulative distinct daily challenges completed — unlocks Epic Minimalist (mono) at 100
+let ratePrompted = false;  // native App Store rating prompt already shown once (SKStoreReviewController via InAppReview)
 let streak = 0;            // consecutive-day daily-completion streak, as of lastDailyDone
 let bestStreak = 0;        // highest streak ever reached
 let streakBonus = 0;       // milestone coin reward earned by this run (for the share card)
@@ -1477,8 +1480,8 @@ function showOverButtons(){
   const lo = document.getElementById('lbOpenBtn'); if (lo) lo.style.display = mode === 'daily' ? '' : 'none';
   const rv = document.getElementById('reviveBtn');
   if (rv){
-    // revive: Free Play only, on death, once per run, and only when a rewarded provider is available
-    rv.style.display = (rewardedAvailable() && mode === 'free' && !usedRevive && state === 'dead') ? '' : 'none';
+    // revive: Free Play only, on death, once per run, and only when an ad is actually loaded & ready
+    rv.style.display = (rewardedReady() && mode === 'free' && !usedRevive && state === 'dead') ? '' : 'none';
     rv.textContent = '▶ Continue · Ad'; rv.disabled = false;
   }
   const db = document.getElementById('doubleBtn');
@@ -1514,6 +1517,7 @@ function finish(){
       if (streak > bestStreak) bestStreak = streak;
       lastDailyDone = dayNumber;
       dailiesCompleted++; checkDailyUnlock();                          // this distinct day counts once → unlock Epic Minimalist at 100
+      if (dailiesCompleted >= 2) setTimeout(maybeAskReview, 1800);     // ask a returning player to rate, once, after the finish settles
       const sb = STREAK_MILESTONES[streak];                           // one-time milestone coin reward
       if (sb){ coins += sb; runCoinsEarned += sb; streakBonus = sb; }
       checkStreakUnlock();                                            // unlock the exclusive Streak Flame trail
@@ -2380,6 +2384,15 @@ function checkDailyUnlock(){
     if (shopOpen) renderShop();
   }
 }
+// Ask for an App Store rating once, at a positive moment (SKStoreReviewController via the InAppReview plugin).
+// iOS itself decides whether/how often to actually show the prompt; we just request it at a good time.
+function maybeAskReview(){
+  if (ratePrompted) return;
+  const IAR = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.InAppReview;
+  if (!IAR || !IAR.requestReview) return;   // web or plugin unavailable → no-op
+  ratePrompted = true; saveGame();
+  try { IAR.requestReview(); } catch (e) {}
+}
 // unlock the exclusive Streak Flame trail once the streak threshold is reached
 function checkStreakUnlock(){
   const t = COSMETICS.trail.find(x => x.streakUnlock);
@@ -2426,6 +2439,15 @@ const reviveBtn = document.getElementById('reviveBtn');
 // A rewarded provider is "available" if the gate flag is on OR the host app has
 // injected window.OMS_showRewarded (e.g. the AdMob/Capacitor wrapper — see MOBILE.md).
 function rewardedAvailable(){ return REWARDED_ENABLED || typeof window.OMS_showRewarded === 'function'; }
+// Only offer a rewarded ad when one is actually preloaded & ready (no dead "Continue · Ad" button on no-fill).
+function rewardedReady(){
+  if (!rewardedAvailable()) return false;
+  if (typeof window.OMS_rewardedReady === 'function') return !!window.OMS_rewardedReady();
+  return REWARDED_ENABLED;   // dev-only placeholder path (no native provider wired)
+}
+// mobile-ads.js calls this the instant an ad finishes preloading, so a button hidden at
+// death (ad not yet loaded) lights up as soon as one is ready.
+window.OMS_onRewardedReady = function(){ if (state === 'dead' || state === 'finished') showOverButtons(); };
 function showRewardedAd(onReward, btn){
   if (adShowing) return;
   adShowing = true;
@@ -2451,7 +2473,7 @@ reviveBtn.addEventListener('click', () => showRewardedAd(revive, reviveBtn));
 // Grants a bonus equal to the coins banked this run (doubling the run's take). Only
 // offered when a rewarded provider exists, the run actually earned coins, and not yet claimed.
 function canDoubleCoins(){
-  return rewardedAvailable() && runCoinsEarned > 0 && !doubledRun && (state === 'dead' || state === 'finished');
+  return rewardedReady() && runCoinsEarned > 0 && !doubledRun && (state === 'dead' || state === 'finished');
 }
 function doubleCoins(){
   if (!canDoubleCoins()) return;

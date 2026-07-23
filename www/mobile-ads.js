@@ -10,7 +10,7 @@
 
   // Flip to false ONLY for the App Store release build. Kept true during development
   // so your own device sees TEST ads — never click live ads on your own AdMob account.
-  const TESTING_ADS = false;
+  const TESTING_ADS = true;
 
   const REWARDED = {
     ios:     'ca-app-pub-4322452976770818/4305833249',   // real iOS rewarded unit
@@ -27,23 +27,50 @@
   // UMP consent or npa=1 to stay non-personalized there.)
   try { await AdMob.initialize({ initializeForTesting: TESTING_ADS }); } catch (e) {}
 
+  // ── Preload + readiness ───────────────────────────────────────────────────
+  // Keep one rewarded ad loaded ahead of time and expose OMS_rewardedReady() so the
+  // game only offers "Continue · Ad" when an ad is actually available — no dead button
+  // on no-fill. After each ad shows we preload the next one; a failed load retries later.
+  let ready = false, loading = false, rewarded = false;
+  const RETRY_MS = 30000;
+
+  async function loadAd(){
+    if (ready || loading) return;
+    loading = true;
+    try { await AdMob.prepareRewardVideoAd({ adId, isTesting: TESTING_ADS }); }
+    catch (e) { loading = false; ready = false; setTimeout(loadAd, RETRY_MS); }
+  }
+
+  await AdMob.addListener('onRewardedVideoAdLoaded', () => {
+    ready = true; loading = false;
+    try { if (window.OMS_onRewardedReady) window.OMS_onRewardedReady(); } catch (e) {}   // let the game reveal the button
+  });
+  await AdMob.addListener('onRewardedVideoAdFailedToLoad', () => {
+    ready = false; loading = false; setTimeout(loadAd, RETRY_MS);   // e.g. no-fill — try again later
+  });
+  await AdMob.addListener('onRewardedVideoAdReward', () => { rewarded = true; });
+
+  window.OMS_rewardedReady = function(){ return ready; };
+
   window.OMS_showRewarded = function () {
     return new Promise(async (resolve) => {
-      let rewarded = false, settled = false;
+      if (!ready){ loadAd(); resolve(false); return; }   // the button is gated on readiness, but stay safe
+      let settled = false;
       const finish = (v) => { if (!settled) { settled = true; resolve(v); } };
-      try {
-        const rewardSub = await AdMob.addListener('onRewardedVideoAdReward',    () => { rewarded = true; });
-        const closeSub  = await AdMob.addListener('onRewardedVideoAdDismissed', async () => {
-          if (rewardSub && rewardSub.remove) await rewardSub.remove();
-          if (closeSub  && closeSub.remove)  await closeSub.remove();
-          // The ad deactivated the iOS audio session — reactivate it before the reward callback runs,
-          // so the fanfare + resumed gameplay aren't silent (WebAudio stays 'running' but muted).
-          try { if (window.OMS_AudioSession && window.OMS_AudioSession.reactivate) await window.OMS_AudioSession.reactivate(); } catch (e) {}
-          finish(rewarded);
-        });
-        await AdMob.prepareRewardVideoAd({ adId, isTesting: TESTING_ADS });
-        await AdMob.showRewardVideoAd();
-      } catch (e) { finish(false); }
+      rewarded = false;
+      const closeSub = await AdMob.addListener('onRewardedVideoAdDismissed', async () => {
+        if (closeSub && closeSub.remove) await closeSub.remove();
+        // The ad deactivated the iOS audio session — reactivate it before the reward callback runs,
+        // so the fanfare + resumed gameplay aren't silent (WebAudio stays 'running' but muted).
+        try { if (window.OMS_AudioSession && window.OMS_AudioSession.reactivate) await window.OMS_AudioSession.reactivate(); } catch (e) {}
+        ready = false;
+        loadAd();          // preload the next one so the button can light up again
+        finish(rewarded);
+      });
+      try { await AdMob.showRewardVideoAd(); }
+      catch (e) { ready = false; loadAd(); finish(false); }
     });
   };
+
+  loadAd();   // preload the first ad on startup
 })();
