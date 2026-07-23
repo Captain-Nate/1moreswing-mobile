@@ -2051,12 +2051,13 @@ function renderShop(){
       }
     }
     let list = COSMETICS[cat];
-    if (cat === 'theme'){   // base themes, then NATIONS, then PREMIUM sorted by coin price, then earned/ultra
+    if (cat === 'theme'){   // base, then NATIONS, then PREMIUM by price, then the limited-time SEASONAL grouped together, then earned/ultra
       const base = list.filter(t=>!t.premium && !t.nations && !t.dailyUnlock);
       const nat  = list.filter(t=>t.nations);
-      const prem = list.filter(t=>t.premium && !t.ultra).sort((a,b)=>a.cost-b.cost);
+      const prem = list.filter(t=>t.premium && !t.ultra && !t.seasonal).sort((a,b)=>a.cost-b.cost);
+      const seas = list.filter(t=>t.seasonal).sort((a,b)=>a.cost-b.cost);   // keep the 4 limited-time seasonal themes contiguous
       const spec = list.filter(t=>t.ultra || t.dailyUnlock);
-      list = base.concat(nat, prem, spec);
+      list = base.concat(nat, prem, seas, spec);
     }
     for (const it of list){
       if (cat === 'theme'){
