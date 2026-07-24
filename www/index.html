@@ -299,17 +299,17 @@
     -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.45);
     transition:transform .08s; }
   #playBtn:active { transform:scale(.95); }
-  #titleLbBtn { margin-top:14px; padding:14px 32px; border:none; border-radius:999px;
+  #titleLbBtn { padding:14px 32px; border:none; border-radius:999px;
     background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
     display:inline-flex; align-items:center; gap:8px; -webkit-tap-highlight-color:transparent;
     box-shadow:0 8px 26px rgba(0,0,0,.45); transition:transform .08s; }
   #titleLbBtn svg { display:block; }
   #titleLbBtn:active { transform:scale(.95); }
-  #titleModeBtn { margin-top:14px; padding:14px 32px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
+  #titleModeBtn { padding:14px 32px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
     background:rgba(22,27,34,.55); color:var(--accent,#58a6ff); font-weight:800; font-size:18px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; transition:transform .08s; }
   #titleModeBtn:active { transform:scale(.95); }
-  #quitBtn { margin-top:14px; padding:9px 26px; border-radius:999px; border:1px solid #30363d;
+  #quitBtn { padding:9px 26px; border-radius:999px; border:1px solid #30363d;
     background:transparent; color:#8b949e; font-weight:600; font-size:14px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; }
   #quitBtn:active { transform:scale(.95); }
@@ -359,6 +359,43 @@
   #settingsBody .settoggle.on { background:var(--accent,#58a6ff); border-color:var(--accent,#58a6ff); color:#0d1117; }
   #infoBody a { color:var(--accent,#58a6ff); }
   #infoBody .muted { color:#8b949e; font-size:12.5px; }
+
+  /* ---- How to Play: title button + animated tutorial overlay ---- */
+  #howtoBtn { position:relative; padding:14px 32px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
+    background:rgba(22,27,34,.55); color:var(--accent,#58a6ff); font-weight:800; font-size:18px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; -webkit-tap-highlight-color:transparent; transition:transform .08s; }
+  #howtoBtn svg { display:block; }
+  #howtoBtn:active { transform:scale(.95); }
+  /* one-time "new" pulse ring — expands & fades in the theme accent until the tutorial is opened once */
+  #howtoBtn.pulse::after { content:''; position:absolute; inset:-1px; border-radius:999px; border:2px solid currentColor;
+    pointer-events:none; animation:howtoPulseRing 1.9s ease-out infinite; }
+  @keyframes howtoPulseRing { 0% { opacity:.5; transform:scale(1); } 70%,100% { opacity:0; transform:scale(1.16); } }
+  #howto { position:fixed; inset:0; z-index:24; display:none; box-sizing:border-box;
+    padding:calc(14px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));
+    background:rgba(8,11,16,.86); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
+  #howto.open { display:flex; }
+  #howto .panel { width:min(440px,92vw); max-height:100%; overflow:hidden; display:flex; flex-direction:column;
+    background:#0f141b; border:1px solid #30363d; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  #howto .shead { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid #21262d; }
+  #howto .shead h2 { margin:0; font-size:15px; letter-spacing:1px; color:#e6edf3; }
+  #howtoClose { width:32px; height:32px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#e6edf3; cursor:pointer; font-size:16px; }
+  #howtoCanvas { display:block; width:100%; height:min(44vh,400px); background:#0b0f16; touch-action:none; cursor:pointer; }
+  .hcaprow { display:flex; align-items:center; gap:2px; padding:9px 8px 2px; min-height:64px; }
+  #howtoCap { flex:1 1 auto; min-height:2.6em; text-align:center; color:#c9d1d9; font-size:14.5px; line-height:1.4; }
+  #howtoCap b { color:var(--accent,#58a6ff); font-weight:800; }
+  .hnav { flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; width:42px; height:46px;
+    padding:0; border:none; background:transparent; color:var(--accent,#58a6ff); cursor:pointer;
+    -webkit-tap-highlight-color:transparent; opacity:.92; transition:transform .1s, opacity .15s; }
+  .hnav:active { transform:scale(.82); opacity:1; }
+  .hnav svg { display:block; }
+  .hpips { display:flex; gap:4px; justify-content:center; padding:4px 0 2px; }
+  .hpips i { box-sizing:content-box; width:7px; height:7px; padding:5px; border-radius:50%;
+    background:#30363d; background-clip:content-box; cursor:pointer; transition:background .2s, transform .2s; }
+  .hpips i.on { background:var(--accent,#58a6ff); transform:scale(1.3); }
+  #howtoPlay { margin:12px 18px calc(16px + env(safe-area-inset-bottom)); padding:13px 0; border:none; border-radius:999px;
+    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:17px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; transition:transform .08s; }
+  #howtoPlay:active { transform:scale(.97); }
 </style>
 </head>
 <body>
@@ -405,6 +442,7 @@
   <div id="titleGreet"></div>
   <div id="streakChip"></div>
   <button id="playBtn">&#9654; Play</button>
+  <button id="howtoBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/><path d="M22 4h-6a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/></svg> How to Play</button>
   <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg> Leaderboard</button>
   <button id="titleModeBtn">Daily</button>
   <button id="quitBtn">Quit</button>
@@ -441,6 +479,22 @@
         <button id="setTestNotif" class="settoggle">Send</button>
       </div>
     </div>
+  </div>
+</div>
+<div id="howto">
+  <div class="panel">
+    <div class="shead">
+      <h2>HOW TO PLAY</h2>
+      <button id="howtoClose">&#10005;</button>
+    </div>
+    <canvas id="howtoCanvas"></canvas>
+    <div class="hcaprow">
+      <button id="howtoPrev" class="hnav" aria-label="Previous slide"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div id="howtoCap">&nbsp;</div>
+      <button id="howtoNext" class="hnav" aria-label="Next slide"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+    <div class="hpips"><i></i><i></i><i></i><i></i></div>
+    <button id="howtoPlay">&#9654; Play</button>
   </div>
 </div>
 <script>/* Mobile app build only: load AdMob glue + StoreKit in-app purchases inside Capacitor. No-op on the web. */
@@ -832,7 +886,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, hintSeen, remindersOn, ratePrompted };
+  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, hintSeen, howtoSeen, remindersOn, ratePrompted };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -873,6 +927,7 @@ function loadGame(){
     if (typeof s.bestStreak === 'number') bestStreak = s.bestStreak;
     if (typeof s.coachSeen === 'boolean') coachSeen = s.coachSeen;
     if (typeof s.hintSeen === 'boolean') hintSeen = s.hintSeen;
+    if (typeof s.howtoSeen === 'boolean') howtoSeen = s.howtoSeen;
     if (typeof s.remindersOn === 'boolean') remindersOn = s.remindersOn;
   } catch(e){}
   if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
@@ -923,6 +978,7 @@ async function mergeCloudSave(){
     if (c.ratePrompted && !ratePrompted){ ratePrompted = true; changed = true; }   // don't re-ask if they rated on another device
     if (c.coachSeen && !coachSeen){ coachSeen = true; changed = true; }
     if (c.hintSeen && !hintSeen){ hintSeen = true; changed = true; }
+    if (c.howtoSeen && !howtoSeen){ howtoSeen = true; changed = true; }
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
     if (changed){ saveGame(); syncUI(); updateRemindBtn(); if (lbOpen) showTab(); }   // refresh leaderboard if it's open when the cloud identity lands
   } catch(e){}
@@ -1078,6 +1134,7 @@ let titleOpen = true;      // start on the title screen; pauses the game loop un
 let usedRevive = false, adShowing = false, doubledRun = false;
 let coachSeen = false;   // has the one-time multiplier coach-mark been shown?
 let hintSeen = false;    // has the first-run controls hint been shown (once ever)?
+let howtoSeen = false;   // has the How-to-Play tutorial been opened (once ever)? drives the button pulse
 
 // Streak = consecutive days you complete the daily. It stays "alive" if your last
 // completion was today or yesterday; miss a whole day and it reads 0 until you finish
@@ -1415,6 +1472,7 @@ function release(){
 
 function physics(){
   updateParticles();   // run inside the sim step so hit-pause / slow-mo affect them too
+  if (state === 'landed' && trail.length) trail.shift();   // drain the flight trail so it dissipates instead of freezing in mid-air while banked
   if (state !== 'flying' && state !== 'swinging') return;
   runTime += DT;       // active play time only (excludes pause / menus / landed)
   const drag = state === 'swinging' ? K.SWING_DRAG : K.AIR_DRAG;
@@ -1660,6 +1718,7 @@ function syncUI(){
   // upper-right mode button shows only when paused/over; on the title it lives in the center stack instead
   const modeUp = document.getElementById('modeBtn'); if (modeUp) modeUp.style.display = (playing || titleOpen) ? 'none' : '';
   const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
+  const hb = document.getElementById('howtoBtn'); if (hb) hb.classList.toggle('pulse', !howtoSeen);   // nudge new players to the tutorial until they open it once
   const sc = document.getElementById('streakChip');   // 🔥 streak status + next reward on the title screen
   if (sc){
     const ls = liveStreak(), nm = nextMilestone();
@@ -1820,6 +1879,151 @@ function openInfo(which){
 function closeInfo(){ infoOpen = false; infoEl.classList.remove('open'); }
 document.getElementById('aboutLink').addEventListener('click',   e=>{ e.preventDefault(); openInfo('about'); });
 document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventDefault(); openInfo('privacy'); });
+
+// ---------- How to Play — animated, theme-aware tutorial (title screen only) ----------
+// A self-contained looping demo of the full loop: swing → release → skip → bank.
+// Uses the equipped theme's accent so it always matches the shop; zero assets, so it
+// never goes stale when a theme or the UI changes. Runs its own rAF only while open.
+(function(){
+  const overlay = document.getElementById('howto');
+  const cvs     = document.getElementById('howtoCanvas');
+  const capEl   = document.getElementById('howtoCap');
+  const pips    = Array.prototype.slice.call(overlay.querySelectorAll('.hpips i'));
+  const g = cvs.getContext('2d');
+  let open=false, raf=0, w=0, h=0, lastPhase=-1;
+  let manual=false, slide=0, slideStart=0;   // manual = user took over via arrows/swipe/pip; else it auto-advances
+  const SLIDE_LOOP = 4200;   // ms each slide shows — equal for every slide (auto-play) and its segment-loop length
+  // per-slide animation: a sub-range of the master timeline, so each slide loops one dynamic segment
+  const RANGES = [ [0.00,0.36], [0.28,0.52], [0.44,0.78], [0.66,1.00] ];
+  const STEPS = [
+    'Press &amp; <b>hold</b> to swing — momentum builds at the bottom of the arc',
+    '<b>Release</b> at the top of the swing to launch to the next anchor',
+    '<b>Skip</b> anchors in mid-air for bonus points &amp; a bigger multiplier',
+    'Land on a green <b>BANK</b> pad to lock in your score',
+  ];
+
+  function resize(){
+    const dpr = Math.min(window.devicePixelRatio||1, 2.5);
+    const r = cvs.getBoundingClientRect();
+    w = r.width; h = r.height;
+    cvs.width  = Math.max(1, Math.round(w*dpr));
+    cvs.height = Math.max(1, Math.round(h*dpr));
+    g.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  const PI2 = Math.PI*2;
+  function roundRect(x,y,wd,ht,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+wd,y,x+wd,y+ht,r);
+    g.arcTo(x+wd,y+ht,x,y+ht,r); g.arcTo(x,y+ht,x,y,r); g.arcTo(x,y,x+wd,y,r); g.closePath(); }
+  function label(txt,x,y,col){ g.font='800 13px ui-sans-serif, system-ui'; g.textAlign='center'; g.textBaseline='alphabetic'; g.fillStyle=col; g.fillText(txt,x,y); }
+  function anchorDot(x,y,acc,rgb,alpha,flash){
+    g.save(); g.globalAlpha *= (alpha==null?1:alpha);
+    if (flash>0){ g.beginPath(); g.arc(x,y,9+flash*11,0,PI2); g.strokeStyle='rgba('+rgb+','+(0.7*flash)+')'; g.lineWidth=2; g.stroke(); }
+    g.beginPath(); g.arc(x,y,6,0,PI2); g.fillStyle=acc; g.fill();
+    g.globalAlpha *= 0.9; g.beginPath(); g.arc(x,y,2.5,0,PI2); g.fillStyle='#fff'; g.fill();
+    g.restore();
+  }
+  function bankPad(cx,topY,pw,now){   // matches the in-game platform: mint bloom, rounded #2ea043 bar, BANK label above
+    const x=cx-pw/2, pulse=0.5+0.5*Math.sin(now/380);   // slow breathing glow, matching play mode
+    g.save();   // layered bloom: fill the bar twice through a mint drop-shadow so the halo deepens
+    g.shadowColor='#5dffa0'; g.shadowBlur=11+10*pulse;
+    g.fillStyle='#2ea043'; roundRect(x,topY,pw,12,4); g.fill(); g.fill();
+    g.restore();
+    g.save();   // BANK label floats above the bar, mint + pulsing
+    g.shadowColor='#5dffa0'; g.shadowBlur=8+8*pulse;
+    g.fillStyle='rgba(155,255,190,'+(0.85+0.15*pulse)+')';
+    g.font='700 11px ui-sans-serif, system-ui'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText('BANK', cx, topY-7);
+    g.restore();
+  }
+  function orb(x,y,acc,rgb){
+    g.beginPath(); g.arc(x,y,17,0,PI2); g.fillStyle='rgba('+rgb+',0.30)'; g.fill();
+    g.beginPath(); g.arc(x,y,11,0,PI2); g.fillStyle=acc; g.fill();
+  }
+
+  function draw(now){
+    if (!open){ raf=0; return; }
+    raf = requestAnimationFrame(draw);
+    if (!w || !h) resize();
+    const th = (typeof TH==='function' && TH()) || {};
+    const acc = th.accent || '#58a6ff';
+    const rgb = th.rgb || '88,166,255';
+    while (!manual && (now - slideStart) >= SLIDE_LOOP){ slide=(slide+1)%STEPS.length; slideStart += SLIDE_LOOP; }   // auto-advance: equal time per slide
+    const seg=RANGES[slide];
+    const lp=((now-slideStart)%SLIDE_LOOP)/SLIDE_LOOP;   // progress through the current slide's loop
+    const u=seg[0]+lp*(seg[1]-seg[0]);                   // position on the master timeline
+
+    // fixed mini-course (fractions of the measured canvas)
+    const Ax=w*0.22, Ay=h*0.20, L=h*0.34, relAng=0.60;
+    const Rx=Ax+Math.sin(relAng)*L, Ry=Ay+Math.cos(relAng)*L;   // release point (forward peak of the swing)
+    const padCx=w*0.78, padTopY=h*0.66, padW=Math.min(w*0.30,150);
+    const landX=padCx-padW*0.26, landY=padTopY-11;               // orb rests on the pad, offset left of the centered BANK label
+    const Cx=(Rx+landX)/2, Cy=h*0.04;                            // Bézier control (arc up and over)
+    const bez=p=>({ x:(1-p)*(1-p)*Rx+2*(1-p)*p*Cx+p*p*landX, y:(1-p)*(1-p)*Ry+2*(1-p)*p*Cy+p*p*landY });
+    const S=bez(0.5);                                            // skip anchor sits exactly on the flight path
+
+    // phases: swing 0–.36 | release .36–.44 | flight/skip .44–.78 | bank .78–1
+    let phase, ox, oy, ropeOn=false, holdOn=false, skipFlash=0, bankFlash=0, relFlash=0, f=0;
+    if (u<0.36){ phase=0; const s=u/0.36, amp=relAng*(0.5+0.5*s), ang=-amp*Math.cos(3*Math.PI*s);
+      ox=Ax+Math.sin(ang)*L; oy=Ay+Math.cos(ang)*L; ropeOn=true; holdOn=true; }
+    else if (u<0.44){ phase=1; ox=Rx; oy=Ry; relFlash=1-(u-0.36)/0.08; }
+    else if (u<0.78){ phase=2; f=(u-0.44)/0.34; const P=bez(f); ox=P.x; oy=P.y; skipFlash=Math.max(0,1-Math.abs(f-0.5)/0.16); }
+    else { phase=3; const b=(u-0.78)/0.22; ox=landX; oy=landY; bankFlash=Math.max(0,1-b/0.55); }
+
+    const fade=Math.min(1, lp/0.035, (1-lp)/0.035);   // dip at the current loop's seam (auto or manual) to mask the cut
+
+    // ---- paint ----
+    g.clearRect(0,0,w,h);
+    const bg=g.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#0b111b'); bg.addColorStop(1,'#0a0e14');
+    g.fillStyle=bg; g.fillRect(0,0,w,h);
+
+    g.save(); g.globalAlpha=fade;
+    bankPad(padCx,padTopY,padW,now);
+    anchorDot(Ax,Ay,acc,rgb, phase===0?1:0.55, 0);
+    anchorDot(S.x,S.y,acc,rgb, 1, skipFlash);
+    if (ropeOn){ g.strokeStyle='#8b949e'; g.lineWidth=2; g.beginPath(); g.moveTo(Ax,Ay); g.lineTo(ox,oy); g.stroke(); }
+    if (phase===2){ for (let k=1;k<=6;k++){ const tf=f-k*0.03; if(tf<0)break; const q=bez(tf);
+        g.globalAlpha=fade*0.28*(1-k/7); g.beginPath(); g.arc(q.x,q.y,7-k*0.6,0,PI2); g.fillStyle=acc; g.fill(); }
+      g.globalAlpha=fade; }
+    if (relFlash>0){ g.globalAlpha=fade*relFlash; g.strokeStyle=acc; g.lineWidth=2.5;
+      g.beginPath(); g.arc(Rx,Ry,14+(1-relFlash)*22,0,PI2); g.stroke(); g.globalAlpha=fade; }
+    orb(ox,oy,acc,rgb);
+    if (holdOn){ const pr=15+3*Math.sin(now/140); g.globalAlpha=fade*0.7; g.strokeStyle=acc; g.lineWidth=2;
+      g.setLineDash([3,4]); g.beginPath(); g.arc(ox,oy,pr,0,PI2); g.stroke(); g.setLineDash([]);
+      label('HOLD',ox,oy-pr-9,acc); g.globalAlpha=fade; }
+    if (skipFlash>0.2){ g.globalAlpha=fade*Math.min(1,skipFlash*1.4); label('+SKIP  ×2', S.x, S.y-16-(1-skipFlash)*10, '#9be29b'); g.globalAlpha=fade; }
+    if (bankFlash>0.15){ g.globalAlpha=fade*Math.min(1,bankFlash*1.5); label('BANKED!', padCx, padTopY-24-(1-bankFlash)*14, '#9bffbe'); g.globalAlpha=fade; }
+    g.restore();
+
+    if (slide!==lastPhase){ lastPhase=slide; capEl.innerHTML=STEPS[slide];
+      for (let i=0;i<pips.length;i++) pips[i].classList.toggle('on', i===slide); }
+  }
+
+  function openHowto(){ if (open) return; overlay.classList.add('open'); open=true; lastPhase=-1; manual=false; slide=0;
+    resize(); slideStart=performance.now(); raf=requestAnimationFrame(draw);
+    if (!howtoSeen){ howtoSeen=true; try{ saveGame(); }catch(e){} }   // remember it's been seen (persists + syncs via cloud)
+    const hb=document.getElementById('howtoBtn'); if (hb) hb.classList.remove('pulse'); }
+  function closeHowto(){ open=false; if (raf){ cancelAnimationFrame(raf); raf=0; } overlay.classList.remove('open'); }
+
+  document.getElementById('howtoBtn').addEventListener('click', openHowto);
+  document.getElementById('howtoClose').addEventListener('click', closeHowto);
+  document.getElementById('howtoPlay').addEventListener('click', function(){ closeHowto(); startGame(); });
+  overlay.addEventListener('click', function(e){ if (e.target===overlay) closeHowto(); });
+  window.addEventListener('resize', function(){ if (open) resize(); });
+
+  // manual navigation: the ‹ › arrows, a swipe across the canvas, or a pip. Any of these pauses auto-play
+  // and holds the chosen slide; reopen for auto-play.
+  function jump(i){ slide=(i+STEPS.length)%STEPS.length; manual=true; slideStart=performance.now(); lastPhase=-1; }
+  function go(dir){ jump(slide+dir); }
+  document.getElementById('howtoPrev').addEventListener('click', function(){ go(-1); });
+  document.getElementById('howtoNext').addEventListener('click', function(){ go(1); });
+  let downX=0, downY=0, tracking=false;
+  cvs.addEventListener('pointerdown', function(e){ tracking=true; downX=e.clientX; downY=e.clientY; try{ cvs.setPointerCapture(e.pointerId); }catch(_){} });
+  cvs.addEventListener('pointerup', function(e){ if(!tracking) return; tracking=false;
+    const dx=e.clientX-downX, dy=e.clientY-downY;
+    if (Math.abs(dx)>=35 && Math.abs(dx)>Math.abs(dy)) go(dx<0?1:-1); });   // horizontal swipe → next / prev
+  cvs.addEventListener('pointercancel', function(){ tracking=false; });
+  for (let i=0;i<pips.length;i++){ (function(idx){ pips[idx].addEventListener('click', function(){ jump(idx); }); })(i); }
+})();
 
 // Streak rewards ladder — reuses the #info modal, built live from the current streak.
 function openStreakInfo(){
