@@ -180,6 +180,16 @@
   #lb .lbtabs button { flex:1; padding:8px; border-radius:8px; border:1px solid #30363d;
     background:#161b22; color:#8b949e; font-weight:700; font-size:13px; cursor:pointer; }
   #lb .lbtabs button.active { background:#21262d; color:#e6edf3; border-color:var(--accent,#58a6ff); }
+  /* all-time board: "you're #N" line + page arrows */
+  #lb .lbyou { text-align:center; color:#c9d1d9; font-size:13px; font-weight:600; margin:2px 2px 10px; }
+  #lb .lbyou b { color:var(--accent,#58a6ff); }
+  #lb .lbpager { display:flex; align-items:center; justify-content:center; gap:16px; padding:14px 0 2px; }
+  #lb .lbarrow { display:inline-flex; align-items:center; justify-content:center; width:38px; height:34px; padding:0;
+    border:1px solid #30363d; border-radius:9px; background:#161b22; color:var(--accent,#58a6ff);
+    font-size:20px; line-height:1; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color .15s, transform .08s; }
+  #lb .lbarrow:active { transform:scale(.92); }
+  #lb .lbarrow:disabled { color:#30363d; cursor:default; }
+  #lb .lbpageinfo { color:#8b949e; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; min-width:88px; text-align:center; }
 
   /* ---- shop overlay ---- */
   #shop { position:fixed; inset:0; z-index:20; display:none;
@@ -272,7 +282,7 @@
   /* ---- title screen (sits below the top #ui bar so those buttons stay tappable) ---- */
   #titleScreen { position:fixed; inset:0; z-index:8; display:none;
     flex-direction:column; align-items:center; justify-content:center; gap:14px;
-    padding:calc(env(safe-area-inset-top)) 0 calc(env(safe-area-inset-bottom));
+    padding:calc(env(safe-area-inset-top)) 0 calc(70px + env(safe-area-inset-bottom));   /* extra bottom pad lifts the centered content up a bit */
     background:transparent;   /* show the equipped theme's canvas background through */
     -webkit-user-select:none; user-select:none; }
   #titleScreen.show { display:flex; }
@@ -292,21 +302,14 @@
     padding:7px 14px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
     background:rgba(22,27,34,.75); color:#e6edf3; outline:none; }
   #titleGreet input::placeholder { color:#6b7480; font-weight:400; }
-  #streakChip { display:none; margin:2px 0 14px; padding:6px 14px; border-radius:999px;
-    background:rgba(255,140,40,.14); border:1px solid rgba(255,140,40,.45); color:#ffb572;
-    font-size:13.5px; font-weight:700; letter-spacing:.3px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent; transition:transform .08s; }
-  #streakChip.show { display:inline-block; }
-  #streakChip:active { transform:scale(.96); }
-  #streakChip b { color:#ffd9b0; }
   /* returning-player progress: high score (★) + coin balance, reusing the in-game star + coin icons */
   #titleStats { display:none; margin:-2px 0 2px; flex-wrap:wrap; align-items:center; justify-content:center;
     gap:4px 14px; color:#c9d3de; font-size:14px; font-weight:600; -webkit-user-select:none; user-select:none; }
   #titleStats.show { display:flex; }
   #titleStats .tstat b { color:#e6edf3; font-weight:800; }
   #titleStats .tstar { color:#ffd95e; font-size:15px; }
-  /* shared gold coin badge (matches the shop) in the streak chip + rewards modal */
-  #streakChip .ci, #infoBody .ci, #fxToast .ci, #titleStats .ci { display:inline-flex; align-items:center; justify-content:center;
+  /* shared gold coin badge (matches the shop) in the streak section, rewards modal, toast + title stats */
+  #shopBody .streakSec .ci, #infoBody .ci, #fxToast .ci, #titleStats .ci { display:inline-flex; align-items:center; justify-content:center;
     width:14px; height:14px; border-radius:50%; margin-right:3px; vertical-align:middle; position:relative;
     top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
@@ -316,14 +319,24 @@
     border-radius:50%; vertical-align:middle; position:relative; top:-1px; margin-right:1px;
     color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
-  /* streak rewards ladder (inside the reused #info modal) */
-  #infoBody .streakRow { display:flex; align-items:center; gap:10px; padding:9px 0;
-    border-bottom:1px solid #21262d; font-size:14px; }
-  #infoBody .streakRow:last-child { border-bottom:none; }
-  #infoBody .streakRow .sd { flex:1 1 auto; color:#e6edf3; font-weight:600; }
-  #infoBody .streakRow .sr { color:#ffd95e; font-weight:700; }
-  #infoBody .streakRow .si { width:20px; text-align:center; }
-  #playBtn { padding:14px 40px; border:none; border-radius:999px; background:var(--accent,#58a6ff);
+  /* daily-streak section at the top of the shop: current day + milestone ladder */
+  #shopBody .streakSec { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:12px 14px; margin:6px 0 14px; }
+  #shopBody .streakSecTop { display:flex; align-items:center; gap:8px; width:100%; box-sizing:border-box;
+    background:none; border:none; padding:0; margin:0; font-family:inherit; text-align:left;
+    cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .08s; }
+  #shopBody .streakSecTop:active { transform:scale(.99); }
+  #shopBody .streakSecTitle { flex:1 1 auto; color:#ffb572; font-weight:800; font-size:14.5px; letter-spacing:.3px; }
+  #shopBody .streakSecTop .chev { font-size:18px; line-height:1; color:var(--accent,#58a6ff); }
+  #shopBody .streakSecDay { color:#e6edf3; font-weight:800; font-size:14.5px; }
+  #shopBody .streakSecSub { color:#8b949e; font-size:12px; margin:3px 0 8px; }
+  #shopBody .streakLadder { border-top:1px solid #21262d; }
+  #shopBody .streakRow { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #21262d; font-size:13.5px; }
+  #shopBody .streakRow:last-child { border-bottom:none; }
+  #shopBody .streakRow .sd { flex:1 1 auto; color:#e6edf3; font-weight:600; }
+  #shopBody .streakRow .sr { color:#ffd95e; font-weight:700; white-space:nowrap; }
+  #shopBody .streakRow .si { width:20px; text-align:center; }
+  #shopBody .streakSecFoot { color:#6e7681; font-size:11px; margin-top:9px; }
+  #playBtn { margin-top:34px; padding:14px 40px; border:none; border-radius:999px; background:var(--accent,#58a6ff);
     color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.4), 0 0 24px var(--accent,#58a6ff);
     transition:transform .08s; }
@@ -437,6 +450,7 @@
   .hcaprow { display:flex; align-items:center; gap:2px; padding:9px 8px 2px; min-height:64px; }
   #howtoCap { flex:1 1 auto; min-height:2.6em; text-align:center; color:#c9d1d9; font-size:14.5px; line-height:1.4; }
   #howtoCap b { color:var(--accent,#58a6ff); font-weight:800; }
+  #howtoCap .hnote { display:block; margin-top:5px; font-size:11.5px; line-height:1.35; color:#8b949e; font-weight:400; }
   .hnav { flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; width:42px; height:46px;
     padding:0; border:none; background:transparent; color:var(--accent,#58a6ff); cursor:pointer;
     -webkit-tap-highlight-color:transparent; opacity:.92; transition:transform .1s, opacity .15s; }
@@ -512,7 +526,6 @@
   <p class="tagline">Swing &middot; Skip &middot; Bank</p>
   <div id="titleGreet"></div>
   <div id="titleStats"></div>
-  <div id="streakChip"></div>
   <button id="playBtn">&#9654; Play</button>
   <button id="howtoBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/><path d="M22 4h-6a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/></svg> How to Play</button>
   <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg> Leaderboard</button>
@@ -601,7 +614,7 @@ if (window.Capacitor) {
     </div>
     <div class="lbtabs">
       <button id="tabToday" class="active">Today</button>
-      <button id="tabWins">All-Time Wins</button>
+      <button id="tabAllTime">All-Time</button>
     </div>
     <div id="lbBody"></div>
   </div>
@@ -1230,7 +1243,7 @@ let beatenSeen = false;  // has the "you unlocked everything / beat the game" ce
 // Streak = consecutive days you complete the daily. It stays "alive" if your last
 // completion was today or yesterday; miss a whole day and it reads 0 until you finish
 // another daily. Hitting a milestone day pays a one-time coin bonus from this table.
-const STREAK_MILESTONES = { 3:5000, 7:15000, 14:50000, 30:150000 };   // coin rewards (shop themes start at 12,000)
+const STREAK_MILESTONES = { 3:5000, 7:15000, 14:50000, 30:150000, 100:1000000, 365:5000000 };   // coin rewards (shop themes start at 12,000)
 const STREAK_DAYS = Object.keys(STREAK_MILESTONES).map(Number).sort((a,b)=>a-b);
 function liveStreak(){
   return (lastDailyDone === dayNumber || lastDailyDone === dayNumber - 1) ? streak : 0;
@@ -1809,20 +1822,6 @@ function syncUI(){
   const modeUp = document.getElementById('modeBtn'); if (modeUp) modeUp.style.display = (playing || titleOpen) ? 'none' : '';
   const ts = document.getElementById('titleScreen'); if (ts) ts.classList.toggle('show', titleOpen);
   const hb = document.getElementById('howtoBtn'); if (hb) hb.classList.toggle('pulse', !howtoSeen);   // nudge new players to the tutorial until they open it once
-  const sc = document.getElementById('streakChip');   // 🔥 streak status + next reward on the title screen
-  if (sc){
-    const ls = liveStreak(), nm = nextMilestone();
-    let txt = ls >= 1 ? `🔥 <b>${ls}</b>-day streak`
-            : bestStreak >= 1 ? `🔥 Best streak <b>${bestStreak}</b>`
-            : `🔥 Start a daily streak`;
-    if (nm){
-      const hitsToday = lastDailyDone !== dayNumber && nm.day === ls + 1;   // finishing today's daily reaches it
-      txt += hitsToday ? ` &middot; <span class="ci">C</span><b>+${fmt(nm.reward)}</b> today!`
-                       : ` &middot; day ${nm.day} = <span class="ci">C</span><b>+${fmt(nm.reward)}</b>`;
-    }
-    sc.innerHTML = txt + ` <span style="opacity:.55;font-weight:400">&#9656;</span>`;
-    sc.classList.add('show');
-  }
   const stEl = document.getElementById('titleStats');   // returning-player progress: high score (★) + coin balance
   if (stEl){
     const parts = [];
@@ -1949,9 +1948,9 @@ const INFO = {
     <h4>Leaderboard</h4>
     <p>If you submit a score, the app sends your chosen display name (you can stay
        anonymous) plus a short tag, your score, the day number, and your random
-       player ID to the leaderboard server at 1moreswing.com. This is also how your
-       all-time wins are tracked. We do not collect your real name, email, or
-       contacts.</p>
+       player ID to the leaderboard server at 1moreswing.com. This is also how the
+       daily and all-time leaderboards are ranked. We do not collect your real name,
+       email, or contacts.</p>
     <h4>Ads</h4>
     <p>The app shows ads via Google AdMob, including optional rewarded videos you
        can watch to continue a run. Google may use device and advertising
@@ -2002,7 +2001,7 @@ document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventD
     '<b>Skip</b> anchors in mid-air for bonus points &amp; a bigger multiplier',
     'Land on a green <b>BANK</b> pad to lock in your score',
     'These are your top-right buttons. Switch between <b>Daily</b> &amp; <b>Free&nbsp;Play</b> anytime with the toggle.',   // UI guide — rendered as the #howtoGuide HTML overlay, not on the canvas
-    'Top the <b>Daily</b> to win the day. Rack up wins to rule the <b>All-Time</b> board, and collect every unlockable <b>cosmetic</b> to beat the game.',   // the goal — drawn by drawGoal(), not the swing timeline
+    'Top the <b>Daily</b> board, and your best run ranks you on the <b>All-Time</b> top 100 &mdash; then collect every unlockable <b>cosmetic</b> to beat the game. <span class="hnote">Prism &amp; limited-time seasonal themes are not required for 100%.</span>',   // the goal — drawn by drawGoal(), not the swing timeline
   ];
 
   function resize(){
@@ -2057,7 +2056,7 @@ document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventD
     for (let i=0;i<3;i++){ g.beginPath(); g.arc(tips[i][0],tips[i][1],s*0.11,0,PI2); g.fillStyle='#fff'; g.fill(); }
     g.restore();
   }
-  // Final slide — the meta goal: top the Daily → rule the All-Time wins board → unlock every theme to "beat" it.
+  // Final slide — the meta goal: top the Daily → rank on the All-Time top-100 score board → unlock every theme to "beat" it.
   // A leaderboard podium (accent #1 bar) crowned champion, over a row of theme swatches that fill to 100%.
   function drawGoal(now, lp, fade, acc){
     g.save(); g.globalAlpha=fade;
@@ -2209,33 +2208,33 @@ document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventD
   for (let i=0;i<pips.length;i++){ (function(idx){ pips[idx].addEventListener('click', function(){ jump(idx); }); })(i); }
 })();
 
-// Streak rewards ladder — reuses the #info modal, built live from the current streak.
-function openStreakInfo(){
+// Streak section shown at the top of the shop — current streak day + the milestone rewards ladder, built live.
+function streakSectionHTML(){
   const ls = liveStreak(), nm = nextMilestone();
-  const rows = STREAK_DAYS.map(d => {
-    const reward = STREAK_MILESTONES[d];
-    const done = ls >= d, isNext = nm && nm.day === d;
-    const icon = done ? '<span style="color:#3fb950">✓</span>'
-               : isNext ? '🔥' : '<span style="color:#6e7681">○</span>';
-    const dayCol = done ? '#8b949e' : isNext ? '#ffb572' : '#e6edf3';
-    return `<div class="streakRow"><span class="si">${icon}</span>` +
-           `<span class="sd" style="color:${dayCol}">Day ${d}${isNext?' &middot; <span style="color:#8b949e;font-weight:400">next</span>':''}</span>` +
-           `<span class="sr"><span class="ci">C</span>+${fmt(reward)}</span></div>`;
-  }).join('');
-  const status = ls >= 1
-    ? `Current streak: <b style="color:#ffb572">${ls} day${ls>1?'s':''}</b>` + (bestStreak>ls?` &middot; best ${bestStreak}`:'')
-    : (bestStreak >= 1 ? `Best streak: <b style="color:#ffb572">${bestStreak}</b> &middot; play today to start a new one`
-                       : `Finish today's daily to start your streak.`);
-  document.getElementById('infoTitle').textContent = 'DAILY STREAK';
-  document.getElementById('infoBody').innerHTML =
-    `<h3>Daily Streak 🔥</h3>` +
-    `<p>Complete the daily run on consecutive days to build your streak. Miss a whole day and it resets to zero.</p>` +
-    `<p class="muted">${status}</p>` +
-    `<h4>Milestone rewards</h4>${rows}` +
-    `<p class="muted" style="margin-top:12px">Coins are paid once each time you reach a milestone day.</p>`;
-  infoOpen = true; infoEl.classList.add('open');
+  const dayLabel = ls >= 1 ? `Day ${ls}` : 'Not started';
+  let html = `<div class="streakSec${streakOpen?' open':''}">`
+    + `<button class="streakSecTop" data-act="streak"><span class="streakSecTitle">🔥 Daily Streak</span>`
+    + `<span class="streakSecDay">${dayLabel}</span><span class="chev">${streakOpen?'▾':'▸'}</span></button>`;
+  if (streakOpen){
+    const rows = STREAK_DAYS.map(d => {
+      const reward = STREAK_MILESTONES[d];
+      const done = ls >= d, isNext = nm && nm.day === d;
+      const icon = done ? '<span style="color:#3fb950">✓</span>'
+                 : isNext ? '🔥' : '<span style="color:#6e7681">○</span>';
+      const dayCol = done ? '#8b949e' : isNext ? '#ffb572' : '#e6edf3';
+      return `<div class="streakRow"><span class="si">${icon}</span>` +
+             `<span class="sd" style="color:${dayCol}">Day ${d}${isNext?' &middot; <span style="color:#8b949e;font-weight:400">next</span>':''}</span>` +
+             `<span class="sr"><span class="ci">C</span>+${fmt(reward)}</span></div>`;
+    }).join('');
+    const sub = ls >= 1
+      ? (nm ? `${nm.day - ls} day${nm.day - ls > 1 ? 's' : ''} to <span class="ci">C</span>+${fmt(nm.reward)}` : 'Every milestone reached! 🎉')
+      : (bestStreak >= 1 ? `Best: ${bestStreak} days &middot; play a daily to start again` : 'Play a daily each day to build it up');
+    html += `<div class="streakSecSub">${sub}</div>`
+      + `<div class="streakLadder">${rows}</div>`
+      + `<div class="streakSecFoot">Coins are paid once each time you reach a milestone day.</div>`;
+  }
+  return html + `</div>`;
 }
-document.getElementById('streakChip').addEventListener('click', openStreakInfo);
 document.getElementById('infoClose').addEventListener('click', closeInfo);
 infoEl.addEventListener('click', e=>{ if (e.target === infoEl) closeInfo(); });   // tap backdrop to close
 
@@ -2375,6 +2374,7 @@ const shopEl = document.getElementById('shop');
 let shopOpen = false;
 let nationsOpen = false;   // collapsed NATIONS subgroup in the shop
 let catOpen = { theme:false, trail:false, orb:false };   // collapsible shop sections (closed by default)
+let streakOpen = false;   // the daily-streak section collapses like the category sections
 function swatchStyle(cat, id){
   if (cat === 'theme'){
     if (id === 'space')     return 'radial-gradient(circle at 32% 30%, #34d399, #05070d 78%)';
@@ -2435,7 +2435,7 @@ function renderShop(){
   const iap = window.OMS_IAP;
   const iapReady = !!(iap && iap.ready);
   const seasonId = seasonNow();
-  let html = '';
+  let html = streakSectionHTML();   // 🔥 daily-streak section at the top of the shop
   for (const [cat,label] of [['theme','THEMES'],['trail','TRAILS'],['orb','ORBS']]){
     html += `<button class="cattoggle${catOpen[cat]?' open':''}" data-act="cat" data-cat="${cat}">${label} <span class="cn">${COSMETICS[cat].length}</span><span class="chev">${catOpen[cat]?'▾':'▸'}</span></button>`;
     if (!catOpen[cat]) continue;   // collapsed section — skip its contents
@@ -2506,7 +2506,8 @@ function renderShop(){
   body.innerHTML = html;
   body.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', () => {
     const { act, cat, id } = b.dataset;
-    if (act === 'cat'){ catOpen[cat] = !catOpen[cat]; renderShop(); }
+    if (act === 'streak'){ streakOpen = !streakOpen; renderShop(); }
+    else if (act === 'cat'){ catOpen[cat] = !catOpen[cat]; renderShop(); }
     else if (act === 'nations'){ nationsOpen = !nationsOpen; renderShop(); }
     else if (act === 'buy') buyItem(cat, id);
     else if (act === 'equip') equipItem(cat, id);
@@ -2836,7 +2837,8 @@ function renderLB(data){
   });
 }
 let lbTab = 'today';
-async function fetchWins(){ try{ const r = await fetch(`${API_BASE}/api/wins?platform=${PLATFORM}`); if(!r.ok) return null; return await r.json(); } catch(e){ return null; } }
+let atData = null, atPage = 0;   // all-time board: fetched top-100 payload + current page (0-indexed)
+async function fetchAllTime(){ try{ const r = await fetch(`${API_BASE}/api/alltime?platform=${PLATFORM}`); if(!r.ok) return null; return await r.json(); } catch(e){ return null; } }
 // unlock Epic Minimalist once 100 distinct daily challenges have been completed (local count — no leaderboard needed)
 function checkDailyUnlock(){
   const mono = COSMETICS.theme.find(t => t.id === 'mono');
@@ -2864,24 +2866,38 @@ function checkStreakUnlock(){
     checkBeatGame();   // the earned Streak Flame trail may have been the last piece
   }
 }
-function renderWins(data){
+const AT_PER = 10;   // all-time board rows per page
+function renderAllTime(){
   const myTag = tagOf(playerId);
+  const players = atData && atData.players;
+  if (!players)        { lbBody.innerHTML = `<div class="msg">Leaderboard offline.</div>`; return; }
+  if (!players.length) { lbBody.innerHTML = `<div class="msg">No scores yet — be the first!</div>`; return; }
+  const pages = Math.ceil(players.length / AT_PER);
+  atPage = Math.max(0, Math.min(atPage, pages - 1));
+  const myRank = players.findIndex(p => p.tag === myTag);   // -1 if not in the top 100
+  const start = atPage * AT_PER;
   let html = '';
-  if (!data || !data.champions)    html += `<div class="msg">Leaderboard offline.</div>`;
-  else if (!data.champions.length) html += `<div class="msg">No champions yet — win a daily to be the first!</div>`;
-  else data.champions.forEach((c,i)=>{
-    const me = (c.tag === myTag) ? ' me' : '';
-    html += `<div class="row${me}"><span class="rk">${i+1}</span><span class="nm">${escapeHtml(c.name)}<span class="tag">#${c.tag}</span></span><span class="sc">${c.wins}<span class="unit">${c.wins === 1 ? 'win' : 'wins'}</span></span></div>`;
+  if (myRank >= 0) html += `<div class="lbyou">You're <b>#${myRank + 1}</b> of ${players.length}</div>`;
+  players.slice(start, start + AT_PER).forEach((p,i)=>{
+    const rank = start + i + 1, me = (p.tag === myTag) ? ' me' : '';
+    html += `<div class="row${me}"><span class="rk">${rank}</span><span class="nm">${escapeHtml(p.name)}<span class="tag">#${p.tag}</span></span><span class="sc">${fmt(p.score)}</span></div>`;
   });
+  if (pages > 1) html += `<div class="lbpager">`
+    + `<button class="lbarrow" id="atPrev"${atPage===0?' disabled':''} aria-label="Previous page">&#8249;</button>`
+    + `<span class="lbpageinfo">Page ${atPage + 1} / ${pages}</span>`
+    + `<button class="lbarrow" id="atNext"${atPage>=pages-1?' disabled':''} aria-label="Next page">&#8250;</button>`
+    + `</div>`;
   lbBody.innerHTML = html;
+  const pv = document.getElementById('atPrev'); if (pv) pv.addEventListener('click', ()=>{ atPage--; renderAllTime(); });
+  const nx = document.getElementById('atNext'); if (nx) nx.addEventListener('click', ()=>{ atPage++; renderAllTime(); });
 }
 async function showTab(){
   document.getElementById('tabToday').classList.toggle('active', lbTab==='today');
-  document.getElementById('tabWins').classList.toggle('active', lbTab==='wins');
-  document.getElementById('lbTitle').textContent = lbTab==='today' ? `DAILY · DAY ${dayNumber}` : 'ALL-TIME WINS';
+  document.getElementById('tabAllTime').classList.toggle('active', lbTab==='alltime');
+  document.getElementById('lbTitle').textContent = lbTab==='today' ? `DAILY · DAY ${dayNumber}` : 'ALL-TIME BEST';
   lbBody.innerHTML = '<div class="msg">Loading…</div>';
   if (lbTab==='today') renderLB(await fetchScores(dayNumber));
-  else                 renderWins(await fetchWins());
+  else { atData = await fetchAllTime(); atPage = 0; renderAllTime(); }
 }
 function setTab(t){ lbTab = t; showTab(); }
 async function openLeaderboard(){ lbOpen = true; lbEl.classList.add('open'); lbTab = 'today'; editingName = false; showTab(); }
@@ -2890,7 +2906,7 @@ document.getElementById('lbClose').addEventListener('click', closeLeaderboard);
 document.getElementById('lbOpenBtn').addEventListener('click', openLeaderboard);
 document.getElementById('titleLbBtn').addEventListener('click', openLeaderboard);
 document.getElementById('tabToday').addEventListener('click', ()=>setTab('today'));
-document.getElementById('tabWins').addEventListener('click', ()=>setTab('wins'));
+document.getElementById('tabAllTime').addEventListener('click', ()=>setTab('alltime'));
 lbEl.addEventListener('click', e => { if (e.target === lbEl) closeLeaderboard(); });
 
 // ---------- rewarded "continue" (Free Play only) ----------
