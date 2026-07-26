@@ -125,6 +125,29 @@
     100% { opacity:0; transform:translate(-50%,-62%) scale(1); }
   }
 
+  /* ---- "you beat the game" full-screen takeover (all cosmetics unlocked) ---- */
+  #beatGame { position:fixed; inset:0; z-index:56; display:none; box-sizing:border-box;
+    padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+    align-items:center; justify-content:center; text-align:center;
+    background:radial-gradient(circle at 50% 34%, rgba(21,28,40,.975), rgba(6,9,14,.992)); backdrop-filter:blur(4px); }
+  #beatGame.show { display:flex; }
+  #beatGame .bgCard { width:min(460px,92vw); animation:bgIn .55s cubic-bezier(.2,.85,.3,1) both; }
+  #beatGame .bgCrown { width:min(150px,44vw); height:auto; filter:drop-shadow(0 6px 26px var(--accent,#58a6ff));
+    animation:bgBob 2.6s ease-in-out infinite; }
+  #beatGame .bgCrown path { fill:var(--accent,#58a6ff); }   /* theme the crown via CSS (reliable in iOS WKWebView; attribute is only a fallback) */
+  #beatGame .bgKicker { margin-top:16px; letter-spacing:3.5px; font-size:13px; font-weight:800; color:var(--accent,#58a6ff); }
+  #beatGame .bgTitle { margin:9px 0 0; font-size:clamp(28px,7.2vw,40px); font-weight:800; color:#f4f7fb; line-height:1.12; }
+  #beatGame .bgTitle b { color:var(--accent,#58a6ff); }
+  #beatGame .bgMsg { margin:16px auto 0; max-width:33ch; font-size:15.5px; line-height:1.55; color:#c9d1d9; }
+  #beatGame .bgSub { margin-top:18px; display:inline-block; padding:7px 15px; border:1px solid #30363d;
+    border-radius:999px; font-size:12.5px; font-weight:600; letter-spacing:.3px; color:#9aa4af; }
+  #beatGameClose { display:block; margin:26px auto 0; padding:14px 44px; border:none; border-radius:999px;
+    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:17px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; transition:transform .08s; }
+  #beatGameClose:active { transform:scale(.97); }
+  @keyframes bgBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-9px); } }
+  @keyframes bgIn { from { opacity:0; transform:translateY(16px) scale(.955); } to { opacity:1; transform:none; } }
+
   /* ---- leaderboard overlay ---- */
   #lb { position:fixed; inset:0; z-index:20; display:none;
     background:rgba(8,11,16,.78); backdrop-filter:blur(3px); align-items:center; justify-content:center; }
@@ -255,7 +278,7 @@
   #titleScreen.show { display:flex; }
   #titleScreen .bigtitle { margin:0; color:#e6edf3; font-weight:800; font-size:44px;
     letter-spacing:1px; text-align:center; text-shadow:0 3px 16px rgba(0,0,0,.55); }
-  #titleScreen .bigtitle b { color:var(--accent,#58a6ff); }
+  #titleScreen .bigtitle b { color:var(--accent,#58a6ff); text-shadow:0 2px 14px rgba(0,0,0,.5), 0 0 22px var(--accent,#58a6ff); }
   #titleScreen .tagline { margin:0 0 4px; color:#8b949e; font-size:14px; letter-spacing:.4px; }
   /* personalized greeting + tappable name entry (reuses playerName; syncs with the leaderboard) */
   #titleGreet { margin:-6px 0 0; text-align:center; min-height:22px; }
@@ -276,8 +299,14 @@
   #streakChip.show { display:inline-block; }
   #streakChip:active { transform:scale(.96); }
   #streakChip b { color:#ffd9b0; }
+  /* returning-player progress: high score (★) + coin balance, reusing the in-game star + coin icons */
+  #titleStats { display:none; margin:-2px 0 2px; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:4px 14px; color:#c9d3de; font-size:14px; font-weight:600; -webkit-user-select:none; user-select:none; }
+  #titleStats.show { display:flex; }
+  #titleStats .tstat b { color:#e6edf3; font-weight:800; }
+  #titleStats .tstar { color:#ffd95e; font-size:15px; }
   /* shared gold coin badge (matches the shop) in the streak chip + rewards modal */
-  #streakChip .ci, #infoBody .ci, #fxToast .ci { display:inline-flex; align-items:center; justify-content:center;
+  #streakChip .ci, #infoBody .ci, #fxToast .ci, #titleStats .ci { display:inline-flex; align-items:center; justify-content:center;
     width:14px; height:14px; border-radius:50%; margin-right:3px; vertical-align:middle; position:relative;
     top:-1px; color:#7a5c00; font-size:9px; font-weight:800; line-height:1;
     background:radial-gradient(circle at 35% 30%, #ffe9a8, #f1c40f 68%, #c9a227); }
@@ -296,19 +325,23 @@
   #infoBody .streakRow .si { width:20px; text-align:center; }
   #playBtn { padding:14px 40px; border:none; border-radius:999px; background:var(--accent,#58a6ff);
     color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.45);
+    -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.4), 0 0 24px var(--accent,#58a6ff);
     transition:transform .08s; }
   #playBtn:active { transform:scale(.95); }
-  #titleLbBtn { padding:14px 32px; border:none; border-radius:999px;
-    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:18px; cursor:pointer;
+  #titleLbBtn { padding:14px 32px; border:1px solid var(--accent,#58a6ff); border-radius:999px;
+    background:rgba(22,27,34,.55); color:var(--accent,#58a6ff); font-weight:800; font-size:18px; cursor:pointer;
     display:inline-flex; align-items:center; gap:8px; -webkit-tap-highlight-color:transparent;
-    box-shadow:0 8px 26px rgba(0,0,0,.45); transition:transform .08s; }
+    box-shadow:0 0 16px -3px var(--accent,#58a6ff); transition:transform .08s; }
   #titleLbBtn svg { display:block; }
   #titleLbBtn:active { transform:scale(.95); }
-  #titleModeBtn { padding:14px 32px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
-    background:rgba(22,27,34,.55); color:var(--accent,#58a6ff); font-weight:800; font-size:18px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent; transition:transform .08s; }
-  #titleModeBtn:active { transform:scale(.95); }
+  /* mode selector: a segmented Daily / Free Play toggle so it's clearly a switch, not a nav button */
+  #titleModeToggle { display:inline-flex; padding:4px; gap:4px; border-radius:999px;
+    border:1px solid #30363d; background:rgba(22,27,34,.55); -webkit-tap-highlight-color:transparent; }
+  #titleModeToggle .seg { padding:9px 18px; border:none; border-radius:999px; background:transparent;
+    color:#8b949e; font-family:inherit; font-weight:800; font-size:15px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; transition:background .15s, color .15s, transform .08s; }
+  #titleModeToggle .seg.on { background:var(--accent,#58a6ff); color:#0d1117; box-shadow:0 0 13px var(--accent,#58a6ff); }
+  #titleModeToggle .seg:active { transform:scale(.96); }
   #quitBtn { padding:9px 26px; border-radius:999px; border:1px solid #30363d;
     background:transparent; color:#8b949e; font-weight:600; font-size:14px; cursor:pointer;
     -webkit-tap-highlight-color:transparent; }
@@ -363,7 +396,8 @@
   /* ---- How to Play: title button + animated tutorial overlay ---- */
   #howtoBtn { position:relative; padding:14px 32px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
     background:rgba(22,27,34,.55); color:var(--accent,#58a6ff); font-weight:800; font-size:18px; cursor:pointer;
-    display:inline-flex; align-items:center; gap:8px; -webkit-tap-highlight-color:transparent; transition:transform .08s; }
+    display:inline-flex; align-items:center; gap:8px; -webkit-tap-highlight-color:transparent;
+    box-shadow:0 0 16px -3px var(--accent,#58a6ff); transition:transform .08s; }
   #howtoBtn svg { display:block; }
   #howtoBtn:active { transform:scale(.95); }
   /* one-time "new" pulse ring — expands & fades in the theme accent until the tutorial is opened once */
@@ -380,6 +414,26 @@
   #howto .shead h2 { margin:0; font-size:15px; letter-spacing:1px; color:#e6edf3; }
   #howtoClose { width:32px; height:32px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#e6edf3; cursor:pointer; font-size:16px; }
   #howtoCanvas { display:block; width:100%; height:min(44vh,400px); background:#0b0f16; touch-action:none; cursor:pointer; }
+  /* "getting around" slide — swapped in for the canvas: the real top-bar icons + a live mode toggle */
+  #howtoGuide { display:none; width:100%; height:min(44vh,400px); box-sizing:border-box;
+    flex-direction:column; align-items:center; justify-content:center; gap:24px;
+    padding:16px; background:linear-gradient(#0b111b,#0a0e14); }
+  #howtoGuide.show { display:flex; }
+  #howtoGuide .hgIcons { display:flex; flex-wrap:wrap; gap:14px 18px; justify-content:center; }
+  #howtoGuide .hgItem { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  #howtoGuide .hgBtn { width:48px; height:48px; border-radius:13px; border:1px solid var(--accent,#58a6ff);
+    background:rgba(22,27,34,.85); color:#e6edf3; display:flex; align-items:center; justify-content:center; }
+  #howtoGuide .hgBtn svg { width:24px; height:24px; display:block; }
+  #howtoGuide .hgDot { width:22px; height:22px; border-radius:50%; background:var(--accent,#58a6ff);
+    color:var(--accent,#58a6ff); box-shadow:0 0 8px currentColor; }
+  #howtoGuide .hgLbl { font-size:12.5px; font-weight:700; color:#c9d1d9; }
+  #howtoGuide .hgModes { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  #howtoGuide .hgToggle { display:inline-flex; padding:4px; gap:4px; border-radius:999px;
+    border:1px solid #30363d; background:rgba(22,27,34,.55); }
+  #howtoGuide .hgSeg { padding:8px 16px; border-radius:999px; font-weight:800; font-size:14px; color:#8b949e;
+    transition:background .25s, color .25s; }
+  #howtoGuide .hgSeg.on { background:var(--accent,#58a6ff); color:#0d1117; box-shadow:0 0 13px var(--accent,#58a6ff); }
+  #howtoGuide .hgModeLbl { font-size:12.5px; font-weight:600; color:#8b949e; }
   .hcaprow { display:flex; align-items:center; gap:2px; padding:9px 8px 2px; min-height:64px; }
   #howtoCap { flex:1 1 auto; min-height:2.6em; text-align:center; color:#c9d1d9; font-size:14.5px; line-height:1.4; }
   #howtoCap b { color:var(--accent,#58a6ff); font-weight:800; }
@@ -394,7 +448,8 @@
   .hpips i.on { background:var(--accent,#58a6ff); transform:scale(1.3); }
   #howtoPlay { margin:12px 18px calc(16px + env(safe-area-inset-bottom)); padding:13px 0; border:none; border-radius:999px;
     background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:17px; cursor:pointer;
-    -webkit-tap-highlight-color:transparent; transition:transform .08s; }
+    -webkit-tap-highlight-color:transparent; box-shadow:0 8px 26px rgba(0,0,0,.4), 0 0 24px var(--accent,#58a6ff);
+    transition:transform .08s; }
   #howtoPlay:active { transform:scale(.97); }
 </style>
 </head>
@@ -432,6 +487,22 @@
 </div>
 <div id="fx"></div>
 <div id="fxToast"></div>
+<div id="beatGame">
+  <div class="bgCard">
+    <svg class="bgCrown" viewBox="0 0 100 74" aria-hidden="true">
+      <path d="M19 61 L19 25 L38 43 L50 14 L62 43 L81 25 L81 61 Z" fill="#58a6ff"/>
+      <rect x="19" y="50" width="62" height="11" rx="3" fill="rgba(0,0,0,0.18)"/>
+      <circle cx="19" cy="25" r="5.5" fill="#fff"/>
+      <circle cx="50" cy="14" r="5.5" fill="#fff"/>
+      <circle cx="81" cy="25" r="5.5" fill="#fff"/>
+    </svg>
+    <div class="bgKicker">100% COMPLETE</div>
+    <h1 class="bgTitle">You beat <b>1&nbsp;More&nbsp;Swing</b></h1>
+    <p class="bgMsg" id="beatGameMsg"></p>
+    <div class="bgSub">Every theme, trail &amp; orb &mdash; unlocked.</div>
+    <button id="beatGameClose">Continue</button>
+  </div>
+</div>
 <div id="coach"></div>
 <div id="previewBar"></div>
 <button id="resumeBtn">&#9654; Resume</button>
@@ -440,11 +511,15 @@
   <h1 class="bigtitle">1 MORE <b>SWING</b></h1>
   <p class="tagline">Swing &middot; Skip &middot; Bank</p>
   <div id="titleGreet"></div>
+  <div id="titleStats"></div>
   <div id="streakChip"></div>
   <button id="playBtn">&#9654; Play</button>
   <button id="howtoBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/><path d="M22 4h-6a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/></svg> How to Play</button>
   <button id="titleLbBtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="2" y="11" width="6" height="10" rx="1"/><rect x="9" y="5" width="6" height="16" rx="1"/><rect x="16" y="14" width="6" height="7" rx="1"/></svg> Leaderboard</button>
-  <button id="titleModeBtn">Daily</button>
+  <div id="titleModeToggle" role="group" aria-label="Game mode">
+    <button class="seg" data-mode="daily">Daily</button>
+    <button class="seg" data-mode="free">&#8734; Free Play</button>
+  </div>
   <button id="quitBtn">Quit</button>
   <div class="titleLinks">
     <a href="#" id="aboutLink">About</a> &middot; <a href="#" id="privacyLink">Privacy</a>
@@ -488,12 +563,24 @@
       <button id="howtoClose">&#10005;</button>
     </div>
     <canvas id="howtoCanvas"></canvas>
+    <div id="howtoGuide">
+      <div class="hgIcons">
+        <div class="hgItem"><span class="hgBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/><path d="M2 3h3l2.4 12.4a1.5 1.5 0 0 0 1.5 1.2h8.2a1.5 1.5 0 0 0 1.5-1.2L22 7H6"/></svg></span><span class="hgLbl">Shop</span></div>
+        <div class="hgItem"><span class="hgBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg></span><span class="hgLbl">Sound</span></div>
+        <div class="hgItem"><span class="hgBtn"><span class="hgDot"></span></span><span class="hgLbl">Theme</span></div>
+        <div class="hgItem"><span class="hgBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span class="hgLbl">Settings</span></div>
+      </div>
+      <div class="hgModes">
+        <div class="hgToggle" aria-hidden="true"><span class="hgSeg on">Daily</span><span class="hgSeg">&#8734; Free Play</span></div>
+        <span class="hgModeLbl">Tap to switch modes anytime</span>
+      </div>
+    </div>
     <div class="hcaprow">
       <button id="howtoPrev" class="hnav" aria-label="Previous slide"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
       <div id="howtoCap">&nbsp;</div>
       <button id="howtoNext" class="hnav" aria-label="Next slide"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
     </div>
-    <div class="hpips"><i></i><i></i><i></i><i></i></div>
+    <div class="hpips"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <button id="howtoPlay">&#9654; Play</button>
   </div>
 </div>
@@ -886,7 +973,7 @@ function genPid(){ try { return crypto.randomUUID(); } catch(e){ return 'p' + Ma
 function saveSnapshot(){
   let tn = themeName;
   if (!owned.theme.includes(tn)) tn = (preTheme && owned.theme.includes(preTheme)) ? preTheme : 'blue';
-  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, hintSeen, howtoSeen, remindersOn, ratePrompted };
+  return { coins, owned, equipped, themeName: tn, muted, hapticsMode, mode, name: playerName, pid: playerId, lastDailyDone, dailiesCompleted, streak, best, bestStreak, coachSeen, hintSeen, howtoSeen, remindersOn, ratePrompted, beatenSeen };
 }
 function saveGame(){
   try { localStorage.setItem('oms_save', JSON.stringify(saveSnapshot())); } catch(e){}
@@ -928,6 +1015,7 @@ function loadGame(){
     if (typeof s.coachSeen === 'boolean') coachSeen = s.coachSeen;
     if (typeof s.hintSeen === 'boolean') hintSeen = s.hintSeen;
     if (typeof s.howtoSeen === 'boolean') howtoSeen = s.howtoSeen;
+    if (typeof s.beatenSeen === 'boolean') beatenSeen = s.beatenSeen;
     if (typeof s.remindersOn === 'boolean') remindersOn = s.remindersOn;
   } catch(e){}
   if (!playerId){ playerId = genPid(); saveGame(); }   // first run: mint a persistent player id
@@ -979,8 +1067,10 @@ async function mergeCloudSave(){
     if (c.coachSeen && !coachSeen){ coachSeen = true; changed = true; }
     if (c.hintSeen && !hintSeen){ hintSeen = true; changed = true; }
     if (c.howtoSeen && !howtoSeen){ howtoSeen = true; changed = true; }
+    if (c.beatenSeen && !beatenSeen){ beatenSeen = true; changed = true; }   // don't re-congratulate if they hit 100% on another device
     if (typeof c.remindersOn === 'boolean'){ remindersOn = c.remindersOn; changed = true; }
     if (changed){ saveGame(); syncUI(); updateRemindBtn(); if (lbOpen) showTab(); }   // refresh leaderboard if it's open when the cloud identity lands
+    checkBeatGame();   // cloud merge may have completed the collection (or synced that they've already seen it)
   } catch(e){}
 }
 
@@ -1135,6 +1225,7 @@ let usedRevive = false, adShowing = false, doubledRun = false;
 let coachSeen = false;   // has the one-time multiplier coach-mark been shown?
 let hintSeen = false;    // has the first-run controls hint been shown (once ever)?
 let howtoSeen = false;   // has the How-to-Play tutorial been opened (once ever)? drives the button pulse
+let beatenSeen = false;  // has the "you unlocked everything / beat the game" celebration been shown (once ever)?
 
 // Streak = consecutive days you complete the daily. It stays "alive" if your last
 // completion was today or yesterday; miss a whole day and it reads 0 until you finish
@@ -1699,8 +1790,7 @@ function syncUI(){
   muteBtn.title = muted ? 'Unmute' : 'Mute';
   modeBtn.innerHTML = mode === 'daily' ? 'Daily' : '&#8734; Free Play'; // ∞ = endless Free Play
   modeBtn.title = mode === 'daily' ? 'Daily challenge — tap for Free Play' : 'Free Play — tap for Daily';
-  const titleModeLabel = document.getElementById('titleModeBtn');
-  if (titleModeLabel) titleModeLabel.innerHTML = mode === 'daily' ? 'Daily' : '&#8734; Free Play';
+  document.querySelectorAll('#titleModeToggle .seg').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));   // highlight the active mode in the segmented toggle
   // favicon follows the current colour scheme
   const fav = document.getElementById('favicon');
   if (fav){
@@ -1732,6 +1822,14 @@ function syncUI(){
     }
     sc.innerHTML = txt + ` <span style="opacity:.55;font-weight:400">&#9656;</span>`;
     sc.classList.add('show');
+  }
+  const stEl = document.getElementById('titleStats');   // returning-player progress: high score (★) + coin balance
+  if (stEl){
+    const parts = [];
+    if (best  > 0) parts.push(`<span class="tstat"><span class="tstar">&#9733;</span> Best <b>${fmt(best)}</b></span>`);
+    if (coins > 0) parts.push(`<span class="tstat"><span class="ci">C</span><b>${fmt(coins)}</b></span>`);
+    stEl.innerHTML = parts.join('');
+    stEl.classList.toggle('show', parts.length > 0);
   }
   renderTitleGreet();
   const pausedMenu = paused && !titleOpen && !over;
@@ -1889,6 +1987,9 @@ document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventD
   const cvs     = document.getElementById('howtoCanvas');
   const capEl   = document.getElementById('howtoCap');
   const pips    = Array.prototype.slice.call(overlay.querySelectorAll('.hpips i'));
+  const guide   = document.getElementById('howtoGuide');                       // slide 5: "getting around" HTML overlay
+  const guideSegs = guide ? guide.querySelectorAll('.hgSeg') : [];             // its Daily / Free Play mock segments
+  const GUIDE_SLIDE = 4;                                                       // index of the guide slide (goal is 5)
   const g = cvs.getContext('2d');
   let open=false, raf=0, w=0, h=0, lastPhase=-1;
   let manual=false, slide=0, slideStart=0;   // manual = user took over via arrows/swipe/pip; else it auto-advances
@@ -1900,6 +2001,8 @@ document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventD
     '<b>Release</b> at the top of the swing to launch to the next anchor',
     '<b>Skip</b> anchors in mid-air for bonus points &amp; a bigger multiplier',
     'Land on a green <b>BANK</b> pad to lock in your score',
+    'These are your top-right buttons. Switch between <b>Daily</b> &amp; <b>Free&nbsp;Play</b> anytime with the toggle.',   // UI guide — rendered as the #howtoGuide HTML overlay, not on the canvas
+    'Top the <b>Daily</b> to win the day. Rack up wins to rule the <b>All-Time</b> board, and collect every unlockable <b>cosmetic</b> to beat the game.',   // the goal — drawn by drawGoal(), not the swing timeline
   ];
 
   function resize(){
@@ -1939,6 +2042,72 @@ document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventD
     g.beginPath(); g.arc(x,y,17,0,PI2); g.fillStyle='rgba('+rgb+',0.30)'; g.fill();
     g.beginPath(); g.arc(x,y,11,0,PI2); g.fillStyle=acc; g.fill();
   }
+  function crown(cx,cy,s,acc){   // 3-point champion crown — accent fill, soft glow, white gem tips
+    g.save();
+    g.shadowColor=acc; g.shadowBlur=14;
+    g.beginPath();
+    g.moveTo(cx-s*0.62, cy+s*0.42); g.lineTo(cx-s*0.62, cy-s*0.30);
+    g.lineTo(cx-s*0.24, cy+s*0.06); g.lineTo(cx,        cy-s*0.52);
+    g.lineTo(cx+s*0.24, cy+s*0.06); g.lineTo(cx+s*0.62, cy-s*0.30);
+    g.lineTo(cx+s*0.62, cy+s*0.42); g.closePath();
+    g.fillStyle=acc; g.fill();
+    g.shadowBlur=0;
+    g.fillStyle='rgba(0,0,0,0.16)'; roundRect(cx-s*0.62, cy+s*0.20, s*1.24, s*0.22, 3); g.fill();   // rim band
+    const tips=[[cx-s*0.62,cy-s*0.30],[cx,cy-s*0.52],[cx+s*0.62,cy-s*0.30]];
+    for (let i=0;i<3;i++){ g.beginPath(); g.arc(tips[i][0],tips[i][1],s*0.11,0,PI2); g.fillStyle='#fff'; g.fill(); }
+    g.restore();
+  }
+  // Final slide — the meta goal: top the Daily → rule the All-Time wins board → unlock every theme to "beat" it.
+  // A leaderboard podium (accent #1 bar) crowned champion, over a row of theme swatches that fill to 100%.
+  function drawGoal(now, lp, fade, acc){
+    g.save(); g.globalAlpha=fade;
+
+    // leaderboard podium — bright accent #1 bar between two muted runners-up
+    const barW=Math.min(w*0.15,58), gap=barW*0.34, groundY=h*0.53;
+    const cH=h*0.21, cx=w*0.5, cTop=groundY-cH, cX=cx-barW/2;
+    g.fillStyle='#242c38';
+    roundRect(cX-barW-gap, groundY-h*0.13,  barW, h*0.13,  5); g.fill();   // 2nd place
+    roundRect(cX+barW+gap, groundY-h*0.085, barW, h*0.085, 5); g.fill();   // 3rd place
+    g.save(); g.shadowColor=acc; g.shadowBlur=13; g.fillStyle=acc;
+    roundRect(cX, cTop, barW, cH, 5); g.fill(); g.restore();               // 1st place (champion)
+
+    // champion crown on the #1 bar, gently bobbing
+    const cs=Math.min(w*0.11,40), crownY=cTop - cs*0.42 - 5;
+    crown(cx, crownY + Math.sin(now/520)*2, cs, acc);
+
+    // theme swatches filling to 100% — unlock every cosmetic to "beat" the game
+    const N=8, swW=Math.min(w*0.072,24), sgap=swW*0.62;
+    const total=N*swW+(N-1)*sgap, sx0=(w-total)/2, rowY=h*0.72;
+    const fillT=Math.min(1, lp/0.72), exact=fillT*N, litN=Math.min(N, Math.floor(exact));
+    for (let i=0;i<N;i++){
+      const x=sx0+i*(swW+sgap);
+      if (i<litN){
+        const hue=Math.round(i/N*360);
+        g.save(); g.shadowColor=`hsl(${hue},80%,60%)`; g.shadowBlur=7;
+        g.fillStyle=`hsl(${hue},72%,58%)`; roundRect(x,rowY,swW,swW,5); g.fill(); g.restore();
+        if (i===litN-1 && fillT<1){ g.save(); g.globalAlpha=fade*(1-(exact-litN));   // pop ring on the newest unlock
+          g.strokeStyle='#fff'; g.lineWidth=2; roundRect(x-3,rowY-3,swW+6,swW+6,7); g.stroke(); g.restore(); }
+      } else {
+        g.fillStyle='rgba(255,255,255,0.05)'; roundRect(x,rowY,swW,swW,5); g.fill();
+        g.strokeStyle='#30363d'; g.lineWidth=1.5; roundRect(x+0.75,rowY+0.75,swW-1.5,swW-1.5,4); g.stroke();
+      }
+    }
+
+    // completion flourish — "100%" pops and the crown sparkles once every swatch is lit
+    if (litN>=N){
+      const pop=Math.min(1,(lp-0.72)/0.12), pulse=0.6+0.4*Math.sin(now/220);
+      g.save(); g.globalAlpha=fade*pop;
+      g.font='800 18px ui-sans-serif, system-ui'; g.textAlign='center'; g.textBaseline='alphabetic';
+      g.shadowColor='#5dffa0'; g.shadowBlur=10; g.fillStyle='#9bffbe'; g.fillText('100%', cx, rowY-13);
+      g.restore();
+      g.save(); g.globalAlpha=fade*pop*pulse; g.fillStyle='#fff';
+      for (let k=0;k<4;k++){ const a=now/700+k*PI2/4;
+        g.beginPath(); g.arc(cx+Math.cos(a)*cs*1.5, crownY+Math.sin(a)*cs*0.9, 2.2, 0, PI2); g.fill(); }
+      g.restore();
+    }
+
+    g.restore();
+  }
 
   function draw(now){
     if (!open){ raf=0; return; }
@@ -1948,57 +2117,72 @@ document.getElementById('privacyLink').addEventListener('click', e=>{ e.preventD
     const acc = th.accent || '#58a6ff';
     const rgb = th.rgb || '88,166,255';
     while (!manual && (now - slideStart) >= SLIDE_LOOP){ slide=(slide+1)%STEPS.length; slideStart += SLIDE_LOOP; }   // auto-advance: equal time per slide
-    const seg=RANGES[slide];
     const lp=((now-slideStart)%SLIDE_LOOP)/SLIDE_LOOP;   // progress through the current slide's loop
-    const u=seg[0]+lp*(seg[1]-seg[0]);                   // position on the master timeline
-
-    // fixed mini-course (fractions of the measured canvas)
-    const Ax=w*0.22, Ay=h*0.20, L=h*0.34, relAng=0.60;
-    const Rx=Ax+Math.sin(relAng)*L, Ry=Ay+Math.cos(relAng)*L;   // release point (forward peak of the swing)
-    const padCx=w*0.78, padTopY=h*0.66, padW=Math.min(w*0.30,150);
-    const landX=padCx-padW*0.26, landY=padTopY-11;               // orb rests on the pad, offset left of the centered BANK label
-    const Cx=(Rx+landX)/2, Cy=h*0.04;                            // Bézier control (arc up and over)
-    const bez=p=>({ x:(1-p)*(1-p)*Rx+2*(1-p)*p*Cx+p*p*landX, y:(1-p)*(1-p)*Ry+2*(1-p)*p*Cy+p*p*landY });
-    const S=bez(0.5);                                            // skip anchor sits exactly on the flight path
-
-    // phases: swing 0–.36 | release .36–.44 | flight/skip .44–.78 | bank .78–1
-    let phase, ox, oy, ropeOn=false, holdOn=false, skipFlash=0, bankFlash=0, relFlash=0, f=0;
-    if (u<0.36){ phase=0; const s=u/0.36, amp=relAng*(0.5+0.5*s), ang=-amp*Math.cos(3*Math.PI*s);
-      ox=Ax+Math.sin(ang)*L; oy=Ay+Math.cos(ang)*L; ropeOn=true; holdOn=true; }
-    else if (u<0.44){ phase=1; ox=Rx; oy=Ry; relFlash=1-(u-0.36)/0.08; }
-    else if (u<0.78){ phase=2; f=(u-0.44)/0.34; const P=bez(f); ox=P.x; oy=P.y; skipFlash=Math.max(0,1-Math.abs(f-0.5)/0.16); }
-    else { phase=3; const b=(u-0.78)/0.22; ox=landX; oy=landY; bankFlash=Math.max(0,1-b/0.55); }
-
-    const fade=Math.min(1, lp/0.035, (1-lp)/0.035);   // dip at the current loop's seam (auto or manual) to mask the cut
+    const fade=Math.min(1, lp/0.035, (1-lp)/0.035);      // dip at the current loop's seam (auto or manual) to mask the cut
 
     // ---- paint ----
+    if (slide === GUIDE_SLIDE){
+      // "getting around" is the #howtoGuide HTML overlay (canvas hidden); demo the switch on its Daily / Free Play toggle
+      const on = Math.floor(now/1400) % 2;   // flip the highlighted segment every 1.4s
+      if (guideSegs.length === 2){ guideSegs[0].classList.toggle('on', on===0); guideSegs[1].classList.toggle('on', on===1); }
+    } else {
     g.clearRect(0,0,w,h);
     const bg=g.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#0b111b'); bg.addColorStop(1,'#0a0e14');
     g.fillStyle=bg; g.fillRect(0,0,w,h);
 
-    g.save(); g.globalAlpha=fade;
-    bankPad(padCx,padTopY,padW,now);
-    anchorDot(Ax,Ay,acc,rgb, phase===0?1:0.55, 0);
-    anchorDot(S.x,S.y,acc,rgb, 1, skipFlash);
-    if (ropeOn){ g.strokeStyle='#8b949e'; g.lineWidth=2; g.beginPath(); g.moveTo(Ax,Ay); g.lineTo(ox,oy); g.stroke(); }
-    if (phase===2){ for (let k=1;k<=6;k++){ const tf=f-k*0.03; if(tf<0)break; const q=bez(tf);
-        g.globalAlpha=fade*0.28*(1-k/7); g.beginPath(); g.arc(q.x,q.y,7-k*0.6,0,PI2); g.fillStyle=acc; g.fill(); }
-      g.globalAlpha=fade; }
-    if (relFlash>0){ g.globalAlpha=fade*relFlash; g.strokeStyle=acc; g.lineWidth=2.5;
-      g.beginPath(); g.arc(Rx,Ry,14+(1-relFlash)*22,0,PI2); g.stroke(); g.globalAlpha=fade; }
-    orb(ox,oy,acc,rgb);
-    if (holdOn){ const pr=15+3*Math.sin(now/140); g.globalAlpha=fade*0.7; g.strokeStyle=acc; g.lineWidth=2;
-      g.setLineDash([3,4]); g.beginPath(); g.arc(ox,oy,pr,0,PI2); g.stroke(); g.setLineDash([]);
-      label('HOLD',ox,oy-pr-9,acc); g.globalAlpha=fade; }
-    if (skipFlash>0.2){ g.globalAlpha=fade*Math.min(1,skipFlash*1.4); label('+SKIP  ×2', S.x, S.y-16-(1-skipFlash)*10, '#9be29b'); g.globalAlpha=fade; }
-    if (bankFlash>0.15){ g.globalAlpha=fade*Math.min(1,bankFlash*1.5); label('BANKED!', padCx, padTopY-24-(1-bankFlash)*14, '#9bffbe'); g.globalAlpha=fade; }
-    g.restore();
+    if (slide < 4){
+      // mechanic scene — each slide loops one segment of the master swing→bank timeline
+      const seg=RANGES[slide];
+      const u=seg[0]+lp*(seg[1]-seg[0]);                          // position on the master timeline
+
+      // fixed mini-course (fractions of the measured canvas)
+      const Ax=w*0.22, Ay=h*0.20, L=h*0.34, relAng=0.60;
+      const Rx=Ax+Math.sin(relAng)*L, Ry=Ay+Math.cos(relAng)*L;   // release point (forward peak of the swing)
+      const padCx=w*0.78, padTopY=h*0.66, padW=Math.min(w*0.30,150);
+      const landX=padCx-padW*0.26, landY=padTopY-11;              // orb rests on the pad, offset left of the centered BANK label
+      const Cx=(Rx+landX)/2, Cy=h*0.04;                           // Bézier control (arc up and over)
+      const bez=p=>({ x:(1-p)*(1-p)*Rx+2*(1-p)*p*Cx+p*p*landX, y:(1-p)*(1-p)*Ry+2*(1-p)*p*Cy+p*p*landY });
+      const S=bez(0.5);                                           // skip anchor sits exactly on the flight path
+
+      // phases: swing 0–.36 | release .36–.44 | flight/skip .44–.78 | bank .78–1
+      let phase, ox, oy, ropeOn=false, holdOn=false, skipFlash=0, bankFlash=0, relFlash=0, f=0;
+      if (u<0.36){ phase=0; const s=u/0.36, amp=relAng*(0.5+0.5*s), ang=-amp*Math.cos(3*Math.PI*s);
+        ox=Ax+Math.sin(ang)*L; oy=Ay+Math.cos(ang)*L; ropeOn=true; holdOn=true; }
+      else if (u<0.44){ phase=1; ox=Rx; oy=Ry; relFlash=1-(u-0.36)/0.08; }
+      else if (u<0.78){ phase=2; f=(u-0.44)/0.34; const P=bez(f); ox=P.x; oy=P.y; skipFlash=Math.max(0,1-Math.abs(f-0.5)/0.16); }
+      else { phase=3; const b=(u-0.78)/0.22; ox=landX; oy=landY; bankFlash=Math.max(0,1-b/0.55); }
+
+      g.save(); g.globalAlpha=fade;
+      bankPad(padCx,padTopY,padW,now);
+      anchorDot(Ax,Ay,acc,rgb, phase===0?1:0.55, 0);
+      anchorDot(S.x,S.y,acc,rgb, 1, skipFlash);
+      if (ropeOn){ g.strokeStyle='#8b949e'; g.lineWidth=2; g.beginPath(); g.moveTo(Ax,Ay); g.lineTo(ox,oy); g.stroke(); }
+      if (phase===2){ for (let k=1;k<=6;k++){ const tf=f-k*0.03; if(tf<0)break; const q=bez(tf);
+          g.globalAlpha=fade*0.28*(1-k/7); g.beginPath(); g.arc(q.x,q.y,7-k*0.6,0,PI2); g.fillStyle=acc; g.fill(); }
+        g.globalAlpha=fade; }
+      if (relFlash>0){ g.globalAlpha=fade*relFlash; g.strokeStyle=acc; g.lineWidth=2.5;
+        g.beginPath(); g.arc(Rx,Ry,14+(1-relFlash)*22,0,PI2); g.stroke(); g.globalAlpha=fade; }
+      orb(ox,oy,acc,rgb);
+      if (holdOn){ const pr=15+3*Math.sin(now/140); g.globalAlpha=fade*0.7; g.strokeStyle=acc; g.lineWidth=2;
+        g.setLineDash([3,4]); g.beginPath(); g.arc(ox,oy,pr,0,PI2); g.stroke(); g.setLineDash([]);
+        label('HOLD',ox,oy-pr-9,acc); g.globalAlpha=fade; }
+      if (skipFlash>0.2){ g.globalAlpha=fade*Math.min(1,skipFlash*1.4); label('+SKIP  ×2', S.x, S.y-16-(1-skipFlash)*10, '#9be29b'); g.globalAlpha=fade; }
+      if (bankFlash>0.15){ g.globalAlpha=fade*Math.min(1,bankFlash*1.5); label('BANKED!', padCx, padTopY-24-(1-bankFlash)*14, '#9bffbe'); g.globalAlpha=fade; }
+      g.restore();
+    } else {
+      drawGoal(now, lp, fade, acc);   // slide 5: the goal — top the leaderboard & unlock everything
+    }
+    }
 
     if (slide!==lastPhase){ lastPhase=slide; capEl.innerHTML=STEPS[slide];
-      for (let i=0;i<pips.length;i++) pips[i].classList.toggle('on', i===slide); }
+      for (let i=0;i<pips.length;i++) pips[i].classList.toggle('on', i===slide);
+      const isGuide = (slide === GUIDE_SLIDE);   // swap the canvas out for the #howtoGuide overlay on the guide slide
+      cvs.style.display = isGuide ? 'none' : '';
+      if (guide) guide.style.display = isGuide ? 'flex' : 'none'; }
   }
 
   function openHowto(){ if (open) return; overlay.classList.add('open'); open=true; lastPhase=-1; manual=false; slide=0;
+    cvs.style.display=''; if (guide) guide.style.display='none';   // start on a canvas slide — canvas must be measurable before resize()
     resize(); slideStart=performance.now(); raf=requestAnimationFrame(draw);
     if (!howtoSeen){ howtoSeen=true; try{ saveGame(); }catch(e){} }   // remember it's been seen (persists + syncs via cloud)
     const hb=document.getElementById('howtoBtn'); if (hb) hb.classList.remove('pulse'); }
@@ -2076,7 +2260,7 @@ pauseBtn.addEventListener('click', () => {   // doubles as Home (→ title) on t
 });
 muteBtn.addEventListener('click', ()=>{ muted = !muted; if (!muted) resumeAudio(); syncUI(); saveGame(); });
 modeBtn.addEventListener('click', ()=>{ mode = mode === 'daily' ? 'free' : 'daily'; saveGame(); newRun(); syncUI(); });
-document.getElementById('titleModeBtn').addEventListener('click', ()=>{ mode = mode === 'daily' ? 'free' : 'daily'; saveGame(); syncUI(); });  // title: just switch mode; Play starts the run in it
+document.querySelectorAll('#titleModeToggle .seg').forEach(b => b.addEventListener('click', ()=>{ if (b.dataset.mode === mode) return; mode = b.dataset.mode; saveGame(); syncUI(); }));  // title: pick a mode; Play starts the run in it
 
 // ---------- share result (spoiler-free) ----------
 function shareText(){
@@ -2393,6 +2577,65 @@ function celebratePurchaseWhenActive(label){
   if (appActive) setTimeout(flushCelebration, 250);   // grant now lands after the sheet closes (on FINISHED) with the app already active, so no long fallback needed
 }
 
+// ---- "beat the game": every cosmetic obtainable through play is unlocked ----
+// Completion set = all themes/trails/orbs EXCEPT the real-money-only ultra (Prism) and the
+// limited-time seasonal themes — the same items the shop flags as outside the "Unlock All" bundle.
+// (The earned 100-daily theme and 7-streak trail DO count.) Shown once, then remembered + synced.
+function beatGameReq(){
+  return {
+    theme: COSMETICS.theme.filter(t => !t.ultra && !t.seasonal).map(t => t.id),
+    trail: COSMETICS.trail.map(t => t.id),
+    orb:   COSMETICS.orb.map(t => t.id),
+  };
+}
+function hasBeatGame(){
+  const req = beatGameReq();
+  for (const cat in req) for (const id of req[cat]) if (!owned[cat].includes(id)) return false;
+  return true;
+}
+function checkBeatGame(){
+  if (beatenSeen || !hasBeatGame()) return;
+  beatenSeen = true; saveGame();
+  showBeatGame();
+}
+function showBeatGame(){
+  const el = document.getElementById('beatGame'); if (!el || el.classList.contains('show')) return;
+  const msg = document.getElementById('beatGameMsg'), nm = playerName && playerName.trim();
+  if (msg) msg.innerHTML = (nm ? `${escapeHtml(nm)}, you&rsquo;ve` : 'You&rsquo;ve')
+    + ' collected every unlockable cosmetic in the game. Thank you for playing all the way to 100% &mdash; it truly means a lot!';
+  el.classList.add('show');
+  beatConfetti();
+  try { const a = audioCtx(); if (a && a.state !== 'running') a.resume().catch(function(){}); sfxPurchase(); } catch(e){}
+  haptic('success');
+}
+// A longer, top-down confetti rain for the once-ever completion moment (reuses the #fx layer).
+function beatConfetti(){
+  const fx = document.getElementById('fx'); if (!fx) return;
+  const colors = ['#ffd95e','#58a6ff','#3fb950','#f85149','#a371f7','#ff7b72','#39d0d8'];
+  const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  if (acc) colors.unshift(acc);
+  for (let i = 0; i < 130; i++){
+    const piece = document.createElement('div');
+    piece.className = 'confetti';
+    piece.style.background = colors[i % colors.length];
+    if (i % 3 === 0) piece.style.borderRadius = '50%';
+    fx.appendChild(piece);
+    const sx = Math.random() * innerWidth;
+    const sy = -24 - Math.random() * innerHeight * 0.35;
+    const dx = (Math.random() - 0.5) * innerWidth * 0.5;
+    const dy = innerHeight + 80 - sy;
+    const rot = Math.random() * 1200 - 600;
+    piece.animate([
+      { transform:`translate(${sx}px,${sy}px) rotate(0deg)`, opacity:1, offset:0 },
+      { transform:`translate(${sx+dx}px,${sy+dy}px) rotate(${rot}deg)`, opacity:1, offset:0.86 },
+      { transform:`translate(${sx+dx}px,${sy+dy}px) rotate(${rot}deg)`, opacity:0, offset:1 }
+    ], { duration:2400 + Math.random()*1800, delay:Math.random()*650, easing:'cubic-bezier(.3,.5,.5,1)' }).onfinish = () => piece.remove();
+  }
+}
+document.getElementById('beatGameClose').addEventListener('click', function(){
+  document.getElementById('beatGame').classList.remove('show');
+});
+
 function buyItem(cat, id){
   const it = COSMETICS[cat].find(x => x.id === id);
   if (!it || it.ultra || offSeasonLocked(it) || owned[cat].includes(id) || coins < it.cost) return;   // ultra is real-money only; seasonal only in-season
@@ -2400,6 +2643,7 @@ function buyItem(cat, id){
   if (cat === 'theme'){ themeName = id; syncUI(); } else equipped[cat] = id;
   saveGame(); renderShop();
   celebratePurchase(it.name);
+  checkBeatGame();   // this buy may have completed the collection
 }
 function equipItem(cat, id){
   if (!owned[cat].includes(id)) return;
@@ -2481,6 +2725,7 @@ window.OMS_applyEntitlement = function(productId){
     if (purchaseIntent && label){ purchaseIntent = false; celebratePurchaseWhenActive(label); }
   }
   if (shopOpen) renderShop();
+  checkBeatGame();   // an "Unlock All" / final theme buy (or restore) may have completed the collection
 };
 // iap.js calls this when store prices load or change
 window.OMS_onIapUpdated = function(){ if (shopOpen) renderShop(); };
@@ -2598,6 +2843,7 @@ function checkDailyUnlock(){
   if (mono && dailiesCompleted >= mono.dailyUnlock && !owned.theme.includes('mono')){
     owned.theme.push('mono'); saveGame();
     if (shopOpen) renderShop();
+    checkBeatGame();   // the earned Epic Minimalist theme may have been the last piece
   }
 }
 // Ask for an App Store rating once, at a positive moment (SKStoreReviewController via the InAppReview plugin).
@@ -2615,6 +2861,7 @@ function checkStreakUnlock(){
   if (t && bestStreak >= t.streakUnlock && !owned.trail.includes(t.id)){
     owned.trail.push(t.id); saveGame();
     if (shopOpen) renderShop();
+    checkBeatGame();   // the earned Streak Flame trail may have been the last piece
   }
 }
 function renderWins(data){
