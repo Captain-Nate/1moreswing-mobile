@@ -406,6 +406,25 @@
   #infoBody a { color:var(--accent,#58a6ff); }
   #infoBody .muted { color:#8b949e; font-size:12.5px; }
 
+  /* ---- forced "Update required" gate (native only; shown when the installed
+         version is below the server minimum — see checkForceUpdate). Non-dismissible. ---- */
+  #forceUpdate { position:fixed; inset:0; z-index:9999; display:none; box-sizing:border-box;
+    align-items:center; justify-content:center;
+    padding:calc(20px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom));
+    background:rgba(8,11,16,.94); backdrop-filter:blur(4px); -webkit-tap-highlight-color:transparent; }
+  #forceUpdate.open { display:flex; }
+  #forceUpdate .fuCard { width:min(400px,92vw); text-align:center; box-sizing:border-box;
+    background:#0f141b; border:1px solid #30363d; border-radius:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,.6); padding:30px 26px 26px; }
+  #forceUpdate .fuIcon { width:64px; height:64px; margin:0 auto 18px; display:block; }
+  #forceUpdate h1 { margin:0 0 10px; font-size:22px; color:#e6edf3; letter-spacing:.3px; }
+  #forceUpdate p { margin:0 auto 22px; max-width:300px; color:#c9d1d9; font-size:14.5px; line-height:1.55; }
+  #forceUpdate .fuBtn { display:block; width:100%; padding:15px; border:none; border-radius:12px;
+    background:var(--accent,#58a6ff); color:#0d1117; font-weight:800; font-size:16px; letter-spacing:.3px;
+    cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  #forceUpdate .fuBtn:active { filter:brightness(.92); }
+  #forceUpdate .fuVer { margin-top:14px; color:#6e7681; font-size:12px; }
+
   /* ---- How to Play: title button + animated tutorial overlay ---- */
   #howtoBtn { position:relative; padding:14px 32px; border-radius:999px; border:1px solid var(--accent,#58a6ff);
     background:rgba(22,27,34,.55); color:var(--accent,#58a6ff); font-weight:800; font-size:18px; cursor:pointer;
@@ -595,6 +614,17 @@
     </div>
     <div class="hpips"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <button id="howtoPlay">&#9654; Play</button>
+  </div>
+</div>
+<div id="forceUpdate">
+  <div class="fuCard">
+    <svg class="fuIcon" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12a9 9 0 1 1-3.5-7.1"/><path d="M21 4v5h-5"/>
+    </svg>
+    <h1>Update required</h1>
+    <p id="forceUpdateMsg">A new version of 1&nbsp;More&nbsp;Swing is out. Update to keep playing with the latest features and leaderboards.</p>
+    <button id="forceUpdateBtn" class="fuBtn">Update Now</button>
+    <div class="fuVer" id="forceUpdateVer"></div>
   </div>
 </div>
 <script>/* Mobile app build only: load AdMob glue + StoreKit in-app purchases inside Capacitor. No-op on the web. */
@@ -2563,8 +2593,61 @@ function flushCelebration(){
 if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
   Capacitor.Plugins.App.addListener('appStateChange', ({ isActive }) => {
     appActive = isActive;
-    if (isActive){ flushCelebration(); resumeAudio(); }   // user pressed OK / returned → app active again
+    if (isActive){ flushCelebration(); resumeAudio(); checkForceUpdate(); }   // user pressed OK / returned → app active again; also re-check the min supported version
   });
+}
+
+// ---------- forced update gate ----------
+// Native only. On launch (and on each resume) ask the server for the lowest version this
+// platform may run (GET /api/version). If the installed build is below it, show a
+// non-dismissible "Update required" screen. Fails OPEN: any error, timeout, missing plugin,
+// or the web build => never blocks. See functions/api/version.js in the web repo.
+function cmpVer(a, b){                        // compare dotted numeric versions -> -1 | 0 | 1
+  const pa = String(a).split('.'), pb = String(b).split('.');
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++){
+    const d = (parseInt(pa[i], 10) || 0) - (parseInt(pb[i], 10) || 0);
+    if (d) return d < 0 ? -1 : 1;
+  }
+  return 0;
+}
+let forceUpdateShown = false;
+async function checkForceUpdate(){
+  if (forceUpdateShown) return;              // already gated this session
+  if (!window.Capacitor) return;             // web build: never
+  const App = Capacitor.Plugins && Capacitor.Plugins.App;
+  if (!App || !App.getInfo) return;
+  let ver;
+  try { ver = (await App.getInfo()).version; } catch (e) { return; }
+  if (!ver) return;
+  const plat = (Capacitor.getPlatform && Capacitor.getPlatform()) || 'ios';
+  let cfg;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(`${API_BASE}/api/version`, { cache: 'no-store', signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) return;                        // fail open
+    cfg = await r.json();
+  } catch (e) { return; }                     // offline / aborted / bad JSON -> fail open
+  const block = cfg && cfg[plat];
+  if (!block || !block.min) return;           // nothing configured for this platform
+  if (cmpVer(ver, block.min) >= 0) return;    // installed build is current -> nothing to do
+  showForceUpdate(block.store, block.msg, ver);
+}
+function showForceUpdate(storeUrl, msg, ver){
+  const el = document.getElementById('forceUpdate');
+  if (!el) return;
+  forceUpdateShown = true;
+  const url = storeUrl || 'https://apps.apple.com/app/id6786021515';
+  if (msg){ const m = document.getElementById('forceUpdateMsg'); if (m) m.textContent = msg; }
+  const v = document.getElementById('forceUpdateVer'); if (v && ver) v.textContent = 'You have v' + ver;
+  const btn = document.getElementById('forceUpdateBtn');
+  if (btn) btn.onclick = function(){
+    try { window.open(url, '_blank'); }         // Capacitor routes _blank to the system browser -> App Store
+    catch (e) { try { window.location.href = url; } catch (_) {} }
+  };
+  try { paused = true; } catch (e) {}          // stop the run underneath (best effort; overlay covers all UI)
+  el.classList.add('open');
 }
 function celebratePurchaseWhenActive(label){
   // Always queue. On a real device the StoreKit purchase flow makes the app resign-active,
@@ -3901,6 +3984,7 @@ checkStreakUnlock();   // unlock Streak Flame if the player already has a qualif
 updateRemindBtn();       // reflect the saved reminder setting on the title button
 updateHapticsBtn();      // reflect the saved haptics setting
 ensureDailyReminder();   // keep the daily-run reminder scheduled (only if already permitted)
+checkForceUpdate();      // native only: block play if this build is below the server's minimum version
 requestAnimationFrame(frame);
 </script>
 </body>
