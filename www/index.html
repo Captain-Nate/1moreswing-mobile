@@ -1791,7 +1791,13 @@ cv.addEventListener('pointerdown', e=>{ e.preventDefault(); pointerActive = true
 cv.addEventListener('touchstart', e=>{ e.preventDefault(); }, { passive:false });
 cv.addEventListener('touchmove',  e=>{ e.preventDefault(); }, { passive:false });
 window.addEventListener('pointerup', ()=>{ if (pointerActive){ pointerActive = false; release(); } });
+// Game shortcuts (Space/d/r/p/l/Esc) must NOT fire while typing in a field — otherwise a letter
+// like "L" typed into the name editor toggles the leaderboard shut (l = leaderboard). Ignore keys
+// aimed at an input/textarea. Checks the target, so it's robust even when a soft keyboard reports
+// an odd key code.
+function typingInField(e){ const t = e.target; return !!(t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)); }
 window.addEventListener('keydown', e=>{
+  if (typingInField(e)) return;
   if (e.code === 'Space'){ e.preventDefault(); if(!spaceDown){ spaceDown=true; press(); } }
   else if (e.key === 'd' || e.key === 'D') debug = !debug;
   else if (e.key === 'r' || e.key === 'R') newRun();
@@ -1799,7 +1805,7 @@ window.addEventListener('keydown', e=>{
   else if (e.key === 'l' || e.key === 'L'){ lbOpen ? closeLeaderboard() : openLeaderboard(); }
   else if (e.key === 'Escape'){ if (infoOpen) closeInfo(); else if (settingsOpen) closeSettings(); else if (previewing){ endPreview(false); openShop(); } else if (shopOpen) closeShop(); else if (lbOpen) closeLeaderboard(); }
 });
-window.addEventListener('keyup', e=>{ if (e.code==='Space'){ spaceDown=false; release(); } });
+window.addEventListener('keyup', e=>{ if (typingInField(e)) return; if (e.code==='Space'){ spaceDown=false; release(); } });
 
 // ---------- UI buttons ----------
 const colorBtn = document.getElementById('colorBtn');
